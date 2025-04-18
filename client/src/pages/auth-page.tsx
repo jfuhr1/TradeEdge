@@ -83,7 +83,7 @@ export default function AuthPage() {
     setTimeout(() => {
       setIsLoggingIn(false);
       window.location.href = "/";
-    }, 1500);
+    }, 800);
   }
 
   // Handle register form submission
@@ -93,7 +93,7 @@ export default function AuthPage() {
     setTimeout(() => {
       setIsRegistering(false);
       window.location.href = "/";
-    }, 1500);
+    }, 800);
   }
 
   return (
@@ -229,6 +229,16 @@ export default function AuthPage() {
                     </Button>
                   </p>
                 </div>
+                
+                <div className="border-t pt-4 mt-4">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => window.location.href = "/"}
+                  >
+                    Skip Login (Demo Mode)
+                  </Button>
+                </div>
               </TabsContent>
               
               {/* Register Form */}
@@ -333,6 +343,16 @@ export default function AuthPage() {
                       Login
                     </Button>
                   </p>
+                </div>
+                
+                <div className="border-t pt-4 mt-4">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => window.location.href = "/"}
+                  >
+                    Skip Registration (Demo Mode)
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
