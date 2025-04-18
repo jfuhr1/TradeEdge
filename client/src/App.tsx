@@ -6,6 +6,7 @@ import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 import CreateAlert from "./pages/admin/create-alert";
+import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Route path="/education" component={Education} />
       <Route path="/coaching" component={Coaching} />
       <Route path="/admin/create-alert" component={CreateAlert} />
+      <Route path="/ws-test" component={WebSocketTest} />
       <Route component={NotFound} />
     </Switch>
   );

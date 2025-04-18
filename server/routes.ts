@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
+import { WebSocketServer, WebSocket } from "ws";
 import { insertStockAlertSchema, insertPortfolioItemSchema, insertCoachingSessionSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -234,5 +235,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server for real-time stock price updates
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('Client connected to WebSocket');
+    
+    // Send welcome message
+    ws.send(JSON.stringify({ 
+      type: 'connection', 
+      message: 'Connected to Portfolio Consultant WebSocket Server' 
+    }));
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received WebSocket message:', data);
+        
+        // Handle message types
+        switch (data.type) {
+          case 'subscribe':
+            // Handle subscription to stock alerts or portfolio updates
+            ws.send(JSON.stringify({
+              type: 'subscribed',
+              channel: data.channel,
+              message: `Subscribed to ${data.channel}`
+            }));
+            break;
+            
+          case 'ping':
+            ws.send(JSON.stringify({ 
+              type: 'pong', 
+              timestamp: new Date().toISOString() 
+            }));
+            break;
+            
+          default:
+            console.log('Unknown message type:', data.type);
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('Client disconnected from WebSocket');
+    });
+  });
+  
+  // Utility function to broadcast stock price updates to all connected clients
+  const broadcastStockUpdate = (stockData: any) => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'stock_update',
+          data: stockData
+        }));
+      }
+    });
+  };
+  
+  // Mock periodic stock price updates for demonstration
+  // In a real app, this would come from an external API
+  setInterval(async () => {
+    try {
+      const alerts = await storage.getStockAlerts();
+      
+      // Update a random stock with small price change
+      if (alerts.length > 0) {
+        const randomIndex = Math.floor(Math.random() * alerts.length);
+        const alert = alerts[randomIndex];
+        
+        // Random price change between -1% and +1%
+        const changePercent = (Math.random() * 2 - 1) / 100;
+        const newPrice = alert.currentPrice * (1 + changePercent);
+        
+        // Update the stock price in storage
+        const updatedAlert = await storage.updateStockAlertPrice(alert.id, parseFloat(newPrice.toFixed(2)));
+        
+        if (updatedAlert) {
+          // Broadcast the update to all connected clients
+          broadcastStockUpdate(updatedAlert);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating stock prices:', error);
+    }
+  }, 15000); // Update every 15 seconds
+  
   return httpServer;
 }

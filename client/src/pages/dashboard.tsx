@@ -1,13 +1,19 @@
 import MainLayout from "@/components/layout/main-layout";
-import { ChartLine, TrendingUp, Target, AlertCircle, Award } from "lucide-react";
+import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { StockAlert } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Sample stock alert data
-const latestAlerts = [
+// We'll replace this with real data from the API
+const initialLatestAlerts = [
   { 
     id: 1, 
     symbol: "AAPL", 
@@ -140,9 +146,54 @@ const coachingSessions = [
   }
 ];
 
-// Rich dashboard with real data (disconnected from auth)
+// Rich dashboard with real data and WebSocket updates
 export default function Dashboard() {
-  const userName = "Jane Smith"; // Hardcoded for demo
+  // We're using a simpler approach for now without auth
+  const userName = "Guest"; 
+  const { connected, lastMessage } = useWebSocket();
+  const [latestAlerts, setLatestAlerts] = useState<StockAlert[]>([]);
+  
+  // Fetch stock alerts
+  const { data: stockAlerts, isLoading } = useQuery<StockAlert[]>({
+    queryKey: ['/api/stock-alerts']
+  });
+  
+  // Update the latest alerts when data is fetched
+  useEffect(() => {
+    if (stockAlerts) {
+      setLatestAlerts(stockAlerts.slice(0, 3)); // Show first 3 alerts
+    }
+  }, [stockAlerts]);
+  
+  // Fetch approaching targets
+  const { data: targetData } = useQuery({
+    queryKey: ['/api/stock-alerts/targets']
+  });
+  
+  // Listen for WebSocket updates
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'stock_update') {
+      console.log('Received stock update:', lastMessage);
+      // Update the alerts with the new price data
+      setLatestAlerts(prevAlerts => {
+        return prevAlerts.map(alert => {
+          if (alert.id === lastMessage.data.id) {
+            // Return updated alert
+            return {
+              ...alert,
+              currentPrice: lastMessage.data.currentPrice,
+              updatedAt: new Date()
+            };
+          }
+          return alert;
+        });
+      });
+    }
+  }, [lastMessage]);
+  
+  // If no data yet, use the initial sample data
+  const displayAlerts = latestAlerts.length > 0 ? latestAlerts : initialLatestAlerts;
+  const targets = targetData || approachingTargets;
 
   return (
     <MainLayout 
@@ -221,61 +272,101 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {latestAlerts.map((alert) => (
-            <Card key={alert.id} className="overflow-hidden">
-              <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold">{alert.symbol}</span>
-                      <Badge 
-                        variant={alert.status === "in-buy-zone" ? "success" : "secondary"}
-                      >
-                        {alert.status === "in-buy-zone" ? "In Buy Zone" : "Above Buy Zone"}
-                      </Badge>
+          {isLoading ? (
+            <>
+              <Card className="overflow-hidden">
+                <CardHeader className="p-4 pb-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-4 w-32 mt-1" />
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <Skeleton className="h-16 w-full mb-2" />
+                  <Skeleton className="h-12 w-full" />
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardHeader className="p-4 pb-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-4 w-32 mt-1" />
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <Skeleton className="h-16 w-full mb-2" />
+                  <Skeleton className="h-12 w-full" />
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardHeader className="p-4 pb-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-4 w-32 mt-1" />
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <Skeleton className="h-16 w-full mb-2" />
+                  <Skeleton className="h-12 w-full" />
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            displayAlerts.map((alert) => (
+              <Card key={alert.id} className="overflow-hidden">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold">{alert.symbol}</span>
+                        <Badge 
+                          variant={alert.status === "in-buy-zone" ? "success" : "secondary"}
+                        >
+                          {alert.status === "in-buy-zone" ? "In Buy Zone" : "Above Buy Zone"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{alert.companyName}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{alert.companyName}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold">${alert.currentPrice.toFixed(2)}</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <div className="grid grid-cols-2 gap-2 my-2">
-                  <div className="text-sm">
-                    <p className="text-muted-foreground">Buy Zone</p>
-                    <p className="font-medium">${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}</p>
-                  </div>
-                  <div className="text-sm">
-                    <p className="text-muted-foreground">Date Added</p>
-                    <p className="font-medium">{alert.createdAt.toLocaleDateString()}</p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-2 mt-2">
-                  <p className="text-sm text-muted-foreground mb-1">Price Targets</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                      <p className="text-xs text-muted-foreground">Target 1</p>
-                      <p className="font-semibold">${alert.target1.toFixed(2)}</p>
-                      <p className="text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                      <p className="text-xs text-muted-foreground">Target 2</p>
-                      <p className="font-semibold">${alert.target2.toFixed(2)}</p>
-                      <p className="text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                      <p className="text-xs text-muted-foreground">Target 3</p>
-                      <p className="font-semibold">${alert.target3.toFixed(2)}</p>
-                      <p className="text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                    <div className="text-right">
+                      <p className="text-lg font-semibold">${alert.currentPrice.toFixed(2)}</p>
+                      {connected && 
+                        <div className="flex items-center text-xs text-green-600">
+                          <Wifi className="h-3 w-3 mr-1" /> Live
+                        </div>
+                      }
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <div className="grid grid-cols-2 gap-2 my-2">
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Buy Zone</p>
+                      <p className="font-medium">${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}</p>
+                    </div>
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Date Added</p>
+                      <p className="font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-2 mt-2">
+                    <p className="text-sm text-muted-foreground mb-1">Price Targets</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
+                        <p className="text-xs text-muted-foreground">Target 1</p>
+                        <p className="font-semibold">${alert.target1.toFixed(2)}</p>
+                        <p className="text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                      </div>
+                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
+                        <p className="text-xs text-muted-foreground">Target 2</p>
+                        <p className="font-semibold">${alert.target2.toFixed(2)}</p>
+                        <p className="text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                      </div>
+                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
+                        <p className="text-xs text-muted-foreground">Target 3</p>
+                        <p className="font-semibold">${alert.target3.toFixed(2)}</p>
+                        <p className="text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </div>
       
