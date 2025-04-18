@@ -4,7 +4,9 @@ import {
   portfolioItems, PortfolioItem, InsertPortfolioItem,
   educationContent, EducationContent, InsertEducationContent,
   coachingSessions, CoachingSession, InsertCoachingSession,
-  technicalReasons, TechnicalReason, InsertTechnicalReason
+  technicalReasons, TechnicalReason, InsertTechnicalReason,
+  educationProgress, EducationProgress, InsertEducationProgress,
+  userAchievements, UserAchievement, InsertUserAchievement
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -18,6 +20,9 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserTier(id: number, tier: string): Promise<User | undefined>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  getUsersByTier(tier: string): Promise<User[]>;
+  checkIfAdmin(userId: number): Promise<boolean>;
   
   // Stock alert operations
   createStockAlert(alert: InsertStockAlert): Promise<StockAlert>;
@@ -25,22 +30,46 @@ export interface IStorage {
   getStockAlert(id: number): Promise<StockAlert | undefined>;
   getStockAlertsInBuyZone(): Promise<StockAlert[]>;
   getStockAlertsNearingTargets(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}>;
+  updateStockAlert(id: number, updates: Partial<StockAlert>): Promise<StockAlert | undefined>;
+  updateStockAlertPrice(id: number, currentPrice: number): Promise<StockAlert | undefined>;
   
   // Portfolio operations
   createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
   getPortfolioItemsByUser(userId: number): Promise<PortfolioItem[]>;
   updatePortfolioItem(id: number, updates: Partial<PortfolioItem>): Promise<PortfolioItem | undefined>;
   sellPortfolioItem(id: number, soldPrice: number): Promise<PortfolioItem | undefined>;
+  getPortfolioStats(userId: number): Promise<{
+    activePositions: number;
+    currentValue: number;
+    totalGainLoss: number;
+    percentGainLoss: number;
+    closedProfit: number;
+  }>;
   
   // Education content operations
   createEducationContent(content: InsertEducationContent): Promise<EducationContent>;
   getEducationContent(): Promise<EducationContent[]>;
   getEducationContentByTier(tier: string): Promise<EducationContent[]>;
+  getEducationContentByCategory(category: string): Promise<EducationContent[]>;
+  getEducationContentByLevel(level: string): Promise<EducationContent[]>;
+  searchEducationContent(query: string): Promise<EducationContent[]>;
+  
+  // Education progress operations
+  createEducationProgress(progress: InsertEducationProgress): Promise<EducationProgress>;
+  getEducationProgressByUser(userId: number): Promise<EducationProgress[]>;
+  updateEducationProgress(id: number, updates: Partial<EducationProgress>): Promise<EducationProgress | undefined>;
+  getCompletedContentCount(userId: number): Promise<number>;
+  
+  // User achievements operations
+  createUserAchievement(achievement: InsertUserAchievement): Promise<UserAchievement>;
+  getUserAchievements(userId: number): Promise<UserAchievement[]>;
+  checkForNewAchievements(userId: number): Promise<UserAchievement[]>;
   
   // Coaching operations
   createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession>;
   getCoachingSessionsByUser(userId: number): Promise<CoachingSession[]>;
   updateCoachingSession(id: number, updates: Partial<CoachingSession>): Promise<CoachingSession | undefined>;
+  getCoachAvailability(startDate: Date, endDate: Date): Promise<{date: Date, available: boolean}[]>;
   
   // Technical reasons
   getTechnicalReasons(): Promise<TechnicalReason[]>;
@@ -57,8 +86,10 @@ export class MemStorage implements IStorage {
   private educationContents: Map<number, EducationContent>;
   private coachingSessions: Map<number, CoachingSession>;
   private technicalReasonsList: Map<number, TechnicalReason>;
+  private educationProgressList: Map<number, EducationProgress>;
+  private userAchievementsList: Map<number, UserAchievement>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to bypass type checking temporarily
   
   private userId: number;
   private stockAlertId: number;
@@ -66,6 +97,8 @@ export class MemStorage implements IStorage {
   private educationContentId: number;
   private coachingSessionId: number;
   private technicalReasonId: number;
+  private educationProgressId: number;
+  private userAchievementId: number;
 
   constructor() {
     this.users = new Map();
@@ -74,6 +107,8 @@ export class MemStorage implements IStorage {
     this.educationContents = new Map();
     this.coachingSessions = new Map();
     this.technicalReasonsList = new Map();
+    this.educationProgressList = new Map();
+    this.userAchievementsList = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -81,6 +116,8 @@ export class MemStorage implements IStorage {
     this.educationContentId = 1;
     this.coachingSessionId = 1;
     this.technicalReasonId = 1;
+    this.educationProgressId = 1;
+    this.userAchievementId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
