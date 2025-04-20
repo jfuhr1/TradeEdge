@@ -44,16 +44,6 @@ export function Navbar() {
             </Link>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant={location === "/success-center" ? "default" : "ghost"}
-              size="sm"
-              asChild
-            >
-              <Link href="/success-center">
-                <Trophy className="h-4 w-4 mr-2" />
-                Success Center
-              </Link>
-            </Button>
             <Button variant="default" size="sm" asChild>
               <Link href="/auth">Sign In</Link>
             </Button>

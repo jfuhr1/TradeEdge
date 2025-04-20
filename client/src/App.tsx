@@ -21,8 +21,8 @@ function App() {
       <AppLayout>
         <Switch>
           <Route path="/auth" component={AuthPage} />
-          <Route path="/success-center" component={SuccessCenter} />
           <Route path="/ws-test" component={WebSocketTest} />
+          <ProtectedRoute path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/" component={Dashboard} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
           <ProtectedRoute path="/stock/:id" component={StockDetail} />

@@ -108,12 +108,7 @@ export default function AuthPage() {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-primary-foreground" asChild>
-              <Link href="/success-center">
-                <Trophy className="w-4 h-4 mr-2" />
-                Success Center
-              </Link>
-            </Button>
+            {/* No links here as per requirement */}
           </div>
         </div>
       </div>
