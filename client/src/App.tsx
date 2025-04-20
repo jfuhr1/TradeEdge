@@ -11,21 +11,28 @@ import CreateAlert from "./pages/admin/create-alert";
 import AlertSettings from "./pages/alert-settings";
 import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
+import { AppLayout } from "./components/layout/app-layout";
+import { AuthProvider } from "./hooks/use-auth";
 
 function App() {
   return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
-      <ProtectedRoute path="/stock/:id" component={StockDetail} />
-      <ProtectedRoute path="/portfolio" component={Portfolio} />
-      <ProtectedRoute path="/education" component={Education} />
-      <ProtectedRoute path="/coaching" component={Coaching} />
-      <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
-      <Route path="/ws-test" component={WebSocketTest} />
-      <Route component={NotFound} />
-    </Switch>
+    <AuthProvider>
+      <AppLayout>
+        <Switch>
+          <Route path="/auth" component={AuthPage} />
+          <ProtectedRoute path="/" component={Dashboard} />
+          <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
+          <ProtectedRoute path="/stock/:id" component={StockDetail} />
+          <ProtectedRoute path="/portfolio" component={Portfolio} />
+          <ProtectedRoute path="/education" component={Education} />
+          <ProtectedRoute path="/coaching" component={Coaching} />
+          <ProtectedRoute path="/alert-settings" component={AlertSettings} />
+          <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
+          <Route path="/ws-test" component={WebSocketTest} />
+          <Route component={NotFound} />
+        </Switch>
+      </AppLayout>
+    </AuthProvider>
   );
 }
 
