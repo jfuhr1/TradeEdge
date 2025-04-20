@@ -50,7 +50,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Stock alert not found" });
       }
       
-      res.json(alert);
+      // For the detail page, we'll inject a random change percentage for demo
+      const changePercent = ((Math.random() * 3) - 1).toFixed(2);
+      
+      res.json({
+        ...alert,
+        changePercent
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stock alert" });
     }

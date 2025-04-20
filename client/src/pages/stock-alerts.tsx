@@ -121,7 +121,7 @@ export default function StockAlerts() {
           ) : (
             <div className="space-y-6">
               {/* Target 1 */}
-              {targetAlerts?.target1.length > 0 && (
+              {targetAlerts && targetAlerts.target1 && targetAlerts.target1.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3">Nearing Target 1</h3>
                   <div className="space-y-4">
@@ -133,7 +133,7 @@ export default function StockAlerts() {
               )}
               
               {/* Target 2 */}
-              {targetAlerts?.target2.length > 0 && (
+              {targetAlerts && targetAlerts.target2 && targetAlerts.target2.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3">Nearing Target 2</h3>
                   <div className="space-y-4">
@@ -145,7 +145,7 @@ export default function StockAlerts() {
               )}
               
               {/* Target 3 */}
-              {targetAlerts?.target3.length > 0 && (
+              {targetAlerts && targetAlerts.target3 && targetAlerts.target3.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3">Nearing Target 3</h3>
                   <div className="space-y-4">

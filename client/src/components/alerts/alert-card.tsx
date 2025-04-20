@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Link } from "wouter";
 
 interface AlertCardProps {
   alert: StockAlert;
@@ -167,12 +168,14 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           >
             Add to Portfolio
           </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1 ml-2"
-          >
-            View Details
-          </Button>
+          <Link href={`/stock/${alert.id}`}>
+            <Button 
+              variant="outline" 
+              className="flex-1 ml-2"
+            >
+              View Details
+            </Button>
+          </Link>
         </div>
       </div>
 

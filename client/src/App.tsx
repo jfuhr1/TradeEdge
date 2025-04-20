@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import AuthPage from "./pages/auth-page";
 import Dashboard from "./pages/dashboard";
 import StockAlerts from "./pages/stock-alerts";
+import StockDetail from "./pages/stock-detail";
 import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
@@ -15,6 +16,7 @@ function App() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/" component={Dashboard} />
       <Route path="/stock-alerts" component={StockAlerts} />
+      <Route path="/stock/:id" component={StockDetail} />
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/education" component={Education} />
       <Route path="/coaching" component={Coaching} />
