@@ -50,6 +50,7 @@ export const stockAlerts = pgTable("stock_alerts", {
   potentialReturns: json("potential_returns").default([]), // array of {target, percentage} objects
   requiredTier: text("required_tier").default("free"), // The minimum membership tier required to see this alert
   status: text("status").notNull().default("active"), // active, closed, cancelled
+  maxPrice: doublePrecision("max_price"), // To track the highest price reached
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

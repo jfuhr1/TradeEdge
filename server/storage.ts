@@ -225,8 +225,15 @@ export class MemStorage implements IStorage {
   
   async getStockAlertsInBuyZone(): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values()).filter(alert => 
+      alert.status === 'active' &&
       alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax
     );
+  }
+  
+  async getClosedStockAlerts(): Promise<StockAlert[]> {
+    return Array.from(this.stockAlerts.values())
+      .filter(alert => alert.status === 'closed')
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
   async getStockAlertsNearingTargets(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
@@ -234,7 +241,8 @@ export class MemStorage implements IStorage {
     const target2: StockAlert[] = [];
     const target3: StockAlert[] = [];
     
-    const alerts = Array.from(this.stockAlerts.values());
+    const alerts = Array.from(this.stockAlerts.values())
+      .filter(alert => alert.status === 'active');
     
     for (const alert of alerts) {
       const percentToTarget1 = (alert.currentPrice / alert.target1) * 100;
@@ -268,7 +276,28 @@ export class MemStorage implements IStorage {
   }
   
   async updateStockAlertPrice(id: number, currentPrice: number): Promise<StockAlert | undefined> {
-    return this.updateStockAlert(id, { currentPrice });
+    const alert = this.stockAlerts.get(id);
+    if (!alert) return undefined;
+    
+    // Check if this is a higher price than we've seen before
+    let maxPrice = alert.maxPrice || alert.currentPrice;
+    if (currentPrice > maxPrice) {
+      maxPrice = currentPrice;
+    }
+    
+    // Check if alert should be closed (any target reached)
+    let status = alert.status;
+    if (status === 'active' && 
+        (currentPrice >= alert.target1 || 
+         (alert.maxPrice && alert.maxPrice >= alert.target1))) {
+      status = 'closed';
+    }
+    
+    return this.updateStockAlert(id, { 
+      currentPrice,
+      maxPrice,
+      status
+    });
   }
   
   // Portfolio operations
