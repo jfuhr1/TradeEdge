@@ -134,35 +134,15 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
         </div>
         
         {/* Advanced Price Visualization */}
-        <div className="mt-4 mb-4">
-          <div className="flex justify-between text-xs text-neutral-500 mb-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="cursor-help">
-                    ${(alert.buyZoneMin * 0.9).toFixed(2)}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>High Risk/Reward Zone (-10%)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <span className="font-medium">${alert.buyZoneMin}</span>
-            <span className="font-medium">${alert.buyZoneMax}</span>
-            <span>${alert.target1}</span>
-            <span>${alert.target2}</span>
-            <span>${alert.target3}</span>
-          </div>
-          
-          <div className="relative h-10 mt-2 mb-4">
+        <div className="mt-4 mb-6">
+          <div className="relative h-12 mb-8">
             {/* Main progress bar container */}
-            <div className="absolute top-3 w-full h-4 bg-gray-100 rounded-full overflow-visible">
-              {/* High Risk/Reward Zone (10% below buy zone) */}
+            <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
+              {/* High Risk/Reward Zone (10% below buy zone - fixed width) */}
               <div 
-                className="absolute h-full bg-amber-100 rounded-l-full"
+                className="absolute h-full bg-orange-100 rounded-l-full"
                 style={{ 
-                  width: "20%",
+                  width: "15%",
                   left: "0%"
                 }}
               ></div>
@@ -171,136 +151,121 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               <div 
                 className="absolute h-full bg-green-100"
                 style={{ 
-                  width: "20%",
-                  left: "20%"
-                }}
-              ></div>
-
-              {/* From buy zone to target 1 */}
-              <div 
-                className="absolute h-full bg-gray-100"
-                style={{ 
-                  width: "20%",
-                  left: "40%"
-                }}
-              ></div>
-
-              {/* From target 1 to target 2 */}
-              <div 
-                className="absolute h-full bg-gray-100"
-                style={{ 
                   width: "15%",
-                  left: "60%"
+                  left: "15%"
                 }}
               ></div>
 
-              {/* From target 2 to target 3 */}
-              <div 
-                className="absolute h-full bg-gray-100"
-                style={{ 
-                  width: "15%",
-                  left: "75%"
-                }}
-              ></div>
-
-              {/* Beyond target 3 */}
+              {/* From buy zone to target 3 + 10% buffer */}
               <div 
                 className="absolute h-full bg-gray-100 rounded-r-full"
                 style={{ 
-                  width: "10%",
-                  left: "90%"
+                  width: "70%",
+                  left: "30%"
                 }}
               ></div>
 
-              {/* Vertical indicators */}
               {/* Buy Zone Min indicator */}
-              <div className="absolute w-0.5 h-6 bg-green-700 -top-1" style={{ left: "20%" }}>
-                <div className="absolute -top-4 -ml-3 text-[10px] text-green-700">Min</div>
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "15%" }}>
+                <div className="absolute top-6 -ml-10 text-xs font-medium text-green-700">${alert.buyZoneMin}</div>
               </div>
               
               {/* Buy Zone Max indicator */}
-              <div className="absolute w-0.5 h-6 bg-green-700 -top-1" style={{ left: "40%" }}>
-                <div className="absolute -top-4 -ml-3 text-[10px] text-green-700">Max</div>
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "30%" }}>
+                <div className="absolute top-6 -ml-10 text-xs font-medium text-green-700">${alert.buyZoneMax}</div>
               </div>
               
               {/* Target 1 indicator */}
-              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "60%" }}>
-                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T1</div>
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position in the 70% remaining space (30% to 100%)
+                  const t1Pos = ((alert.target1 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
+                  return `${t1Pos}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 1</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
               </div>
               
               {/* Target 2 indicator */}
-              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "75%" }}>
-                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T2</div>
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position in the 70% remaining space (30% to 100%)
+                  const t2Pos = ((alert.target2 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
+                  return `${t2Pos}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 2</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
               </div>
               
               {/* Target 3 indicator */}
-              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "90%" }}>
-                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T3</div>
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position in the 70% remaining space (30% to 100%)
+                  const t3Pos = ((alert.target3 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
+                  return `${Math.min(t3Pos, 90)}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 3</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
               </div>
 
               {/* Current price indicator (thicker) */}
               <div className="absolute w-1 h-8 bg-black -top-2 z-10" style={{ 
                 left: (() => {
-                  const lowPrice = alert.buyZoneMin * 0.9;
-                  const highPrice = alert.target3 * 1.05;
-                  const range = highPrice - lowPrice;
-                  const position = ((alert.currentPrice - lowPrice) / range) * 100;
-                  return `${Math.min(Math.max(position, 0), 100)}%`;
+                  if (alert.currentPrice < alert.buyZoneMin * 0.9) {
+                    return "0%"; // Below high risk zone
+                  } else if (alert.currentPrice < alert.buyZoneMin) {
+                    // In high risk zone (0-15%)
+                    const riskRange = alert.buyZoneMin - (alert.buyZoneMin * 0.9);
+                    const posInRange = (alert.currentPrice - (alert.buyZoneMin * 0.9)) / riskRange;
+                    return `${posInRange * 15}%`;
+                  } else if (alert.currentPrice <= alert.buyZoneMax) {
+                    // In buy zone (15-30%)
+                    const buyRange = alert.buyZoneMax - alert.buyZoneMin;
+                    const posInRange = (alert.currentPrice - alert.buyZoneMin) / buyRange;
+                    return `${15 + (posInRange * 15)}%`;
+                  } else if (alert.currentPrice <= alert.target3 * 1.1) {
+                    // Between buy zone and beyond target 3 (30-100%)
+                    const upperRange = alert.target3 * 1.1 - alert.buyZoneMax;
+                    const posInRange = (alert.currentPrice - alert.buyZoneMax) / upperRange;
+                    return `${30 + (posInRange * 70)}%`;
+                  } else {
+                    return "100%"; // Above target 3 + buffer
+                  }
                 })()
               }}>
-                <div className="absolute top-8 -ml-7 text-[11px] font-medium">Current: ${alert.currentPrice.toFixed(2)}</div>
+                <div className="absolute top-8 -ml-10 text-xs font-medium text-center w-20">${alert.currentPrice.toFixed(2)}</div>
               </div>
+            </div>
+            
+            {/* Zone labels below progress bar */}
+            <div className="absolute top-14 left-0 w-full flex text-[10px]">
+              <div className="w-[15%] text-center text-amber-700">High Risk/Reward</div>
+              <div className="w-[15%] text-center text-green-700">Buy Zone</div>
             </div>
           </div>
         </div>
         
-        {/* Target Prices */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="p-2 bg-neutral-100 rounded text-center">
-            <p className="text-xs text-neutral-600">Target 1</p>
-            <p className="font-bold font-mono">${alert.target1}</p>
-            <p className="text-xs text-profit">+{target1Percent.toFixed(1)}%</p>
-          </div>
-          <div className="p-2 bg-neutral-100 rounded text-center">
-            <p className="text-xs text-neutral-600">Target 2</p>
-            <p className="font-bold font-mono">${alert.target2}</p>
-            <p className="text-xs text-profit">+{target2Percent.toFixed(1)}%</p>
-          </div>
-          <div className="p-2 bg-neutral-100 rounded text-center">
-            <p className="text-xs text-neutral-600">Target 3</p>
-            <p className="font-bold font-mono">${alert.target3}</p>
-            <p className="text-xs text-profit">+{target3Percent.toFixed(1)}%</p>
-          </div>
-        </div>
-        
-        {/* Technical Analysis */}
-        <div className="mt-4">
-          <p className="text-sm font-medium">Technical Reasons:</p>
-          <div className="flex flex-wrap mt-1">
-            {(Array.isArray(alert.technicalReasons) ? alert.technicalReasons : []).map((reason, index) => (
-              <Badge 
-                key={index} 
-                variant="outline"
-                className="bg-blue-50 text-primary border-0 mr-2 mb-2"
-              >
-                {reason}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        
         {/* Action Buttons */}
-        <div className="mt-4 flex justify-between">
+        <div className="mt-8 grid grid-cols-2 gap-4">
           <Button 
-            className="flex-1 mr-2"
+            className="py-6 w-full"
             onClick={() => setIsAddingToPortfolio(true)}
           >
             Add to Portfolio
           </Button>
-          <Link href={`/stock/${alert.id}`}>
+          <Link href={`/stock-detail/${alert.symbol}`} className="w-full">
             <Button 
               variant="outline" 
-              className="flex-1 ml-2"
+              className="py-6 w-full h-full"
             >
               View Details
             </Button>
