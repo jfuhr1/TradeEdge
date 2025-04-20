@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  phone: text("phone"),
   tier: text("tier").notNull().default("free"), // 'free', 'standard', 'executive', 'vip', 'all-in'
   profilePicture: text("profile_picture"),
   completedLessons: json("completed_lessons").default([]),
@@ -47,6 +48,7 @@ export const stockAlerts = pgTable("stock_alerts", {
   riskRating: integer("risk_rating"), // 1-5 scale
   timeFrame: text("time_frame"), // short, medium, long term
   potentialReturns: json("potential_returns").default([]), // array of {target, percentage} objects
+  requiredTier: text("required_tier").default("free"), // The minimum membership tier required to see this alert
   status: text("status").notNull().default("active"), // active, closed, cancelled
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

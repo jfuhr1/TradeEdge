@@ -53,18 +53,14 @@ import { Bell, AlertTriangle, Smartphone, Mail, Info } from "lucide-react";
 // Form schema for alert preferences
 const alertPreferenceSchema = z.object({
   stockAlertId: z.number(),
-  notifyTarget1: z.boolean().default(true),
-  notifyTarget2: z.boolean().default(true),
-  notifyTarget3: z.boolean().default(true),
-  notifyPricePercentage: z.boolean().default(false),
-  customTargetPercent: z.string().nullable().transform(val => {
-    if (!val) return null;
-    const num = parseFloat(val);
-    return isNaN(num) ? null : num;
-  }),
-  notifyOnSms: z.boolean().default(false),
-  notifyOnEmail: z.boolean().default(true),
-  notifyOnWeb: z.boolean().default(true),
+  targetOne: z.boolean().default(true),
+  targetTwo: z.boolean().default(true),
+  targetThree: z.boolean().default(true),
+  percentChange: z.number().nullable().default(null),
+  customTargetPrice: z.number().nullable().default(null),
+  textEnabled: z.boolean().default(false),
+  emailEnabled: z.boolean().default(true),
+  pushEnabled: z.boolean().default(true),
 });
 
 type AlertPreferenceForm = z.infer<typeof alertPreferenceSchema>;
@@ -136,14 +132,14 @@ export default function AlertSettings() {
     resolver: zodResolver(alertPreferenceSchema),
     defaultValues: {
       stockAlertId: selectedStock || 0,
-      notifyTarget1: currentPreference?.notifyTarget1 ?? true,
-      notifyTarget2: currentPreference?.notifyTarget2 ?? true,
-      notifyTarget3: currentPreference?.notifyTarget3 ?? true,
-      notifyPricePercentage: currentPreference?.notifyPricePercentage ?? false,
-      customTargetPercent: currentPreference?.customTargetPercent?.toString() || '',
-      notifyOnSms: currentPreference?.notifyOnSms ?? false,
-      notifyOnEmail: currentPreference?.notifyOnEmail ?? true,
-      notifyOnWeb: currentPreference?.notifyOnWeb ?? true,
+      targetOne: currentPreference?.targetOne ?? true,
+      targetTwo: currentPreference?.targetTwo ?? true,
+      targetThree: currentPreference?.targetThree ?? true,
+      percentChange: currentPreference?.percentChange || null,
+      customTargetPrice: currentPreference?.customTargetPrice || null,
+      textEnabled: currentPreference?.textEnabled ?? false,
+      emailEnabled: currentPreference?.emailEnabled ?? true,
+      pushEnabled: currentPreference?.pushEnabled ?? true,
     },
   });
 
@@ -156,14 +152,14 @@ export default function AlertSettings() {
       
       form.reset({
         stockAlertId: selectedStock,
-        notifyTarget1: preference?.notifyTarget1 ?? true,
-        notifyTarget2: preference?.notifyTarget2 ?? true, 
-        notifyTarget3: preference?.notifyTarget3 ?? true,
-        notifyPricePercentage: preference?.notifyPricePercentage ?? false,
-        customTargetPercent: preference?.customTargetPercent?.toString() || '',
-        notifyOnSms: preference?.notifyOnSms ?? false,
-        notifyOnEmail: preference?.notifyOnEmail ?? true,
-        notifyOnWeb: preference?.notifyOnWeb ?? true,
+        targetOne: preference?.targetOne ?? true,
+        targetTwo: preference?.targetTwo ?? true, 
+        targetThree: preference?.targetThree ?? true,
+        percentChange: preference?.percentChange || null,
+        customTargetPrice: preference?.customTargetPrice || null,
+        textEnabled: preference?.textEnabled ?? false,
+        emailEnabled: preference?.emailEnabled ?? true,
+        pushEnabled: preference?.pushEnabled ?? true,
       });
     }
   }, [selectedStock, alertPreferences, form]);
@@ -384,7 +380,7 @@ export default function AlertSettings() {
                             <div className="space-y-2">
                               <FormField
                                 control={form.control}
-                                name="notifyTarget1"
+                                name="targetOne"
                                 render={({ field }) => (
                                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                     <div className="space-y-0.5">
@@ -405,7 +401,7 @@ export default function AlertSettings() {
                               
                               <FormField
                                 control={form.control}
-                                name="notifyTarget2"
+                                name="targetTwo"
                                 render={({ field }) => (
                                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                     <div className="space-y-0.5">
@@ -426,7 +422,7 @@ export default function AlertSettings() {
                               
                               <FormField
                                 control={form.control}
-                                name="notifyTarget3"
+                                name="targetThree"
                                 render={({ field }) => (
                                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                     <div className="space-y-0.5">
@@ -450,7 +446,7 @@ export default function AlertSettings() {
                             
                             <FormField
                               control={form.control}
-                              name="notifyPricePercentage"
+                              name="percentChange"
                               render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                   <div className="space-y-0.5">
@@ -461,8 +457,10 @@ export default function AlertSettings() {
                                   </div>
                                   <FormControl>
                                     <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
+                                      checked={field.value !== null}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked ? 5 : null);
+                                      }}
                                       disabled={!(user?.tier === 'vip' || user?.tier === 'all-in')}
                                     />
                                   </FormControl>
@@ -470,10 +468,10 @@ export default function AlertSettings() {
                               )}
                             />
                             
-                            {form.watch("notifyPricePercentage") && (
+                            {form.watch("percentChange") !== null && (
                               <FormField
                                 control={form.control}
-                                name="customTargetPercent"
+                                name="percentChange"
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Percentage Change (%)</FormLabel>
@@ -482,8 +480,11 @@ export default function AlertSettings() {
                                         type="number"
                                         step="0.1"
                                         placeholder="5.0"
-                                        {...field}
-                                        onChange={(e) => field.onChange(e.target.value)}
+                                        value={field.value === null ? "" : field.value}
+                                        onChange={(e) => {
+                                          const value = e.target.value === "" ? null : Number(e.target.value);
+                                          field.onChange(value);
+                                        }}
                                       />
                                     </FormControl>
                                     <FormDescription>
@@ -502,7 +503,7 @@ export default function AlertSettings() {
                             
                             <FormField
                               control={form.control}
-                              name="notifyOnWeb"
+                              name="pushEnabled"
                               render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                   <div className="space-y-0.5 flex items-center">
@@ -526,7 +527,7 @@ export default function AlertSettings() {
                             
                             <FormField
                               control={form.control}
-                              name="notifyOnEmail"
+                              name="emailEnabled"
                               render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                   <div className="space-y-0.5 flex items-center">
@@ -550,7 +551,7 @@ export default function AlertSettings() {
                             
                             <FormField
                               control={form.control}
-                              name="notifyOnSms"
+                              name="textEnabled"
                               render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                   <div className="space-y-0.5 flex items-center">
@@ -663,37 +664,37 @@ export default function AlertSettings() {
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1">
-                                {pref.notifyTarget1 && (
-                                  <Badge variant="outline" className="w-fit">
+                                {pref.targetOne && (
+                                  <div className="px-2 py-1 rounded-md text-xs border inline-block w-fit">
                                     Target 1: ${stock.target1}
-                                  </Badge>
+                                  </div>
                                 )}
-                                {pref.notifyTarget2 && (
-                                  <Badge variant="outline" className="w-fit">
+                                {pref.targetTwo && (
+                                  <div className="px-2 py-1 rounded-md text-xs border inline-block w-fit">
                                     Target 2: ${stock.target2}
-                                  </Badge>
+                                  </div>
                                 )}
-                                {pref.notifyTarget3 && (
-                                  <Badge variant="outline" className="w-fit">
+                                {pref.targetThree && (
+                                  <div className="px-2 py-1 rounded-md text-xs border inline-block w-fit">
                                     Target 3: ${stock.target3}
-                                  </Badge>
+                                  </div>
                                 )}
-                                {pref.notifyPricePercentage && pref.customTargetPercent && (
-                                  <Badge variant="outline" className="w-fit">
-                                    Custom: {pref.customTargetPercent}%
-                                  </Badge>
+                                {pref.percentChange !== null && (
+                                  <div className="px-2 py-1 rounded-md text-xs border inline-block w-fit">
+                                    Custom: {pref.percentChange}%
+                                  </div>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                {pref.notifyOnWeb && (
+                                {pref.pushEnabled && (
                                   <Bell className="h-4 w-4 text-muted-foreground" />
                                 )}
-                                {pref.notifyOnEmail && (
+                                {pref.emailEnabled && (
                                   <Mail className="h-4 w-4 text-muted-foreground" />
                                 )}
-                                {pref.notifyOnSms && (
+                                {pref.textEnabled && (
                                   <Smartphone className="h-4 w-4 text-muted-foreground" />
                                 )}
                               </div>
