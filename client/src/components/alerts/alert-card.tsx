@@ -111,18 +111,24 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
             <div className="flex items-center">
               <h3 className="font-bold text-lg">{alert.symbol}</h3>
               <span className="ml-2 text-neutral-600">{alert.companyName}</span>
-              <Badge 
-                variant="outline" 
-                className={`ml-2 text-xs ${
-                  isNew 
-                    ? "bg-green-100 text-profit" 
-                    : "bg-neutral-100 text-neutral-600"
-                }`}
-              >
-                {dateDisplay}
-              </Badge>
             </div>
-
+            <div className="flex flex-wrap gap-1 mt-1">
+              {isNew && (
+                <Badge variant="outline" className="bg-green-100 text-green-800">
+                  New Alert
+                </Badge>
+              )}
+              {priceStatus === "buy-zone" && (
+                <Badge variant="outline" className="bg-green-100 text-green-800">
+                  Buy Zone
+                </Badge>
+              )}
+              {priceStatus === "high-risk" && (
+                <Badge variant="outline" className="bg-orange-100 text-amber-800">
+                  High R/R
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-neutral-600">Buy Zone</p>
@@ -130,27 +136,8 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
         </div>
         
-        {/* Status Bubbles */}
-        <div className="mt-6 flex flex-wrap gap-2">
-          {isNew && (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
-              New Alert
-            </Badge>
-          )}
-          {priceStatus === "buy-zone" && (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
-              Buy Zone
-            </Badge>
-          )}
-          {priceStatus === "high-risk" && (
-            <Badge className="bg-orange-100 text-amber-700 hover:bg-orange-200">
-              High R/R
-            </Badge>
-          )}
-        </div>
-        
         {/* Advanced Price Visualization */}
-        <div className="mt-5 mb-6">
+        <div className="mt-8 mb-6">
           <div className="relative h-16 mb-10">
             {/* Main progress bar container */}
             <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
