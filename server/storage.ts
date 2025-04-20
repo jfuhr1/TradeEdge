@@ -122,6 +122,8 @@ export class MemStorage implements IStorage {
   private userAchievementsList: Map<number, UserAchievement>;
   private alertPreferencesList: Map<number, AlertPreference>;
   private successCards: Map<number, SuccessCard>;
+  private achievementBadgesList: Map<number, AchievementBadge>;
+  private userAchievementProgressList: Map<number, UserAchievementProgress>;
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -135,6 +137,8 @@ export class MemStorage implements IStorage {
   private userAchievementId: number;
   private alertPreferenceId: number;
   private successCardId: number;
+  private achievementBadgeId: number;
+  private userAchievementProgressId: number;
 
   constructor() {
     this.users = new Map();
@@ -147,6 +151,8 @@ export class MemStorage implements IStorage {
     this.userAchievementsList = new Map();
     this.alertPreferencesList = new Map();
     this.successCards = new Map();
+    this.achievementBadgesList = new Map();
+    this.userAchievementProgressList = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -158,6 +164,8 @@ export class MemStorage implements IStorage {
     this.userAchievementId = 1;
     this.alertPreferenceId = 1;
     this.successCardId = 1;
+    this.achievementBadgeId = 1;
+    this.userAchievementProgressId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -169,6 +177,8 @@ export class MemStorage implements IStorage {
     this.seedEducationContent();
     // Initialize with some stock alerts
     this.seedStockAlerts();
+    // Initialize with some achievement badges
+    this.seedAchievementBadges();
   }
 
   // User operations
@@ -794,6 +804,72 @@ export class MemStorage implements IStorage {
     });
   }
   
+  private seedAchievementBadges() {
+    const badges = [
+      {
+        name: "Trading Rookie",
+        description: "Completed your first trade in the TradeEdge Pro platform.",
+        imageUrl: "https://images.unsplash.com/photo-1625038694183-d8b616a0bfc4?q=80&w=250&auto=format&fit=crop",
+        category: "Trading Milestone",
+        unlockCriteria: "Make your first trade"
+      },
+      {
+        name: "Target Hunter",
+        description: "Successfully closed a position that hit target 1.",
+        imageUrl: "https://images.unsplash.com/photo-1589275776018-f5d95dd6ed2c?q=80&w=250&auto=format&fit=crop",
+        category: "Trading Milestone",
+        unlockCriteria: "Close a position with target 1 reached"
+      },
+      {
+        name: "Master Trader",
+        description: "Successfully closed a position that hit target 3.",
+        imageUrl: "https://images.unsplash.com/photo-1586998883220-5a7676505017?q=80&w=250&auto=format&fit=crop",
+        category: "Trading Milestone",
+        unlockCriteria: "Close a position with target 3 reached"
+      },
+      {
+        name: "Trading Scholar",
+        description: "Completed 5 educational modules in the platform.",
+        imageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=250&auto=format&fit=crop",
+        category: "Education",
+        unlockCriteria: "Complete 5 educational modules"
+      },
+      {
+        name: "Trading Expert",
+        description: "Completed all educational modules in your tier.",
+        imageUrl: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=250&auto=format&fit=crop",
+        category: "Education",
+        unlockCriteria: "Complete all educational modules in your tier"
+      },
+      {
+        name: "Portfolio Pro",
+        description: "Achieved a 20% gain on your overall portfolio.",
+        imageUrl: "https://images.unsplash.com/photo-1460467820054-c87ab43e9b59?q=80&w=250&auto=format&fit=crop",
+        category: "Performance",
+        unlockCriteria: "Achieve 20% portfolio gain"
+      },
+      {
+        name: "Alert Ace",
+        description: "Successfully acted on 10 stock alerts.",
+        imageUrl: "https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=250&auto=format&fit=crop",
+        category: "Engagement",
+        unlockCriteria: "Act on 10 stock alerts"
+      },
+      {
+        name: "Trading Elite",
+        description: "Achieved 50% gain on a single position.",
+        imageUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=250&auto=format&fit=crop",
+        category: "Performance", 
+        unlockCriteria: "Achieve 50% gain on a single position"
+      }
+    ];
+    
+    badges.forEach(badge => {
+      const id = this.achievementBadgeId++;
+      this.achievementBadgesList.set(id, { ...badge, id });
+    });
+  }
+  
   private seedEducationContent() {
     const contents: InsertEducationContent[] = [
       {
@@ -1048,6 +1124,100 @@ export class MemStorage implements IStorage {
     closedAlerts.forEach(alert => {
       this.createStockAlert(alert);
     });
+  }
+  
+  // Achievement badges operations
+  async getAllAchievementBadges(): Promise<AchievementBadge[]> {
+    return Array.from(this.achievementBadgesList.values())
+      .sort((a, b) => a.id - b.id);
+  }
+  
+  async getBadgeById(id: number): Promise<AchievementBadge | undefined> {
+    return this.achievementBadgesList.get(id);
+  }
+  
+  async getUserAchievementProgress(userId: number): Promise<UserAchievementProgress[]> {
+    return Array.from(this.userAchievementProgressList.values())
+      .filter(progress => progress.userId === userId);
+  }
+  
+  async getRecentCompletedBadges(userId: number, limit = 5): Promise<{badge: AchievementBadge, progress: UserAchievementProgress}[]> {
+    const progress = await this.getUserAchievementProgress(userId);
+    const completedProgress = progress
+      .filter(p => p.completed)
+      .sort((a, b) => (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0))
+      .slice(0, limit);
+    
+    return completedProgress.map(p => {
+      const badge = this.achievementBadgesList.get(p.badgeId);
+      if (!badge) {
+        throw new Error(`Badge with ID ${p.badgeId} not found`);
+      }
+      return { badge, progress: p };
+    });
+  }
+  
+  // Success cards operations
+  async createSuccessCard(card: InsertSuccessCard): Promise<SuccessCard> {
+    const id = this.successCardId++;
+    const now = new Date();
+    const successCard: SuccessCard = { ...card, id, createdAt: now };
+    this.successCards.set(id, successCard);
+    return successCard;
+  }
+  
+  async getSuccessCardsByUser(userId: number): Promise<SuccessCard[]> {
+    return Array.from(this.successCards.values())
+      .filter(card => card.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getSuccessCard(id: number): Promise<SuccessCard | undefined> {
+    return this.successCards.get(id);
+  }
+  
+  async updateSuccessCard(id: number, updates: Partial<SuccessCard>): Promise<SuccessCard | undefined> {
+    const card = this.successCards.get(id);
+    if (!card) return undefined;
+    
+    const updatedCard = { ...card, ...updates };
+    this.successCards.set(id, updatedCard);
+    return updatedCard;
+  }
+  
+  async generateSuccessCardForStock(userId: number, stockAlertId: number, targetHit: number): Promise<SuccessCard | undefined> {
+    const stock = await this.getStockAlert(stockAlertId);
+    if (!stock) return undefined;
+    
+    const portfolioItems = await this.getPortfolioItemsByUser(userId);
+    const item = portfolioItems.find(item => item.stockAlertId === stockAlertId && item.sold);
+    if (!item) return undefined;
+    
+    const boughtPrice = item.boughtPrice;
+    const soldPrice = item.soldPrice || 0;
+    const percentGain = ((soldPrice - boughtPrice) / boughtPrice) * 100;
+    
+    // Calculate days held
+    const boughtDate = item.createdAt;
+    const soldDate = item.soldAt || new Date();
+    const daysHeld = Math.floor((soldDate.getTime() - boughtDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const successCard: InsertSuccessCard = {
+      userId,
+      stockAlertId,
+      stockSymbol: stock.symbol,
+      companyName: stock.companyName,
+      boughtPrice,
+      soldPrice,
+      percentGain,
+      daysHeld,
+      targetHit,
+      imageUrl: stock.chartImageUrl || "",
+      shared: false,
+      sharedPlatform: null
+    };
+    
+    return this.createSuccessCard(successCard);
   }
 }
 
