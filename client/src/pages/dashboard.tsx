@@ -1,5 +1,5 @@
 import MainLayout from "@/components/layout/main-layout";
-import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter, CalendarDays, Clock, UserCircle, Users } from "lucide-react";
+import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter, CalendarDays, Clock, UserCircle, Users, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -424,7 +424,10 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Portfolio Overview</h2>
           <Link href="/portfolio">
-            <Button variant="outline" size="sm">View Full Portfolio</Button>
+            <Button className="h-full">
+              <ChartLine className="mr-2 h-4 w-4" />
+              Portfolio Details
+            </Button>
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -470,13 +473,12 @@ export default function Dashboard() {
           </Card>
           
           <Card>
-            <CardContent className="pt-6 flex justify-center">
-              <Link href="/portfolio">
-                <Button className="h-full">
-                  <ChartLine className="mr-2 h-4 w-4" />
-                  Portfolio Details
-                </Button>
-              </Link>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-muted-foreground mb-1">Win Rate</p>
+                <p className="text-3xl font-bold">68%</p>
+                <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -551,7 +553,9 @@ export default function Dashboard() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold">{alert.symbol}</span>
+                        <Link href={`/stock-detail/${alert.symbol}`}>
+                          <span className="text-xl font-bold hover:text-primary hover:underline cursor-pointer">{alert.symbol}</span>
+                        </Link>
                         {alert.status === "in-buy-zone" ? (
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                             In Buy Zone
@@ -565,9 +569,17 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground">{alert.companyName}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-semibold">${alert.currentPrice.toFixed(2)}</p>
+                      <div className="flex items-center justify-end mb-1">
+                        <p className="text-lg font-semibold mr-2">${alert.currentPrice.toFixed(2)}</p>
+                        <Link href={`/stock-detail/${alert.symbol}`}>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 py-1">
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                      </div>
                       {connected && 
-                        <div className="flex items-center text-xs text-green-600">
+                        <div className="flex items-center justify-end text-xs text-green-600">
                           <Wifi className="h-3 w-3 mr-1" /> Live
                         </div>
                       }
@@ -678,7 +690,11 @@ export default function Dashboard() {
                     const buyZoneMidpoint = (stock.buyZoneMin + stock.buyZoneMax) / 2;
                     return (
                       <TableRow key={stock.id}>
-                        <TableCell className="font-medium">{stock.symbol}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link href={`/stock-detail/${stock.symbol}`}>
+                            <span className="text-primary hover:underline cursor-pointer">{stock.symbol}</span>
+                          </Link>
+                        </TableCell>
                         <TableCell>{stock.companyName}</TableCell>
                         <TableCell>{new Date(stock.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>${stock.currentPrice.toFixed(2)}</TableCell>
@@ -782,7 +798,7 @@ export default function Dashboard() {
                         <p className="font-bold">{stock.symbol}</p>
                         <p className="text-sm text-muted-foreground">{stock.companyName}</p>
                       </div>
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
                         Target 2
                       </Badge>
                     </div>
@@ -794,7 +810,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Target Price</p>
-                        <p className="font-semibold text-amber-600">${stock.target2.toFixed(2)}</p>
+                        <p className="font-semibold text-green-600">${stock.target2.toFixed(2)}</p>
                       </div>
                     </div>
                     
@@ -818,7 +834,7 @@ export default function Dashboard() {
                         <p className="font-bold">{stock.symbol}</p>
                         <p className="text-sm text-muted-foreground">{stock.companyName}</p>
                       </div>
-                      <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
                         Target 3
                       </Badge>
                     </div>
@@ -830,7 +846,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Target Price</p>
-                        <p className="font-semibold text-red-600">${stock.target3.toFixed(2)}</p>
+                        <p className="font-semibold text-green-600">${stock.target3.toFixed(2)}</p>
                       </div>
                     </div>
                     
