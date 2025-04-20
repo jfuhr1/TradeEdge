@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { format } from "date-fns";
 
 interface AlertCardProps {
   alert: StockAlert;
@@ -279,10 +280,10 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
         </div>
         
         {/* Action Buttons and Date */}
-        <div className="mt-8">
-          <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="flex justify-between items-end mt-8">
+          <div className="grid grid-cols-2 gap-4 flex-1 mr-4">
             <Button 
-              className="py-6 w-full bg-primary hover:bg-primary/90"
+              className="py-4 w-full"
               onClick={() => setIsAddingToPortfolio(true)}
             >
               Add to Portfolio
@@ -290,7 +291,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
             <Link href={`/stock-detail/${alert.symbol}`} className="w-full">
               <Button 
                 variant="outline" 
-                className="py-6 w-full h-full border-primary text-primary hover:bg-primary/10"
+                className="py-4 w-full h-full"
               >
                 View Details
               </Button>
@@ -298,7 +299,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
           <div className="text-right">
             <p className="text-xs font-medium text-black">Alert Date</p>
-            <p className="text-sm font-medium text-black">
+            <p className="text-sm font-medium text-black font-mono">
               {format(new Date(alert.createdAt), 'MM/dd/yy')}
             </p>
           </div>
