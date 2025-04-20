@@ -245,20 +245,28 @@ export class MemStorage implements IStorage {
       .filter(alert => alert.status === 'active');
     
     for (const alert of alerts) {
-      const percentToTarget1 = (alert.currentPrice / alert.target1) * 100;
-      const percentToTarget2 = (alert.currentPrice / alert.target2) * 100;
-      const percentToTarget3 = (alert.currentPrice / alert.target3) * 100;
-      
-      if (percentToTarget1 >= 90 && percentToTarget1 < 100) {
-        target1.push(alert);
+      // For target 1: price is above buy zone and within 95% of target 1
+      if (alert.currentPrice > alert.buyZoneMax) {
+        const percentToTarget1 = (alert.currentPrice / alert.target1) * 100;
+        if (percentToTarget1 >= 95 && percentToTarget1 < 100) {
+          target1.push(alert);
+        }
       }
       
-      if (percentToTarget2 >= 90 && percentToTarget2 < 100) {
-        target2.push(alert);
+      // For target 2: price is above or equal to target 1 and within 95% of target 2
+      if (alert.currentPrice >= alert.target1) {
+        const percentToTarget2 = (alert.currentPrice / alert.target2) * 100;
+        if (percentToTarget2 >= 95 && percentToTarget2 < 100) {
+          target2.push(alert);
+        }
       }
       
-      if (percentToTarget3 >= 90 && percentToTarget3 < 100) {
-        target3.push(alert);
+      // For target 3: price is above or equal to target 2 and within 95% of target 3
+      if (alert.currentPrice >= alert.target2) {
+        const percentToTarget3 = (alert.currentPrice / alert.target3) * 100;
+        if (percentToTarget3 >= 95 && percentToTarget3 < 100) {
+          target3.push(alert);
+        }
       }
     }
     
@@ -819,10 +827,11 @@ export class MemStorage implements IStorage {
   
   private seedStockAlerts() {
     const activeAlerts: InsertStockAlert[] = [
+      // Stocks in "High Risk/Reward Zone" (below buy zone)
       {
         symbol: 'AAPL',
         companyName: 'Apple Inc.',
-        currentPrice: 182.63,
+        currentPrice: 170.50, // Below buy zone (high risk)
         buyZoneMin: 175,
         buyZoneMax: 185,
         target1: 195,
@@ -832,9 +841,23 @@ export class MemStorage implements IStorage {
         chartImageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop'
       },
       {
+        symbol: 'SHOP',
+        companyName: 'Shopify Inc.',
+        currentPrice: 61.25, // Below buy zone (high risk)
+        buyZoneMin: 65,
+        buyZoneMax: 70,
+        target1: 75,
+        target2: 80,
+        target3: 85,
+        technicalReasons: ['Price Consolidation', 'Oversold RSI', 'Growth Potential'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop'
+      },
+      
+      // Stocks in "Buy Zone"
+      {
         symbol: 'MSFT',
         companyName: 'Microsoft Corp.',
-        currentPrice: 412.46,
+        currentPrice: 412.46, // In buy zone
         buyZoneMin: 395,
         buyZoneMax: 415,
         target1: 430,
@@ -844,9 +867,35 @@ export class MemStorage implements IStorage {
         chartImageUrl: 'https://images.unsplash.com/photo-1555421689-491a97ff2040?q=80&w=800&auto=format&fit=crop'
       },
       {
+        symbol: 'PYPL',
+        companyName: 'PayPal Holdings, Inc.',
+        currentPrice: 64.80, // In buy zone
+        buyZoneMin: 60,
+        buyZoneMax: 65,
+        target1: 70,
+        target2: 75,
+        target3: 80,
+        technicalReasons: ['Oversold Conditions', 'Value Play', 'Fintech Recovery'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'AMD',
+        companyName: 'Advanced Micro Devices, Inc.',
+        currentPrice: 156.12, // In buy zone
+        buyZoneMin: 150,
+        buyZoneMax: 160,
+        target1: 175,
+        target2: 190,
+        target3: 200,
+        technicalReasons: ['Breakout Confirmation', 'Sector Strength', 'Earnings Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1591488320905-4b1e5c9cafa7?q=80&w=800&auto=format&fit=crop'
+      },
+      
+      // Stocks between buy zone and target 1 (above buy zone)
+      {
         symbol: 'NVDA',
         companyName: 'NVIDIA Corporation',
-        currentPrice: 940.20,
+        currentPrice: 970.30, // Above buy zone, nearing target 1
         buyZoneMin: 900,
         buyZoneMax: 950,
         target1: 995,
@@ -858,7 +907,7 @@ export class MemStorage implements IStorage {
       {
         symbol: 'META',
         companyName: 'Meta Platforms Inc.',
-        currentPrice: 474.80,
+        currentPrice: 486.50, // Above buy zone, nearing target 1
         buyZoneMin: 450,
         buyZoneMax: 480,
         target1: 490,
@@ -867,35 +916,12 @@ export class MemStorage implements IStorage {
         technicalReasons: ['Support Level', 'Revenue Growth', 'Bullish Pattern'],
         chartImageUrl: 'https://images.unsplash.com/photo-1661347334008-95220c7418d4?q=80&w=800&auto=format&fit=crop'
       },
-      {
-        symbol: 'TSLA',
-        companyName: 'Tesla Inc.',
-        currentPrice: 230.80,
-        buyZoneMin: 220,
-        buyZoneMax: 240,
-        target1: 250,
-        target2: 275,
-        target3: 300,
-        technicalReasons: ['Oversold RSI', 'Support Level', 'Volume Increase'],
-        chartImageUrl: 'https://images.unsplash.com/photo-1617704548623-340376564e1c?q=80&w=800&auto=format&fit=crop'
-      },
-      // Additional active alerts
-      {
-        symbol: 'AMD',
-        companyName: 'Advanced Micro Devices, Inc.',
-        currentPrice: 156.12,
-        buyZoneMin: 150,
-        buyZoneMax: 160,
-        target1: 175,
-        target2: 190,
-        target3: 200,
-        technicalReasons: ['Breakout Confirmation', 'Sector Strength', 'Earnings Growth'],
-        chartImageUrl: 'https://images.unsplash.com/photo-1591488320905-4b1e5c9cafa7?q=80&w=800&auto=format&fit=crop'
-      },
+      
+      // Stocks at target 1 level
       {
         symbol: 'DIS',
         companyName: 'The Walt Disney Company',
-        currentPrice: 113.45,
+        currentPrice: 129.45, // Near target 1
         buyZoneMin: 110,
         buyZoneMax: 120,
         target1: 130,
@@ -904,18 +930,36 @@ export class MemStorage implements IStorage {
         technicalReasons: ['Technical Support', 'Turnaround Story', 'Streaming Growth'],
         chartImageUrl: 'https://images.unsplash.com/photo-1605123728064-a0421ab21732?q=80&w=800&auto=format&fit=crop'
       },
+      
+      // Stocks at target 2 level
       {
-        symbol: 'PYPL',
-        companyName: 'PayPal Holdings, Inc.',
-        currentPrice: 64.80,
-        buyZoneMin: 60,
-        buyZoneMax: 65,
-        target1: 70,
-        target2: 75,
-        target3: 80,
-        technicalReasons: ['Oversold Conditions', 'Value Play', 'Fintech Recovery'],
-        chartImageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format&fit=crop'
+        symbol: 'TSLA',
+        companyName: 'Tesla Inc.',
+        currentPrice: 272.80, // Near target 2
+        buyZoneMin: 220,
+        buyZoneMax: 240,
+        target1: 250,
+        target2: 275,
+        target3: 300,
+        technicalReasons: ['Oversold RSI', 'Support Level', 'Volume Increase'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1617704548623-340376564e1c?q=80&w=800&auto=format&fit=crop'
       },
+      
+      // Stocks at target 3 level
+      {
+        symbol: 'ABNB',
+        companyName: 'Airbnb, Inc.',
+        currentPrice: 188.90, // Near target 3
+        buyZoneMin: 150,
+        buyZoneMax: 160,
+        target1: 170,
+        target2: 180,
+        target3: 190,
+        technicalReasons: ['Travel Resurgence', 'Technical Breakout', 'International Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=800&auto=format&fit=crop'
+      },
+      
+      // Other active alerts
       {
         symbol: 'INTC',
         companyName: 'Intel Corporation',
@@ -927,18 +971,6 @@ export class MemStorage implements IStorage {
         target3: 45,
         technicalReasons: ['Manufacturing Progress', 'Chip Recovery', 'Government Incentives'],
         chartImageUrl: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=800&auto=format&fit=crop'
-      },
-      {
-        symbol: 'ABNB',
-        companyName: 'Airbnb, Inc.',
-        currentPrice: 155.90,
-        buyZoneMin: 150,
-        buyZoneMax: 160,
-        target1: 170,
-        target2: 180,
-        target3: 190,
-        technicalReasons: ['Travel Resurgence', 'Technical Breakout', 'International Growth'],
-        chartImageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=800&auto=format&fit=crop'
       }
     ];
     
