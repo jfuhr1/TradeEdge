@@ -22,13 +22,13 @@ function App() {
         <Switch>
           <Route path="/auth" component={AuthPage} />
           <Route path="/" component={Dashboard} />
+          <Route path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
           <ProtectedRoute path="/stock/:id" component={StockDetail} />
           <ProtectedRoute path="/portfolio" component={Portfolio} />
           <ProtectedRoute path="/education" component={Education} />
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
-          <ProtectedRoute path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
           <Route path="/ws-test" component={WebSocketTest} />
           <Route component={NotFound} />
