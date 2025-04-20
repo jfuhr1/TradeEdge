@@ -1,6 +1,6 @@
 import MainLayout from "@/components/layout/main-layout";
-import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { StockAlert } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // We'll replace this with real data from the API
 const initialLatestAlerts = [
@@ -152,18 +156,26 @@ export default function Dashboard() {
   const userName = "Guest"; 
   const { connected, lastMessage } = useWebSocket();
   const [latestAlerts, setLatestAlerts] = useState<StockAlert[]>([]);
+  const [alertDisplayCount, setAlertDisplayCount] = useState<string>("6");
+  const [showOnlyOwned, setShowOnlyOwned] = useState<boolean>(false);
   
   // Fetch stock alerts
   const { data: stockAlerts, isLoading } = useQuery<StockAlert[]>({
     queryKey: ['/api/stock-alerts']
   });
   
+  // Fetch stocks in buy zone
+  const { data: buyZoneStocks, isLoading: buyZoneLoading } = useQuery<StockAlert[]>({
+    queryKey: ['/api/stock-alerts/buy-zone']
+  });
+  
   // Update the latest alerts when data is fetched
   useEffect(() => {
     if (stockAlerts) {
-      setLatestAlerts(stockAlerts.slice(0, 3)); // Show first 3 alerts
+      // Display the selected number of latest alerts
+      setLatestAlerts(stockAlerts.slice(0, parseInt(alertDisplayCount)));
     }
-  }, [stockAlerts]);
+  }, [stockAlerts, alertDisplayCount]);
   
   // Fetch approaching targets
   const { data: targetData } = useQuery({
@@ -191,9 +203,57 @@ export default function Dashboard() {
     }
   }, [lastMessage]);
   
+  // Calculate potential gain based on midpoint of buy zone
+  const calculatePotentialGain = (alert: StockAlert, targetPrice: number) => {
+    const midpoint = (alert.buyZoneMin + alert.buyZoneMax) / 2;
+    return ((targetPrice / midpoint) - 1) * 100;
+  };
+  
+  // Sample data for the "Recently Hit Target" section
+  // In a real app, this would come from the API
+  const recentlyHitTargets = [
+    {
+      id: 1,
+      symbol: "GOOGL",
+      companyName: "Alphabet Inc.",
+      alertDate: new Date(2025, 2, 15),
+      buyZoneMin: 160.00,
+      buyZoneMax: 170.00,
+      targetName: "Target 1", 
+      targetValue: 185.00,
+      dateReached: new Date(2025, 3, 5),
+      daysToTarget: 21
+    },
+    {
+      id: 2,
+      symbol: "AAPL",
+      companyName: "Apple Inc.",
+      alertDate: new Date(2025, 2, 10),
+      buyZoneMin: 165.00,
+      buyZoneMax: 175.00,
+      targetName: "Target 1", 
+      targetValue: 182.00,
+      dateReached: new Date(2025, 2, 25),
+      daysToTarget: 15
+    },
+    {
+      id: 3,
+      symbol: "NVDA",
+      companyName: "NVIDIA Corporation",
+      alertDate: new Date(2025, 1, 20),
+      buyZoneMin: 800.00,
+      buyZoneMax: 850.00,
+      targetName: "Target 2", 
+      targetValue: 950.00,
+      dateReached: new Date(2025, 3, 10),
+      daysToTarget: 49
+    }
+  ];
+  
   // If no data yet, use the initial sample data
   const displayAlerts = latestAlerts.length > 0 ? latestAlerts : initialLatestAlerts;
   const targets = targetData || approachingTargets;
+  const stocksInBuyZone = buyZoneStocks || [];
 
   return (
     <MainLayout 
@@ -266,7 +326,27 @@ export default function Dashboard() {
       {/* Latest Stock Alerts */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Latest Stock Alerts</h2>
+          <div className="flex items-center">
+            <h2 className="text-2xl font-bold mr-4">Latest Stock Alerts</h2>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="alert-count" className="text-sm text-muted-foreground">Show:</Label>
+              <Select
+                value={alertDisplayCount}
+                onValueChange={setAlertDisplayCount}
+              >
+                <SelectTrigger id="alert-count" className="w-20">
+                  <SelectValue placeholder="6" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="6">6</SelectItem>
+                  <SelectItem value="9">9</SelectItem>
+                  <SelectItem value="12">12</SelectItem>
+                  <SelectItem value="15">15</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Link href="/stock-alerts">
             <Button variant="outline" size="sm">View All Alerts</Button>
           </Link>
@@ -370,11 +450,98 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Approaching Targets */}
+      {/* Stocks in Buy Zone */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
-          <Target className="mr-2 h-5 w-5 text-amber-500" />
-          <h2 className="text-2xl font-bold">Approaching Targets</h2>
+          <AlertCircle className="mr-2 h-5 w-5 text-green-500" />
+          <h2 className="text-2xl font-bold">Stocks Still in Buy Zone</h2>
+        </div>
+        
+        <Card>
+          <CardContent className="p-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Symbol</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Date Added</TableHead>
+                  <TableHead>Current Price</TableHead>
+                  <TableHead>Buy Zone</TableHead>
+                  <TableHead>Target 1</TableHead>
+                  <TableHead>Target 2</TableHead>
+                  <TableHead>Target 3</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {buyZoneLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-4">
+                      <div className="flex justify-center">
+                        <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : stocksInBuyZone.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                      No stocks currently in buy zone
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  stocksInBuyZone.map((stock) => {
+                    const buyZoneMidpoint = (stock.buyZoneMin + stock.buyZoneMax) / 2;
+                    return (
+                      <TableRow key={stock.id}>
+                        <TableCell className="font-medium">{stock.symbol}</TableCell>
+                        <TableCell>{stock.companyName}</TableCell>
+                        <TableCell>{new Date(stock.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>${stock.currentPrice.toFixed(2)}</TableCell>
+                        <TableCell>${stock.buyZoneMin.toFixed(2)} - ${stock.buyZoneMax.toFixed(2)}</TableCell>
+                        <TableCell className="text-green-600">
+                          ${stock.target1.toFixed(2)}
+                          <span className="text-xs block">
+                            (+{calculatePotentialGain(stock, stock.target1).toFixed(1)}%)
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-green-600">
+                          ${stock.target2.toFixed(2)}
+                          <span className="text-xs block">
+                            (+{calculatePotentialGain(stock, stock.target2).toFixed(1)}%)
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-green-600">
+                          ${stock.target3.toFixed(2)}
+                          <span className="text-xs block">
+                            (+{calculatePotentialGain(stock, stock.target3).toFixed(1)}%)
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Approaching Targets */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <Target className="mr-2 h-5 w-5 text-amber-500" />
+            <h2 className="text-2xl font-bold">Approaching Targets</h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="owned-only" className="text-sm">
+              Show owned stocks only
+            </Label>
+            <Switch
+              id="owned-only"
+              checked={showOnlyOwned}
+              onCheckedChange={setShowOnlyOwned}
+            />
+          </div>
         </div>
         <Tabs defaultValue="target1" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
@@ -491,6 +658,61 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
+      
+      {/* Recently Hit Targets */}
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+          <h2 className="text-2xl font-bold">Recently Hit Targets</h2>
+        </div>
+        
+        <Card>
+          <CardContent className="p-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Symbol</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Alert Date</TableHead>
+                  <TableHead>Buy Zone</TableHead>
+                  <TableHead>Target</TableHead>
+                  <TableHead>Target Value</TableHead>
+                  <TableHead>Date Reached</TableHead>
+                  <TableHead>Days to Target</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentlyHitTargets.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                      No targets have been hit recently
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  recentlyHitTargets.map((target, index) => (
+                    <TableRow key={`${target.id}-${index}`}>
+                      <TableCell className="font-medium">{target.symbol}</TableCell>
+                      <TableCell>{target.companyName}</TableCell>
+                      <TableCell>{target.alertDate.toLocaleDateString()}</TableCell>
+                      <TableCell>${target.buyZoneMin.toFixed(2)} - ${target.buyZoneMax.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          {target.targetName}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-green-600">${target.targetValue.toFixed(2)}</TableCell>
+                      <TableCell>{target.dateReached.toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge>{target.daysToTarget} days</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
       
       {/* Education Resources */}
