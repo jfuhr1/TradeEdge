@@ -193,3 +193,30 @@ export type InsertEducationProgress = z.infer<typeof insertEducationProgressSche
 
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+
+// Alert Preferences Model
+export const alertPreferences = pgTable("alert_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  stockAlertId: integer("stock_alert_id").notNull(),
+  targetOne: boolean("target_one").notNull().default(true),
+  targetTwo: boolean("target_two").notNull().default(true),
+  targetThree: boolean("target_three").notNull().default(true),
+  percentChange: integer("percent_change").default(10), // Default 10% change alerts
+  customTargetPrice: doublePrecision("custom_target_price"),
+  daysHold: integer("days_hold"), // Alert after X days of holding
+  emailEnabled: boolean("email_enabled").notNull().default(true),
+  pushEnabled: boolean("push_enabled").notNull().default(true),
+  textEnabled: boolean("text_enabled").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertAlertPreferenceSchema = createInsertSchema(alertPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AlertPreference = typeof alertPreferences.$inferSelect;
+export type InsertAlertPreference = z.infer<typeof insertAlertPreferenceSchema>;

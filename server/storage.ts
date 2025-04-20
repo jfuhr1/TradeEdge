@@ -6,7 +6,8 @@ import {
   coachingSessions, CoachingSession, InsertCoachingSession,
   technicalReasons, TechnicalReason, InsertTechnicalReason,
   educationProgress, EducationProgress, InsertEducationProgress,
-  userAchievements, UserAchievement, InsertUserAchievement
+  userAchievements, UserAchievement, InsertUserAchievement,
+  alertPreferences, AlertPreference, InsertAlertPreference
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -45,6 +46,21 @@ export interface IStorage {
     percentGainLoss: number;
     closedProfit: number;
   }>;
+  
+  // Alert preferences operations
+  createAlertPreference(preference: InsertAlertPreference): Promise<AlertPreference>;
+  getAlertPreferencesByUser(userId: number): Promise<AlertPreference[]>;
+  getAlertPreferencesByStock(stockAlertId: number): Promise<AlertPreference[]>;
+  getAlertPreference(id: number): Promise<AlertPreference | undefined>;
+  updateAlertPreference(id: number, updates: Partial<AlertPreference>): Promise<AlertPreference | undefined>;
+  deleteAlertPreference(id: number): Promise<boolean>;
+  getAlertPreferenceByUserAndStock(userId: number, stockAlertId: number): Promise<AlertPreference | undefined>;
+  checkAlertTriggers(stockAlert: StockAlert): Promise<{
+    userId: number;
+    stockAlertId: number;
+    triggerType: string;
+    message: string;
+  }[]>;
   
   // Education content operations
   createEducationContent(content: InsertEducationContent): Promise<EducationContent>;
@@ -88,6 +104,7 @@ export class MemStorage implements IStorage {
   private technicalReasonsList: Map<number, TechnicalReason>;
   private educationProgressList: Map<number, EducationProgress>;
   private userAchievementsList: Map<number, UserAchievement>;
+  private alertPreferencesList: Map<number, AlertPreference>;
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -99,6 +116,7 @@ export class MemStorage implements IStorage {
   private technicalReasonId: number;
   private educationProgressId: number;
   private userAchievementId: number;
+  private alertPreferenceId: number;
 
   constructor() {
     this.users = new Map();
