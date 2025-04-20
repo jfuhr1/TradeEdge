@@ -43,6 +43,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/stock-alerts/closed", async (req, res) => {
+    try {
+      const closedAlerts = await storage.getClosedStockAlerts();
+      res.json(closedAlerts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch closed stock alerts" });
+    }
+  });
+
   app.get("/api/stock-alerts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
