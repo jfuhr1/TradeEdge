@@ -130,9 +130,28 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
         </div>
         
+        {/* Status Bubbles */}
+        <div className="mt-6 flex flex-wrap gap-2">
+          {isNew && (
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+              New Alert
+            </Badge>
+          )}
+          {priceStatus === "buy-zone" && (
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+              Buy Zone
+            </Badge>
+          )}
+          {priceStatus === "high-risk" && (
+            <Badge className="bg-orange-100 text-amber-700 hover:bg-orange-200">
+              High R/R
+            </Badge>
+          )}
+        </div>
+        
         {/* Advanced Price Visualization */}
-        <div className="mt-4 mb-6">
-          <div className="relative h-12 mb-8">
+        <div className="mt-5 mb-6">
+          <div className="relative h-16 mb-10">
             {/* Main progress bar container */}
             <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
               {/* High Risk/Reward Zone (10% below buy zone - fixed width) */}
@@ -173,12 +192,12 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
 
               {/* Buy Zone Min indicator */}
               <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "15%" }}>
-                <div className="absolute top-6 -ml-10 text-xs font-medium text-green-700">${alert.buyZoneMin}</div>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${alert.buyZoneMin}</div>
               </div>
               
               {/* Buy Zone Max indicator */}
               <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "30%" }}>
-                <div className="absolute top-6 -ml-10 text-xs font-medium text-green-700">${alert.buyZoneMax}</div>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${alert.buyZoneMax}</div>
               </div>
               
               {/* Target 1 indicator */}
@@ -247,8 +266,9 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-8 -ml-8 text-center w-16">
-                  <span className="text-xs font-medium block">${alert.currentPrice.toFixed(2)}</span>
+                <div className="absolute -top-12 -translate-x-1/2 text-center w-24">
+                  <span className="text-[10px] font-medium block">Current Price</span>
+                  <span className="text-xs font-medium block font-mono">${alert.currentPrice.toFixed(2)}</span>
                   {alert.currentPrice > alert.buyZoneMax && (
                     <span className="text-[10px] text-green-600 block">
                       +{(((alert.currentPrice / alert.buyZoneMax) - 1) * 100).toFixed(1)}%
