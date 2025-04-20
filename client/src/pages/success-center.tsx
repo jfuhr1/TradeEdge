@@ -30,7 +30,19 @@ import {
   AlertTriangle,
   TrendingUp
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
+// Custom PageHeader component
+const PageHeader = ({ heading, description }: { heading: string, description?: string }) => (
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-1">
+      <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
+      {description && (
+        <p className="text-muted-foreground">
+          {description}
+        </p>
+      )}
+    </div>
+  </div>
+);
 
 // Types based on our schema
 interface AchievementBadge {
@@ -207,30 +219,27 @@ export default function SuccessCenter() {
   
   // Fetch user achievements
   const { 
-    data: achievements, 
+    data: achievements = [], 
     isLoading: achievementsLoading 
   } = useQuery({
-    queryKey: ['/api/user-achievements'],
-    enabled: !!user
+    queryKey: ['/api/user-achievements']
   });
   
   // Fetch all badges
   const { 
-    data: badges, 
+    data: badges = [], 
     isLoading: badgesLoading 
   } = useQuery({
-    queryKey: ['/api/achievement-badges'],
-    enabled: !!user
+    queryKey: ['/api/achievement-badges']
   });
   
   // Fetch success cards
   const { 
-    data: successCards, 
+    data: successCards = [], 
     isLoading: cardsLoading,
     refetch: refetchCards
   } = useQuery({
-    queryKey: ['/api/success-cards'],
-    enabled: !!user
+    queryKey: ['/api/success-cards']
   });
   
   // Filter badges by category
