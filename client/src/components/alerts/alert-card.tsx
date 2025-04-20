@@ -4,7 +4,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -17,7 +16,6 @@ interface AlertCardProps {
 
 export default function AlertCard({ alert, className = "" }: AlertCardProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);

@@ -11,11 +11,10 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function StockAlerts() {
-  const { user } = useAuth();
-  const isAdmin = user?.tier === "premium"; // For demo, we'll make premium users admins
+  // For demo, anyone can see the admin button
+  const isAdmin = true;
   
   // Fetch all stock alerts
   const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery<StockAlert[]>({
