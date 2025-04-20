@@ -4,7 +4,12 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
-import { insertStockAlertSchema, insertPortfolioItemSchema, insertCoachingSessionSchema } from "@shared/schema";
+import { 
+  insertStockAlertSchema, 
+  insertPortfolioItemSchema, 
+  insertCoachingSessionSchema,
+  insertAlertPreferenceSchema
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -236,6 +241,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alert Preferences API
+  app.get("/api/alert-preferences", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const preferences = await storage.getAlertPreferencesByUser(req.user.id);
+      res.json(preferences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch alert preferences" });
+    }
+  });
+  
+  app.get("/api/alert-preferences/:stockId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const stockId = parseInt(req.params.stockId);
+      if (isNaN(stockId)) {
+        return res.status(400).json({ message: "Invalid stock ID format" });
+      }
+      
+      const preference = await storage.getAlertPreferenceByUserAndStock(req.user.id, stockId);
+      
+      if (!preference) {
+        return res.status(404).json({ message: "Alert preference not found" });
+      }
+      
+      res.json(preference);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch alert preference" });
+    }
+  });
+  
+  app.post("/api/alert-preferences", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user has Premium access
+      const user = req.user;
+      if (user.tier === 'free') {
+        return res.status(403).json({ 
+          message: "Upgrade to Premium to set custom alert preferences" 
+        });
+      }
+      
+      // Add user ID to the data
+      const alertPreferenceData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      // Validate request data
+      const validationResult = insertAlertPreferenceSchema.safeParse(alertPreferenceData);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid alert preference data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      // Check if a preference already exists for this user and stock
+      const existingPreference = await storage.getAlertPreferenceByUserAndStock(
+        req.user.id, 
+        validationResult.data.stockAlertId
+      );
+      
+      if (existingPreference) {
+        // Update existing preference
+        const updatedPreference = await storage.updateAlertPreference(
+          existingPreference.id, 
+          validationResult.data
+        );
+        return res.json(updatedPreference);
+      } else {
+        // Create new preference
+        const newPreference = await storage.createAlertPreference(validationResult.data);
+        res.status(201).json(newPreference);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to save alert preference" });
+    }
+  });
+  
+  app.put("/api/alert-preferences/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Get the existing preference
+      const existingPreference = await storage.getAlertPreference(id);
+      
+      // Check if the preference exists and belongs to the user
+      if (!existingPreference) {
+        return res.status(404).json({ message: "Alert preference not found" });
+      }
+      
+      if (existingPreference.userId !== req.user.id) {
+        return res.status(403).json({ message: "You can only update your own preferences" });
+      }
+      
+      // Update the preference
+      const updatedPreference = await storage.updateAlertPreference(id, req.body);
+      res.json(updatedPreference);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update alert preference" });
+    }
+  });
+  
+  app.delete("/api/alert-preferences/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Get the existing preference
+      const existingPreference = await storage.getAlertPreference(id);
+      
+      // Check if the preference exists and belongs to the user
+      if (!existingPreference) {
+        return res.status(404).json({ message: "Alert preference not found" });
+      }
+      
+      if (existingPreference.userId !== req.user.id) {
+        return res.status(403).json({ message: "You can only delete your own preferences" });
+      }
+      
+      // Delete the preference
+      const result = await storage.deleteAlertPreference(id);
+      
+      if (result) {
+        res.status(204).end();
+      } else {
+        res.status(500).json({ message: "Failed to delete alert preference" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete alert preference" });
+    }
+  });
+  
   // Technical Reasons API
   app.get("/api/technical-reasons", async (req, res) => {
     try {
@@ -308,6 +470,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   };
   
+  // Utility function to broadcast alert triggers to all connected clients
+  const broadcastAlertTrigger = (triggerData: any) => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'alert_trigger',
+          data: triggerData
+        }));
+      }
+    });
+  };
+  
   // Mock periodic stock price updates for demonstration
   // In a real app, this would come from an external API
   setInterval(async () => {
@@ -329,6 +503,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (updatedAlert) {
           // Broadcast the update to all connected clients
           broadcastStockUpdate(updatedAlert);
+          
+          // Check for alert triggers
+          const triggers = await storage.checkAlertTriggers(updatedAlert);
+          
+          // Broadcast each trigger to clients
+          for (const trigger of triggers) {
+            broadcastAlertTrigger(trigger);
+          }
         }
       }
     } catch (error) {

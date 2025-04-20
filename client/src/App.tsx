@@ -8,6 +8,7 @@ import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 import CreateAlert from "./pages/admin/create-alert";
+import AlertSettings from "./pages/alert-settings";
 import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
 

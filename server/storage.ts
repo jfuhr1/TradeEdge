@@ -127,6 +127,7 @@ export class MemStorage implements IStorage {
     this.technicalReasonsList = new Map();
     this.educationProgressList = new Map();
     this.userAchievementsList = new Map();
+    this.alertPreferencesList = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -136,6 +137,7 @@ export class MemStorage implements IStorage {
     this.technicalReasonId = 1;
     this.educationProgressId = 1;
     this.userAchievementId = 1;
+    this.alertPreferenceId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -566,6 +568,146 @@ export class MemStorage implements IStorage {
     }
     
     return newAchievements;
+  }
+  
+  // Alert Preference operations
+  async createAlertPreference(preference: InsertAlertPreference): Promise<AlertPreference> {
+    const id = this.alertPreferenceId++;
+    const now = new Date();
+    const alertPreference: AlertPreference = { 
+      ...preference, 
+      id, 
+      createdAt: now,
+      updatedAt: now
+    };
+    this.alertPreferencesList.set(id, alertPreference);
+    return alertPreference;
+  }
+  
+  async getAlertPreferencesByUser(userId: number): Promise<AlertPreference[]> {
+    return Array.from(this.alertPreferencesList.values())
+      .filter(pref => pref.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getAlertPreferencesByStock(stockAlertId: number): Promise<AlertPreference[]> {
+    return Array.from(this.alertPreferencesList.values())
+      .filter(pref => pref.stockAlertId === stockAlertId);
+  }
+  
+  async getAlertPreference(id: number): Promise<AlertPreference | undefined> {
+    return this.alertPreferencesList.get(id);
+  }
+  
+  async updateAlertPreference(id: number, updates: Partial<AlertPreference>): Promise<AlertPreference | undefined> {
+    const preference = this.alertPreferencesList.get(id);
+    if (!preference) return undefined;
+    
+    const now = new Date();
+    const updatedPreference = { 
+      ...preference, 
+      ...updates, 
+      updatedAt: now 
+    };
+    this.alertPreferencesList.set(id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async deleteAlertPreference(id: number): Promise<boolean> {
+    return this.alertPreferencesList.delete(id);
+  }
+  
+  async getAlertPreferenceByUserAndStock(userId: number, stockAlertId: number): Promise<AlertPreference | undefined> {
+    return Array.from(this.alertPreferencesList.values())
+      .find(pref => pref.userId === userId && pref.stockAlertId === stockAlertId);
+  }
+  
+  async checkAlertTriggers(stockAlert: StockAlert): Promise<{
+    userId: number;
+    stockAlertId: number;
+    triggerType: string;
+    message: string;
+  }[]> {
+    const triggers: {
+      userId: number;
+      stockAlertId: number;
+      triggerType: string;
+      message: string;
+    }[] = [];
+    
+    // Get all preferences for this stock
+    const preferences = await this.getAlertPreferencesByStock(stockAlert.id);
+    
+    // For each preference, check if any trigger conditions are met
+    for (const pref of preferences) {
+      const user = await this.getUser(pref.userId);
+      
+      // Skip if user is on free tier
+      if (!user || user.tier === 'free') continue;
+      
+      // Check if price is within 10% of target 1
+      if (pref.targetOne && 
+          stockAlert.currentPrice >= stockAlert.target1 * 0.9 && 
+          stockAlert.currentPrice <= stockAlert.target1 * 1.1) {
+        triggers.push({
+          userId: pref.userId,
+          stockAlertId: stockAlert.id,
+          triggerType: 'target1',
+          message: `${stockAlert.symbol} has reached its first target price of $${stockAlert.target1.toFixed(2)} and could be a great place to take some profits.`
+        });
+      }
+      
+      // Check if price is within 10% of target 2
+      if (pref.targetTwo && 
+          stockAlert.currentPrice >= stockAlert.target2 * 0.9 && 
+          stockAlert.currentPrice <= stockAlert.target2 * 1.1) {
+        triggers.push({
+          userId: pref.userId,
+          stockAlertId: stockAlert.id,
+          triggerType: 'target2',
+          message: `${stockAlert.symbol} has reached its second target price of $${stockAlert.target2.toFixed(2)}. This is a major milestone!`
+        });
+      }
+      
+      // Check if price is within 10% of target 3
+      if (pref.targetThree && 
+          stockAlert.currentPrice >= stockAlert.target3 * 0.9 && 
+          stockAlert.currentPrice <= stockAlert.target3 * 1.1) {
+        triggers.push({
+          userId: pref.userId,
+          stockAlertId: stockAlert.id,
+          triggerType: 'target3',
+          message: `${stockAlert.symbol} has reached its third target price of $${stockAlert.target3.toFixed(2)}. Consider reviewing your position.`
+        });
+      }
+      
+      // Check for custom percent change
+      if (pref.percentChange) {
+        const percentChange = ((stockAlert.currentPrice - stockAlert.buyZoneMax) / stockAlert.buyZoneMax) * 100;
+        if (percentChange >= pref.percentChange) {
+          triggers.push({
+            userId: pref.userId,
+            stockAlertId: stockAlert.id,
+            triggerType: 'percent',
+            message: `${stockAlert.symbol} has increased by ${percentChange.toFixed(1)}% from its buy zone.`
+          });
+        }
+      }
+      
+      // Check for custom target price
+      if (pref.customTargetPrice && 
+          stockAlert.currentPrice >= pref.customTargetPrice * 0.95 && 
+          stockAlert.currentPrice <= pref.customTargetPrice * 1.05) {
+        triggers.push({
+          userId: pref.userId,
+          stockAlertId: stockAlert.id,
+          triggerType: 'custom',
+          message: `${stockAlert.symbol} has reached your custom target price of $${pref.customTargetPrice.toFixed(2)}.`
+        });
+      }
+    }
+    
+    return triggers;
   }
   
   // Technical reasons
