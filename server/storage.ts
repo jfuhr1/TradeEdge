@@ -7,7 +7,10 @@ import {
   technicalReasons, TechnicalReason, InsertTechnicalReason,
   educationProgress, EducationProgress, InsertEducationProgress,
   userAchievements, UserAchievement, InsertUserAchievement,
-  alertPreferences, AlertPreference, InsertAlertPreference
+  alertPreferences, AlertPreference, InsertAlertPreference,
+  achievementBadges, AchievementBadge, InsertAchievementBadge,
+  userAchievementProgress, UserAchievementProgress, InsertUserAchievementProgress,
+  successCards, SuccessCard, InsertSuccessCard
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";

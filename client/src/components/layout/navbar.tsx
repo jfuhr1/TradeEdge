@@ -14,6 +14,7 @@ import {
   Menu,
   Settings,
   User,
+  Trophy,
   X
 } from "lucide-react";
 import {
@@ -44,6 +45,7 @@ export function Navbar() {
     { label: "Portfolio", href: "/portfolio", icon: <BarChart2 className="h-4 w-4 mr-2" /> },
     { label: "Education", href: "/education", icon: <BookOpen className="h-4 w-4 mr-2" /> },
     { label: "Coaching", href: "/coaching", icon: <Calendar className="h-4 w-4 mr-2" /> },
+    { label: "Success Center", href: "/success-center", icon: <Trophy className="h-4 w-4 mr-2" /> },
   ];
 
   const mobileNav = (

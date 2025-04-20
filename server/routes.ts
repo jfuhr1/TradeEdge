@@ -8,7 +8,8 @@ import {
   insertStockAlertSchema, 
   insertPortfolioItemSchema, 
   insertCoachingSessionSchema,
-  insertAlertPreferenceSchema
+  insertAlertPreferenceSchema,
+  insertSuccessCardSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -414,6 +415,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(reasons);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch technical reasons" });
+    }
+  });
+  
+  // Success Center API - Achievement Badges
+  app.get("/api/achievement-badges", async (req, res) => {
+    try {
+      const badges = await storage.getAllAchievementBadges();
+      res.json(badges);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch achievement badges" });
+    }
+  });
+  
+  app.get("/api/user-achievements", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const achievements = await storage.getUserAchievementProgress(req.user.id);
+      res.json(achievements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user achievements" });
+    }
+  });
+  
+  app.get("/api/user-achievements/recent", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const achievements = await storage.getRecentCompletedBadges(req.user.id, limit);
+      res.json(achievements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch recent achievements" });
+    }
+  });
+  
+  // Success Center API - Success Cards
+  app.get("/api/success-cards", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const cards = await storage.getSuccessCardsByUser(req.user.id);
+      res.json(cards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch success cards" });
+    }
+  });
+  
+  app.post("/api/success-cards/generate", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { stockAlertId, targetHit } = req.body;
+      
+      if (!stockAlertId || !targetHit || ![1, 2, 3].includes(targetHit)) {
+        return res.status(400).json({ message: "Valid stockAlertId and targetHit (1, 2, or 3) are required" });
+      }
+      
+      const successCard = await storage.generateSuccessCardForStock(req.user.id, stockAlertId, targetHit);
+      
+      if (!successCard) {
+        return res.status(404).json({ message: "Failed to generate success card. Ensure you have this stock in your portfolio." });
+      }
+      
+      res.status(201).json(successCard);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate success card" });
+    }
+  });
+  
+  app.put("/api/success-cards/:id/share", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const { platform } = req.body;
+      if (!platform) {
+        return res.status(400).json({ message: "Platform is required" });
+      }
+      
+      const successCard = await storage.getSuccessCard(id);
+      
+      if (!successCard) {
+        return res.status(404).json({ message: "Success card not found" });
+      }
+      
+      if (successCard.userId !== req.user.id) {
+        return res.status(403).json({ message: "You can only share your own success cards" });
+      }
+      
+      const updatedCard = await storage.updateSuccessCard(id, { 
+        shared: true, 
+        sharedPlatform: platform 
+      });
+      
+      res.json(updatedCard);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to share success card" });
     }
   });
 

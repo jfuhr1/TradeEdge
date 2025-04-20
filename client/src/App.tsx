@@ -9,6 +9,7 @@ import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 import CreateAlert from "./pages/admin/create-alert";
 import AlertSettings from "./pages/alert-settings";
+import SuccessCenter from "./pages/success-center";
 import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
 import { AppLayout } from "./components/layout/app-layout";
@@ -27,6 +28,7 @@ function App() {
           <ProtectedRoute path="/education" component={Education} />
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
+          <ProtectedRoute path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
           <Route path="/ws-test" component={WebSocketTest} />
           <Route component={NotFound} />
