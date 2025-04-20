@@ -257,7 +257,8 @@ export class MemStorage implements IStorage {
   
   async getStockAlertsInBuyZone(): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values()).filter(alert => 
-      alert.status === 'active' &&
+      // Include alerts without a status or with status='active', exclude status='closed'
+      alert.status !== 'closed' &&
       alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax
     );
   }
@@ -274,7 +275,7 @@ export class MemStorage implements IStorage {
     const target3: StockAlert[] = [];
     
     const alerts = Array.from(this.stockAlerts.values())
-      .filter(alert => alert.status === 'active');
+      .filter(alert => alert.status !== 'closed'); // Include alerts without a status or with status='active'
     
     for (const alert of alerts) {
       // For target 1: price is above buy zone and within 95% of target 1

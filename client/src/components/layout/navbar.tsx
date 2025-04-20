@@ -33,9 +33,8 @@ export function Navbar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Allow access to navbar even when not logged in
-  if (!user && location !== '/success-center' && location !== '/auth') {
-    // Redirect to auth if not at success center or auth page
+  // Different navbar for logged out users
+  if (!user) {
     return (
       <header className="border-b">
         <div className="container flex h-16 items-center justify-between">
