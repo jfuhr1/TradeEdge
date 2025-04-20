@@ -137,7 +137,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
         </div>
         
         {/* Advanced Price Visualization */}
-        <div className="mt-8 mb-6">
+        <div className="mt-12 mb-6">
           <div className="relative h-16 mb-10">
             {/* Main progress bar container */}
             <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
@@ -253,7 +253,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-12 -translate-x-1/2 text-center w-24">
+                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
                   <span className="text-[10px] font-medium block">Current Price</span>
                   <span className="text-xs font-medium block font-mono">${alert.currentPrice.toFixed(2)}</span>
                   {alert.currentPrice > alert.buyZoneMax && (
