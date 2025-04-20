@@ -818,7 +818,7 @@ export class MemStorage implements IStorage {
   }
   
   private seedStockAlerts() {
-    const alerts: InsertStockAlert[] = [
+    const activeAlerts: InsertStockAlert[] = [
       {
         symbol: 'AAPL',
         companyName: 'Apple Inc.',
@@ -881,7 +881,44 @@ export class MemStorage implements IStorage {
       }
     ];
     
-    alerts.forEach(alert => {
+    // Create active alerts
+    activeAlerts.forEach(alert => {
+      this.createStockAlert(alert);
+    });
+    
+    // Create closed alerts
+    const closedAlerts = [
+      {
+        symbol: 'AMZN',
+        companyName: 'Amazon.com Inc.',
+        currentPrice: 178.23,
+        buyZoneMin: 170,
+        buyZoneMax: 180,
+        target1: 195,
+        target2: 210,
+        target3: 225,
+        status: 'closed',
+        maxPrice: 197.50,
+        technicalReasons: ['Support Level', 'Earnings Beat', 'Volume Pattern'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1523474438810-b998697493e7?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'GOOGL',
+        companyName: 'Alphabet Inc.',
+        currentPrice: 161.15,
+        buyZoneMin: 150,
+        buyZoneMax: 160,
+        target1: 170,
+        target2: 180,
+        target3: 190,
+        status: 'closed',
+        maxPrice: 182.86,
+        technicalReasons: ['Breakout Pattern', 'AI Integration', 'Revenue Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?q=80&w=800&auto=format&fit=crop'
+      }
+    ] as InsertStockAlert[];
+    
+    closedAlerts.forEach(alert => {
       this.createStockAlert(alert);
     });
   }
