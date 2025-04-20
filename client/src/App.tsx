@@ -20,7 +20,7 @@ function App() {
       <AppLayout>
         <Switch>
           <Route path="/auth" component={AuthPage} />
-          <ProtectedRoute path="/" component={Dashboard} />
+          <Route path="/" component={Dashboard} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
           <ProtectedRoute path="/stock/:id" component={StockDetail} />
           <ProtectedRoute path="/portfolio" component={Portfolio} />

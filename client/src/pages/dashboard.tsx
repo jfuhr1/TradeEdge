@@ -152,8 +152,9 @@ const coachingSessions = [
 
 // Rich dashboard with real data and WebSocket updates
 export default function Dashboard() {
-  // We're using a simpler approach for now without auth
-  const userName = "Guest"; 
+  // Get auth state
+  const { user } = useAuth();
+  const userName = user?.name || "Guest"; 
   const { connected, lastMessage } = useWebSocket();
   const [latestAlerts, setLatestAlerts] = useState<StockAlert[]>([]);
   const [alertDisplayCount, setAlertDisplayCount] = useState<string>("6");
