@@ -33,8 +33,35 @@ export function Navbar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!user) {
-    return null;
+  // Allow access to navbar even when not logged in
+  if (!user && location !== '/success-center' && location !== '/auth') {
+    // Redirect to auth if not at success center or auth page
+    return (
+      <header className="border-b">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center mr-6">
+              <span className="font-bold text-xl">TradeEdge Pro</span>
+            </Link>
+            <Button
+              variant={location === "/success-center" ? "default" : "ghost"}
+              size="sm"
+              asChild
+            >
+              <Link href="/success-center">
+                <Trophy className="h-4 w-4 mr-2" />
+                Success Center
+              </Link>
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="default" size="sm" asChild>
+              <Link href="/auth">Sign In</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+    );
   }
 
   const isAdmin = user?.isAdmin === true;

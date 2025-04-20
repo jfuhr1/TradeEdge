@@ -8,11 +8,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { user } = useAuth();
-  
   return (
     <WebSocketProvider>
-      {user && <Navbar />}
+      <Navbar />
       <main>
         {children}
       </main>

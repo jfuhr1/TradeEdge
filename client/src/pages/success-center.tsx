@@ -120,7 +120,7 @@ const SuccessCardComponent = ({ card, onShare }: {
   useQuery({
     queryKey: [`/api/stock-alerts/${card.stockAlertId}`],
     enabled: !!card.stockAlertId,
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data && data.symbol) {
         setStockInfo({
           symbol: data.symbol,
