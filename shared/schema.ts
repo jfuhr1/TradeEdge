@@ -221,5 +221,68 @@ export const insertAlertPreferenceSchema = createInsertSchema(alertPreferences).
   updatedAt: true,
 });
 
+// Achievement badges schema - predefined badges that users can earn
+export const achievementBadges = pgTable("achievement_badges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // 'portfolio', 'education', 'alerts', etc.
+  imageUrl: text("image_url").notNull(),
+  level: integer("level").notNull().default(1), // For multi-level badges
+  requiredCount: integer("required_count").notNull(), // Count needed to unlock
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertAchievementBadgeSchema = createInsertSchema(achievementBadges).omit({
+  id: true,
+  createdAt: true,
+});
+
+// User achievement progress to track progress toward badges
+export const userAchievementProgress = pgTable("user_achievement_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  badgeId: integer("badge_id").notNull(),
+  currentCount: integer("current_count").notNull().default(0),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertUserAchievementProgressSchema = createInsertSchema(userAchievementProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Success cards for social media sharing
+export const successCards = pgTable("success_cards", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  stockAlertId: integer("stock_alert_id").notNull(),
+  percentGained: doublePrecision("percent_gained").notNull(),
+  daysToTarget: integer("days_to_target").notNull(),
+  targetHit: integer("target_hit").notNull(), // 1, 2, or 3
+  dateCreated: timestamp("date_created").notNull().defaultNow(),
+  imageUrl: text("image_url"),
+  shared: boolean("shared").notNull().default(false),
+  sharedPlatform: text("shared_platform"),
+});
+
+export const insertSuccessCardSchema = createInsertSchema(successCards).omit({
+  id: true,
+  dateCreated: true,
+});
+
 export type AlertPreference = typeof alertPreferences.$inferSelect;
 export type InsertAlertPreference = z.infer<typeof insertAlertPreferenceSchema>;
+
+export type AchievementBadge = typeof achievementBadges.$inferSelect;
+export type InsertAchievementBadge = z.infer<typeof insertAchievementBadgeSchema>;
+
+export type UserAchievementProgress = typeof userAchievementProgress.$inferSelect;
+export type InsertUserAchievementProgress = z.infer<typeof insertUserAchievementProgressSchema>;
+
+export type SuccessCard = typeof successCards.$inferSelect;
+export type InsertSuccessCard = z.infer<typeof insertSuccessCardSchema>;

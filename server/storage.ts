@@ -91,6 +91,19 @@ export interface IStorage {
   getTechnicalReasons(): Promise<TechnicalReason[]>;
   createTechnicalReason(reason: InsertTechnicalReason): Promise<TechnicalReason>;
   
+  // Achievement badges operations
+  getAllAchievementBadges(): Promise<AchievementBadge[]>;
+  getBadgeById(id: number): Promise<AchievementBadge | undefined>;
+  getUserAchievementProgress(userId: number): Promise<UserAchievementProgress[]>;
+  getRecentCompletedBadges(userId: number, limit?: number): Promise<{badge: AchievementBadge, progress: UserAchievementProgress}[]>;
+  
+  // Success cards operations
+  createSuccessCard(card: InsertSuccessCard): Promise<SuccessCard>;
+  getSuccessCardsByUser(userId: number): Promise<SuccessCard[]>;
+  getSuccessCard(id: number): Promise<SuccessCard | undefined>;
+  updateSuccessCard(id: number, updates: Partial<SuccessCard>): Promise<SuccessCard | undefined>;
+  generateSuccessCardForStock(userId: number, stockAlertId: number, targetHit: number): Promise<SuccessCard | undefined>;
+  
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -105,6 +118,7 @@ export class MemStorage implements IStorage {
   private educationProgressList: Map<number, EducationProgress>;
   private userAchievementsList: Map<number, UserAchievement>;
   private alertPreferencesList: Map<number, AlertPreference>;
+  private successCards: Map<number, SuccessCard>;
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -117,6 +131,7 @@ export class MemStorage implements IStorage {
   private educationProgressId: number;
   private userAchievementId: number;
   private alertPreferenceId: number;
+  private successCardId: number;
 
   constructor() {
     this.users = new Map();
@@ -128,6 +143,7 @@ export class MemStorage implements IStorage {
     this.educationProgressList = new Map();
     this.userAchievementsList = new Map();
     this.alertPreferencesList = new Map();
+    this.successCards = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -138,6 +154,7 @@ export class MemStorage implements IStorage {
     this.educationProgressId = 1;
     this.userAchievementId = 1;
     this.alertPreferenceId = 1;
+    this.successCardId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
