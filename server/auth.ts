@@ -151,4 +151,45 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: "Failed to check admin status" });
     }
   });
+  
+  // Update user information
+  app.patch("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    
+    // Users can only update their own information
+    if (userId !== req.user.id) {
+      return res.status(403).json({ message: "You can only update your own profile" });
+    }
+    
+    try {
+      // Currently only supporting phone number updates
+      const { phone } = req.body;
+      
+      // Validate phone number format if provided
+      if (phone && typeof phone === 'string') {
+        // Simple validation to ensure it's a reasonable phone number
+        // In a production app, you would use a more robust validation
+        const phoneRegex = /^\+?[0-9\s\(\)\-]{8,20}$/;
+        if (!phoneRegex.test(phone)) {
+          return res.status(400).json({ message: "Invalid phone number format" });
+        }
+      }
+      
+      const updatedUser = await storage.updateUser(userId, { phone });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user information" });
+    }
+  });
 }

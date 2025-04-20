@@ -78,7 +78,8 @@ const filterAlertsByTier = (alerts: StockAlert[], userTier: string) => {
   const userTierLevel = tierLevels[userTier as keyof typeof tierLevels] || 0;
   
   return alerts.filter(alert => {
-    const requiredTierLevel = tierLevels[alert.requiredTier as keyof typeof tierLevels] || 0;
+    // Default to free tier if requiredTier is not defined
+    const requiredTierLevel = tierLevels[(alert.requiredTier || 'free') as keyof typeof tierLevels] || 0;
     return userTierLevel >= requiredTierLevel;
   });
 };
@@ -335,7 +336,7 @@ export default function AlertSettings() {
               <AlertTitle>Notification Tiers</AlertTitle>
               <AlertDescription>
                 <p className="mb-2">
-                  Your current tier ({user?.tier.charAt(0).toUpperCase() + user?.tier.slice(1)}) 
+                  Your current tier ({user && user.tier ? user.tier.charAt(0).toUpperCase() + user.tier.slice(1) : 'Free'}) 
                   gives you access to the following notification types:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-sm">
