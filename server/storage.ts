@@ -799,7 +799,8 @@ export class MemStorage implements IStorage {
         target1: 195,
         target2: 210,
         target3: 225,
-        technicalReasons: ['Support Level', 'Oversold RSI', 'Earnings Beat']
+        technicalReasons: ['Support Level', 'Oversold RSI', 'Earnings Beat'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop'
       },
       {
         symbol: 'MSFT',
@@ -810,7 +811,8 @@ export class MemStorage implements IStorage {
         target1: 430,
         target2: 450,
         target3: 475,
-        technicalReasons: ['Breakout Pattern', 'Upward Trend', 'Sector Momentum']
+        technicalReasons: ['Breakout Pattern', 'Upward Trend', 'Sector Momentum'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1555421689-491a97ff2040?q=80&w=800&auto=format&fit=crop'
       },
       {
         symbol: 'NVDA',
@@ -821,7 +823,8 @@ export class MemStorage implements IStorage {
         target1: 995,
         target2: 1050,
         target3: 1100,
-        technicalReasons: ['Earnings Beat', 'Sector Momentum', 'Volume Increase']
+        technicalReasons: ['Earnings Beat', 'Sector Momentum', 'Volume Increase'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1642414200411-351f5e69b621?q=80&w=800&auto=format&fit=crop'
       },
       {
         symbol: 'META',
@@ -832,7 +835,8 @@ export class MemStorage implements IStorage {
         target1: 490,
         target2: 510,
         target3: 530,
-        technicalReasons: ['Support Level', 'Revenue Growth', 'Bullish Pattern']
+        technicalReasons: ['Support Level', 'Revenue Growth', 'Bullish Pattern'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1661347334008-95220c7418d4?q=80&w=800&auto=format&fit=crop'
       },
       {
         symbol: 'TSLA',
@@ -843,7 +847,8 @@ export class MemStorage implements IStorage {
         target1: 250,
         target2: 275,
         target3: 300,
-        technicalReasons: ['Oversold RSI', 'Support Level', 'Volume Increase']
+        technicalReasons: ['Oversold RSI', 'Support Level', 'Volume Increase'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1617704548623-340376564e1c?q=80&w=800&auto=format&fit=crop'
       }
     ];
     
