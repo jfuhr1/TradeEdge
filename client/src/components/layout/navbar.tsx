@@ -42,6 +42,8 @@ export function Navbar() {
             <Link href="/" className="flex items-center mr-6">
               <span className="font-bold text-xl">TradeEdge Pro</span>
             </Link>
+          </div>
+          <div className="flex items-center space-x-2">
             <Button
               variant={location === "/success-center" ? "default" : "ghost"}
               size="sm"
@@ -52,8 +54,6 @@ export function Navbar() {
                 Success Center
               </Link>
             </Button>
-          </div>
-          <div className="flex items-center space-x-2">
             <Button variant="default" size="sm" asChild>
               <Link href="/auth">Sign In</Link>
             </Button>
