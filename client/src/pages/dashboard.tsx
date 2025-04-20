@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { StockAlert } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -158,6 +158,7 @@ export default function Dashboard() {
   const { connected, lastMessage } = useWebSocket();
   const [latestAlerts, setLatestAlerts] = useState<StockAlert[]>([]);
   const [alertDisplayCount, setAlertDisplayCount] = useState<string>("6");
+  const [buyZoneDisplayCount, setBuyZoneDisplayCount] = useState<string>("all");
   const [showOnlyOwned, setShowOnlyOwned] = useState<boolean>(false);
   
   // Fetch stock alerts
@@ -223,7 +224,8 @@ export default function Dashboard() {
       targetName: "Target 1", 
       targetValue: 185.00,
       dateReached: new Date(2025, 3, 5),
-      daysToTarget: 21
+      daysToTarget: 21,
+      percentGained: 12.1 // ((targetValue / buyZoneMidpoint) - 1) * 100
     },
     {
       id: 2,
@@ -235,7 +237,8 @@ export default function Dashboard() {
       targetName: "Target 1", 
       targetValue: 182.00,
       dateReached: new Date(2025, 2, 25),
-      daysToTarget: 15
+      daysToTarget: 15,
+      percentGained: 7.1 // ((targetValue / buyZoneMidpoint) - 1) * 100
     },
     {
       id: 3,
@@ -247,14 +250,24 @@ export default function Dashboard() {
       targetName: "Target 2", 
       targetValue: 950.00,
       dateReached: new Date(2025, 3, 10),
-      daysToTarget: 49
+      daysToTarget: 49,
+      percentGained: 15.2 // ((targetValue / buyZoneMidpoint) - 1) * 100
     }
   ];
   
-  // If no data yet, use the initial sample data
+  // Filter displayed stocks based on selected counts
   const displayAlerts = latestAlerts.length > 0 ? latestAlerts : initialLatestAlerts;
   const targets = targetData || approachingTargets;
-  const stocksInBuyZone = buyZoneStocks || [];
+  const allStocksInBuyZone = buyZoneStocks || [];
+  
+  // Filter stocks in buy zone based on selected display count
+  const stocksInBuyZone = useMemo(() => {
+    if (buyZoneDisplayCount === 'all') {
+      return allStocksInBuyZone;
+    }
+    const count = parseInt(buyZoneDisplayCount);
+    return allStocksInBuyZone.slice(0, count);
+  }, [allStocksInBuyZone, buyZoneDisplayCount]);
 
   return (
     <MainLayout 
@@ -394,11 +407,15 @@ export default function Dashboard() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-xl font-bold">{alert.symbol}</span>
-                        <Badge 
-                          variant={alert.status === "in-buy-zone" ? "success" : "secondary"}
-                        >
-                          {alert.status === "in-buy-zone" ? "In Buy Zone" : "Above Buy Zone"}
-                        </Badge>
+                        {alert.status === "in-buy-zone" ? (
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            In Buy Zone
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            Above Buy Zone
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">{alert.companyName}</p>
                     </div>
@@ -453,9 +470,32 @@ export default function Dashboard() {
       
       {/* Stocks in Buy Zone */}
       <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <AlertCircle className="mr-2 h-5 w-5 text-green-500" />
-          <h2 className="text-2xl font-bold">Stocks Still in Buy Zone</h2>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5 text-green-500" />
+            <h2 className="text-2xl font-bold">Stocks Still in Buy Zone</h2>
+            <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">
+              {stocksInBuyZone.length} stock{stocksInBuyZone.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="buy-zone-count" className="text-sm text-muted-foreground">Display:</Label>
+            <Select
+              defaultValue="all"
+              onValueChange={(value) => setBuyZoneDisplayCount(value)}
+            >
+              <SelectTrigger id="buy-zone-count" className="w-24">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <Card>
@@ -614,7 +654,7 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: `${100 - stock.percentToTarget}%` }}></div>
+                      <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${100 - stock.percentToTarget}%` }}></div>
                     </div>
                     <p className="text-xs text-right mt-1 text-muted-foreground">{stock.percentToTarget.toFixed(1)}% to target</p>
                   </CardContent>
@@ -650,7 +690,7 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div className="bg-red-600 h-2.5 rounded-full" style={{ width: `${100 - stock.percentToTarget}%` }}></div>
+                      <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${100 - stock.percentToTarget}%` }}></div>
                     </div>
                     <p className="text-xs text-right mt-1 text-muted-foreground">{stock.percentToTarget.toFixed(1)}% to target</p>
                   </CardContent>
@@ -679,6 +719,7 @@ export default function Dashboard() {
                   <TableHead>Buy Zone</TableHead>
                   <TableHead>Target</TableHead>
                   <TableHead>Target Value</TableHead>
+                  <TableHead>% Gained</TableHead>
                   <TableHead>Date Reached</TableHead>
                   <TableHead>Days to Target</TableHead>
                 </TableRow>
@@ -703,6 +744,7 @@ export default function Dashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-green-600">${target.targetValue.toFixed(2)}</TableCell>
+                      <TableCell className="text-green-600">+{target.percentGained.toFixed(1)}%</TableCell>
                       <TableCell>{target.dateReached.toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Badge>{target.daysToTarget} days</Badge>
