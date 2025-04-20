@@ -216,12 +216,22 @@ export default function StockDetail() {
               </Card>
             </div>
             
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <Button 
                 className="w-full"
                 onClick={() => setIsAddingToPortfolio(true)}
               >
                 Add to Portfolio
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full"
+                asChild
+              >
+                <Link href={`/alert-settings?stock=${alert.id}`}>
+                  <AlertCircle className="mr-2 h-4 w-4" />
+                  Customize Alerts
+                </Link>
               </Button>
             </div>
           </div>

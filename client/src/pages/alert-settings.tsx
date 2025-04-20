@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { StockAlert, AlertPreference } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { z } from "zod";
-import { AlertPreference, StockAlert } from "@shared/schema";
-import { Link } from "wouter";
-import { ArrowLeft, Bell, Check, Loader2, Mail, MessageSquare, Percent, Target, X } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import MainLayout from "@/components/layout/main-layout";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -18,526 +24,706 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Bell, AlertTriangle, Smartphone, Mail, Info } from "lucide-react";
 
-// Schema for the alert preference form
+// Form schema for alert preferences
 const alertPreferenceSchema = z.object({
   stockAlertId: z.number(),
-  targetOne: z.boolean().default(true),
-  targetTwo: z.boolean().default(false),
-  targetThree: z.boolean().default(false),
-  percentChange: z.number().nullable().default(null),
-  customTargetPrice: z.number().nullable().default(null),
-  emailEnabled: z.boolean().default(true),
-  pushEnabled: z.boolean().default(true),
-  textEnabled: z.boolean().default(false),
+  notifyTarget1: z.boolean().default(true),
+  notifyTarget2: z.boolean().default(true),
+  notifyTarget3: z.boolean().default(true),
+  notifyPricePercentage: z.boolean().default(false),
+  customTargetPercent: z.string().nullable().transform(val => {
+    if (!val) return null;
+    const num = parseFloat(val);
+    return isNaN(num) ? null : num;
+  }),
+  notifyOnSms: z.boolean().default(false),
+  notifyOnEmail: z.boolean().default(true),
+  notifyOnWeb: z.boolean().default(true),
 });
 
-type AlertPreferenceFormValues = z.infer<typeof alertPreferenceSchema>;
+type AlertPreferenceForm = z.infer<typeof alertPreferenceSchema>;
+
+// Filtering function for the notifications
+const filterAlertsByTier = (alerts: StockAlert[], userTier: string) => {
+  const tierLevels = {
+    'free': 0,
+    'standard': 1,
+    'executive': 2,
+    'vip': 3,
+    'all-in': 4
+  };
+
+  const userTierLevel = tierLevels[userTier as keyof typeof tierLevels] || 0;
+  
+  return alerts.filter(alert => {
+    const requiredTierLevel = tierLevels[alert.requiredTier as keyof typeof tierLevels] || 0;
+    return userTierLevel >= requiredTierLevel;
+  });
+};
 
 export default function AlertSettings() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
+  const [stockIdParam, setStockIdParam] = useState<number | null>(null);
   const [selectedStock, setSelectedStock] = useState<number | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
   
-  // Query to fetch stock alerts
-  const { data: stockAlerts, isLoading: isLoadingAlerts } = useQuery<StockAlert[]>({
-    queryKey: ["/api/stock-alerts"],
+  // Get stock ID from URL query param if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stockId = params.get('stock');
+    if (stockId) {
+      const id = parseInt(stockId);
+      if (!isNaN(id)) {
+        setStockIdParam(id);
+        setSelectedStock(id);
+      }
+    }
+  }, [location]);
+
+  // Fetch all stocks
+  const { data: allStocks, isLoading: stocksLoading } = useQuery<StockAlert[]>({
+    queryKey: ['/api/stock-alerts'],
     enabled: !!user,
   });
-  
-  // Query to fetch user's alert preferences
-  const { data: alertPreferences, isLoading: isLoadingPreferences } = useQuery<AlertPreference[]>({
-    queryKey: ["/api/alert-preferences"],
+
+  // Fetch user's alert preferences
+  const { data: alertPreferences, isLoading: preferencesLoading } = useQuery<AlertPreference[]>({
+    queryKey: ['/api/alert-preferences'],
     enabled: !!user,
   });
-  
-  // Query to fetch a single alert preference by stock ID
-  const { data: selectedPreference, isLoading: isLoadingPreference } = useQuery<AlertPreference>({
-    queryKey: ["/api/alert-preferences", selectedStock],
-    enabled: !!selectedStock,
+
+  // Filter stocks based on user's tier
+  const availableStocks = allStocks && user 
+    ? filterAlertsByTier(allStocks, user.tier)
+    : [];
+
+  // Get current preference for selected stock
+  const currentPreference = alertPreferences?.find(
+    (pref) => pref.stockAlertId === selectedStock
+  );
+
+  // Set up form with default values based on current preference
+  const form = useForm<AlertPreferenceForm>({
+    resolver: zodResolver(alertPreferenceSchema),
+    defaultValues: {
+      stockAlertId: selectedStock || 0,
+      notifyTarget1: currentPreference?.notifyTarget1 ?? true,
+      notifyTarget2: currentPreference?.notifyTarget2 ?? true,
+      notifyTarget3: currentPreference?.notifyTarget3 ?? true,
+      notifyPricePercentage: currentPreference?.notifyPricePercentage ?? false,
+      customTargetPercent: currentPreference?.customTargetPercent?.toString() || '',
+      notifyOnSms: currentPreference?.notifyOnSms ?? false,
+      notifyOnEmail: currentPreference?.notifyOnEmail ?? true,
+      notifyOnWeb: currentPreference?.notifyOnWeb ?? true,
+    },
   });
-  
-  // Mutation to create/update an alert preference
-  const savePreferenceMutation = useMutation({
-    mutationFn: async (data: AlertPreferenceFormValues) => {
-      const res = await apiRequest("POST", "/api/alert-preferences", data);
-      return await res.json();
+
+  // Update form when stock or preference changes
+  useEffect(() => {
+    if (selectedStock) {
+      const preference = alertPreferences?.find(
+        (pref) => pref.stockAlertId === selectedStock
+      );
+      
+      form.reset({
+        stockAlertId: selectedStock,
+        notifyTarget1: preference?.notifyTarget1 ?? true,
+        notifyTarget2: preference?.notifyTarget2 ?? true, 
+        notifyTarget3: preference?.notifyTarget3 ?? true,
+        notifyPricePercentage: preference?.notifyPricePercentage ?? false,
+        customTargetPercent: preference?.customTargetPercent?.toString() || '',
+        notifyOnSms: preference?.notifyOnSms ?? false,
+        notifyOnEmail: preference?.notifyOnEmail ?? true,
+        notifyOnWeb: preference?.notifyOnWeb ?? true,
+      });
+    }
+  }, [selectedStock, alertPreferences, form]);
+
+  // Save phone number mutation
+  const savePhoneNumber = useMutation({
+    mutationFn: async (phone: string) => {
+      const response = await apiRequest("PATCH", `/api/users/${user?.id}`, {
+        phone
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Phone number updated",
+        description: "Your phone number has been saved successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update phone number",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Save alert preference mutation
+  const savePreference = useMutation({
+    mutationFn: async (data: AlertPreferenceForm) => {
+      if (currentPreference) {
+        // Update existing preference
+        const response = await apiRequest(
+          "PATCH", 
+          `/api/alert-preferences/${currentPreference.id}`,
+          data
+        );
+        return await response.json();
+      } else {
+        // Create new preference
+        const response = await apiRequest("POST", "/api/alert-preferences", data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       toast({
         title: "Alert preferences saved",
-        description: "Your alert preferences have been updated.",
+        description: "Your alert preferences have been updated successfully.",
       });
-      // Invalidate the queries to refetch the data
-      queryClient.invalidateQueries({ queryKey: ["/api/alert-preferences"] });
-      if (selectedStock) {
-        queryClient.invalidateQueries({ queryKey: ["/api/alert-preferences", selectedStock] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['/api/alert-preferences'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: "Error saving preferences",
+        title: "Failed to save preferences",
         description: error.message,
         variant: "destructive",
-      });
-    },
-  });
-  
-  // Delete mutation
-  const deletePreferenceMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/alert-preferences/${id}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Alert preference removed",
-        description: "Your alert preference has been removed.",
-      });
-      setSelectedStock(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/alert-preferences"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error removing preference",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Set up the form
-  const form = useForm<AlertPreferenceFormValues>({
-    resolver: zodResolver(alertPreferenceSchema),
-    defaultValues: {
-      stockAlertId: 0,
-      targetOne: true,
-      targetTwo: false,
-      targetThree: false,
-      percentChange: null,
-      customTargetPrice: null,
-      emailEnabled: true,
-      pushEnabled: true,
-      textEnabled: false,
-    },
-  });
-  
-  // When selectedStock changes, update the form values
-  useEffect(() => {
-    if (selectedStock && selectedPreference) {
-      form.reset({
-        stockAlertId: selectedStock,
-        targetOne: selectedPreference.targetOne,
-        targetTwo: selectedPreference.targetTwo,
-        targetThree: selectedPreference.targetThree,
-        percentChange: selectedPreference.percentChange,
-        customTargetPrice: selectedPreference.customTargetPrice,
-        emailEnabled: selectedPreference.emailEnabled,
-        pushEnabled: selectedPreference.pushEnabled,
-        textEnabled: selectedPreference.textEnabled,
-      });
-    } else if (selectedStock) {
-      form.reset({
-        stockAlertId: selectedStock,
-        targetOne: true,
-        targetTwo: false,
-        targetThree: false,
-        percentChange: null,
-        customTargetPrice: null,
-        emailEnabled: true,
-        pushEnabled: true,
-        textEnabled: false,
       });
     }
-  }, [selectedStock, selectedPreference, form]);
-  
+  });
+
   // Handle form submission
-  const onSubmit = (data: AlertPreferenceFormValues) => {
-    savePreferenceMutation.mutate(data);
+  const onSubmit = (data: AlertPreferenceForm) => {
+    if (!selectedStock) return;
+    
+    // Ensure stockAlertId is set correctly
+    data.stockAlertId = selectedStock;
+    
+    // Submit the form
+    savePreference.mutate(data);
   };
-  
-  // Handle preference deletion
-  const handleDelete = () => {
-    if (selectedPreference) {
-      deletePreferenceMutation.mutate(selectedPreference.id);
+
+  // Handle stock selection change
+  const handleStockChange = (stockId: string) => {
+    const id = parseInt(stockId);
+    if (!isNaN(id)) {
+      setSelectedStock(id);
+      
+      // Update URL without page refresh
+      const url = new URL(window.location.href);
+      url.searchParams.set('stock', id.toString());
+      window.history.pushState({}, '', url.toString());
     }
   };
-  
-  // If the user is on free tier, display upgrade message
-  if (user?.tier === 'free') {
-    return (
-      <div className="container max-w-6xl py-8">
-        <h1 className="text-3xl font-bold mb-6">Alert Settings</h1>
-        <Card>
-          <CardHeader>
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>Alert customization is a premium feature</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-6">
-              Personalized alerts are available for premium members. Upgrade your account to access this feature.
-            </p>
-            <Button>Upgrade to Premium</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
+
+  // Find the selected stock details
+  const selectedStockDetails = availableStocks.find(
+    (stock) => stock.id === selectedStock
+  );
+
   // Loading state
-  if (isLoadingAlerts || isLoadingPreferences) {
+  if ((stocksLoading || preferencesLoading) && !selectedStock) {
     return (
-      <div className="container max-w-6xl py-8">
-        <h1 className="text-3xl font-bold mb-6">Alert Settings</h1>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-          <span>Loading alert preferences...</span>
+      <MainLayout title="Alert Settings">
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
-  
+
   return (
-    <div className="container max-w-6xl py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Alert Settings</h1>
-        <Button variant="outline" asChild>
-          <Link href="/stock-alerts">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Alerts
-          </Link>
-        </Button>
-      </div>
-      
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Stocks List */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stock Alerts</CardTitle>
-              <CardDescription>Select a stock to customize alerts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {stockAlerts?.map((stock) => (
-                  <Button
-                    key={stock.id}
-                    variant={selectedStock === stock.id ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedStock(stock.id)}
-                  >
-                    <div className="flex items-center w-full">
-                      <span className="font-bold">{stock.symbol}</span>
-                      <span className="ml-auto">
-                        {alertPreferences?.some(p => p.stockAlertId === stock.id) && (
-                          <Badge variant="outline" className="ml-2">
-                            <Bell className="h-3 w-3 mr-1" />
-                            Alert Set
-                          </Badge>
-                        )}
-                      </span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Alert Configuration */}
-        <div className="md:col-span-2">
-          {selectedStock ? (
+    <MainLayout title="Alert Settings">
+      <div className="container py-8">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Side - List of Stocks & Global Settings */}
+          <div className="w-full md:w-1/3 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {stockAlerts?.find(s => s.id === selectedStock)?.symbol} Alert Preferences
+                <CardTitle className="flex items-center">
+                  <Bell className="mr-2 h-5 w-5" />
+                  Alert Settings
                 </CardTitle>
                 <CardDescription>
-                  Customize how and when you want to be notified
+                  Customize how you receive stock alerts
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <Tabs defaultValue="targets" className="w-full">
-                      <TabsList className="mb-4">
-                        <TabsTrigger value="targets">Price Targets</TabsTrigger>
-                        <TabsTrigger value="delivery">Delivery Methods</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="targets" className="space-y-4">
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-medium">Target Alerts</h3>
-                          
-                          <FormField
-                            control={form.control}
-                            name="targetOne"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                  <FormLabel className="text-base flex items-center">
-                                    <Target className="h-4 w-4 mr-2" />
-                                    Target 1 Alert
-                                  </FormLabel>
-                                  <FormDescription>
-                                    Alert when the price approaches ${stockAlerts?.find(s => s.id === selectedStock)?.target1}
-                                  </FormDescription>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="targetTwo"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                  <FormLabel className="text-base flex items-center">
-                                    <Target className="h-4 w-4 mr-2" />
-                                    Target 2 Alert
-                                  </FormLabel>
-                                  <FormDescription>
-                                    Alert when the price approaches ${stockAlerts?.find(s => s.id === selectedStock)?.target2}
-                                  </FormDescription>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="targetThree"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                  <FormLabel className="text-base flex items-center">
-                                    <Target className="h-4 w-4 mr-2" />
-                                    Target 3 Alert
-                                  </FormLabel>
-                                  <FormDescription>
-                                    Alert when the price approaches ${stockAlerts?.find(s => s.id === selectedStock)?.target3}
-                                  </FormDescription>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-medium">Custom Alerts</h3>
-                          
-                          <FormField
-                            control={form.control}
-                            name="percentChange"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center">
-                                  <Percent className="h-4 w-4 mr-2" />
-                                  Percent Change Alert
-                                </FormLabel>
-                                <FormDescription>
-                                  Alert when the price increases by this percentage from the buy zone
-                                </FormDescription>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g. 5 for 5%"
-                                    value={field.value?.toString() || ""}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      field.onChange(value ? parseFloat(value) : null);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="customTargetPrice"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center">
-                                  <Target className="h-4 w-4 mr-2" />
-                                  Custom Target Price
-                                </FormLabel>
-                                <FormDescription>
-                                  Alert when the price reaches a specific target price
-                                </FormDescription>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g. 150.75"
-                                    value={field.value?.toString() || ""}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      field.onChange(value ? parseFloat(value) : null);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="delivery" className="space-y-4">
-                        <h3 className="text-lg font-medium">Notification Methods</h3>
-                        
-                        <FormField
-                          control={form.control}
-                          name="emailEnabled"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base flex items-center">
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Email Notifications
-                                </FormLabel>
-                                <FormDescription>
-                                  Receive alerts via email to {user?.email}
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="pushEnabled"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base flex items-center">
-                                  <Bell className="h-4 w-4 mr-2" />
-                                  Push Notifications
-                                </FormLabel>
-                                <FormDescription>
-                                  Receive alerts in your browser or mobile app
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="textEnabled"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base flex items-center">
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  SMS Notifications
-                                </FormLabel>
-                                <FormDescription>
-                                  Available for Executive tier or higher
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={user?.tier !== 'executive' && user?.tier !== 'vip' && user?.tier !== 'all-in'}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                    </Tabs>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="stock-select">Select Stock</Label>
+                    <Select
+                      value={selectedStock?.toString() || ""}
+                      onValueChange={handleStockChange}
+                    >
+                      <SelectTrigger id="stock-select">
+                        <SelectValue placeholder="Select a stock" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableStocks.map((stock) => (
+                          <SelectItem key={stock.id} value={stock.id.toString()}>
+                            {stock.symbol} - {stock.companyName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium">Contact Information</h3>
                     
-                    <div className="flex justify-between pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={handleDelete}
-                        disabled={!selectedPreference || deletePreferenceMutation.isPending}
-                      >
-                        {deletePreferenceMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <X className="mr-2 h-4 w-4" />
-                        )}
-                        Remove Alerts
-                      </Button>
-                      
-                      <Button 
-                        type="submit"
-                        disabled={savePreferenceMutation.isPending}
-                      >
-                        {savePreferenceMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Check className="mr-2 h-4 w-4" />
-                        )}
-                        Save Preferences
-                      </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number (for SMS alerts)</Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="+1 (555) 555-5555"
+                          value={phoneNumber || user?.phone || ""}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                        <Button 
+                          size="sm"
+                          onClick={() => savePhoneNumber.mutate(phoneNumber)}
+                          disabled={savePhoneNumber.isPending || !phoneNumber}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Used for SMS notifications if enabled
+                      </p>
                     </div>
-                  </form>
-                </Form>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Alert Preferences</CardTitle>
-                <CardDescription>
-                  Select a stock from the list to customize your alert preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center h-64 text-center">
-                <Bell className="h-12 w-12 mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  Choose a stock from the list on the left to set up customized alerts
+
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Notification Tiers</AlertTitle>
+              <AlertDescription>
+                <p className="mb-2">
+                  Your current tier ({user?.tier.charAt(0).toUpperCase() + user?.tier.slice(1)}) 
+                  gives you access to the following notification types:
                 </p>
-              </CardContent>
-            </Card>
-          )}
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <li>Web notifications (All tiers)</li>
+                  <li>Email notifications (All tiers)</li>
+                  {(user?.tier === 'standard' || user?.tier === 'executive' || user?.tier === 'vip' || user?.tier === 'all-in') && (
+                    <li>SMS notifications (Standard tier and above)</li>
+                  )}
+                  {(user?.tier === 'vip' || user?.tier === 'all-in') && (
+                    <li>Custom percentage alerts (VIP tier and above)</li>
+                  )}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          {/* Right Side - Alert Preferences for Selected Stock */}
+          <div className="w-full md:w-2/3">
+            {selectedStock && selectedStockDetails ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {selectedStockDetails.symbol} - {selectedStockDetails.companyName}
+                  </CardTitle>
+                  <CardDescription>
+                    Configure your alert preferences for this stock
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <Tabs defaultValue="triggers">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="triggers">Alert Triggers</TabsTrigger>
+                          <TabsTrigger value="methods">Notification Methods</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="triggers" className="py-4 space-y-4">
+                          <div className="space-y-4">
+                            <h3 className="text-sm font-medium">Price Targets</h3>
+                            
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="notifyTarget1"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                    <div className="space-y-0.5">
+                                      <FormLabel>Target 1 (${selectedStockDetails.target1})</FormLabel>
+                                      <FormDescription>
+                                        Alert when price approaches Target 1
+                                      </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="notifyTarget2"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                    <div className="space-y-0.5">
+                                      <FormLabel>Target 2 (${selectedStockDetails.target2})</FormLabel>
+                                      <FormDescription>
+                                        Alert when price approaches Target 2
+                                      </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="notifyTarget3"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                    <div className="space-y-0.5">
+                                      <FormLabel>Target 3 (${selectedStockDetails.target3})</FormLabel>
+                                      <FormDescription>
+                                        Alert when price approaches Target 3
+                                      </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <h3 className="text-sm font-medium mt-6">Custom Alerts</h3>
+                            
+                            <FormField
+                              control={form.control}
+                              name="notifyPricePercentage"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5">
+                                    <FormLabel>Custom Percentage Alert</FormLabel>
+                                    <FormDescription>
+                                      Alert when price changes by a specific percentage
+                                    </FormDescription>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      disabled={!(user?.tier === 'vip' || user?.tier === 'all-in')}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {form.watch("notifyPricePercentage") && (
+                              <FormField
+                                control={form.control}
+                                name="customTargetPercent"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Percentage Change (%)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        step="0.1"
+                                        placeholder="5.0"
+                                        {...field}
+                                        onChange={(e) => field.onChange(e.target.value)}
+                                      />
+                                    </FormControl>
+                                    <FormDescription>
+                                      Enter a percentage value (e.g., 5 for 5%)
+                                    </FormDescription>
+                                  </FormItem>
+                                )}
+                              />
+                            )}
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="methods" className="py-4 space-y-4">
+                          <div className="space-y-4">
+                            <h3 className="text-sm font-medium">Notification Methods</h3>
+                            
+                            <FormField
+                              control={form.control}
+                              name="notifyOnWeb"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5 flex items-center">
+                                    <Bell className="mr-2 h-4 w-4" />
+                                    <div>
+                                      <FormLabel>Web Notifications</FormLabel>
+                                      <FormDescription>
+                                        Receive alerts in the app when signed in
+                                      </FormDescription>
+                                    </div>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="notifyOnEmail"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5 flex items-center">
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    <div>
+                                      <FormLabel>Email Notifications</FormLabel>
+                                      <FormDescription>
+                                        Receive email alerts to {user?.email}
+                                      </FormDescription>
+                                    </div>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="notifyOnSms"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5 flex items-center">
+                                    <Smartphone className="mr-2 h-4 w-4" />
+                                    <div>
+                                      <FormLabel>SMS Notifications</FormLabel>
+                                      <FormDescription>
+                                        Receive text alerts to {user?.phone || "No phone number set"}
+                                      </FormDescription>
+                                    </div>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      disabled={!(user?.tier === 'standard' || user?.tier === 'executive' || user?.tier === 'vip' || user?.tier === 'all-in') || !user?.phone}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {!user?.phone && (
+                              <div className="flex items-start p-3 border border-yellow-200 bg-yellow-50 rounded-lg">
+                                <Info className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
+                                <div className="text-sm text-yellow-700">
+                                  <p className="font-medium">Phone number needed for SMS alerts</p>
+                                  <p>Add your phone number in the contact settings to enable SMS notifications.</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={savePreference.isPending || !form.formState.isDirty}
+                      >
+                        {savePreference.isPending
+                          ? "Saving..."
+                          : "Save Alert Preferences"}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center p-10">
+                  <div className="rounded-full bg-primary-50 p-3 mb-4">
+                    <Bell className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">Select a Stock</h3>
+                  <p className="text-center text-muted-foreground mb-6">
+                    Choose a stock from the dropdown to customize your alert preferences
+                  </p>
+                  <Select onValueChange={handleStockChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a stock" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableStocks.map((stock) => (
+                        <SelectItem key={stock.id} value={stock.id.toString()}>
+                          {stock.symbol} - {stock.companyName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Preferences List */}
+            {alertPreferences && alertPreferences.length > 0 && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">Your Alert Preferences</CardTitle>
+                  <CardDescription>
+                    Overview of all your configured stock alerts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Stock</TableHead>
+                        <TableHead>Target Alerts</TableHead>
+                        <TableHead>Methods</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {alertPreferences.map((pref) => {
+                        const stock = availableStocks.find(
+                          (s) => s.id === pref.stockAlertId
+                        );
+                        if (!stock) return null;
+                        
+                        return (
+                          <TableRow key={pref.id}>
+                            <TableCell>
+                              <div className="font-medium">{stock.symbol}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {stock.companyName.length > 25
+                                  ? `${stock.companyName.substring(0, 25)}...`
+                                  : stock.companyName}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                {pref.notifyTarget1 && (
+                                  <Badge variant="outline" className="w-fit">
+                                    Target 1: ${stock.target1}
+                                  </Badge>
+                                )}
+                                {pref.notifyTarget2 && (
+                                  <Badge variant="outline" className="w-fit">
+                                    Target 2: ${stock.target2}
+                                  </Badge>
+                                )}
+                                {pref.notifyTarget3 && (
+                                  <Badge variant="outline" className="w-fit">
+                                    Target 3: ${stock.target3}
+                                  </Badge>
+                                )}
+                                {pref.notifyPricePercentage && pref.customTargetPercent && (
+                                  <Badge variant="outline" className="w-fit">
+                                    Custom: {pref.customTargetPercent}%
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                {pref.notifyOnWeb && (
+                                  <Bell className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                {pref.notifyOnEmail && (
+                                  <Mail className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                {pref.notifyOnSms && (
+                                  <Smartphone className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedStock(pref.stockAlertId);
+                                  // Update URL without page refresh
+                                  const url = new URL(window.location.href);
+                                  url.searchParams.set('stock', pref.stockAlertId.toString());
+                                  window.history.pushState({}, '', url.toString());
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

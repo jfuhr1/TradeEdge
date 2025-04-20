@@ -1,154 +1,222 @@
 import { useEffect, useState } from "react";
-import { useWebSocket } from "@/hooks/use-websocket";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { Bell } from "lucide-react";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { Bell, X } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { AlertPreference, StockAlert } from "@shared/schema";
 
-type AlertTrigger = {
+interface AlertMessage {
+  id: string;
   userId: number;
   stockAlertId: number;
+  stockSymbol?: string;
   triggerType: string;
   message: string;
-  timestamp?: string;
-};
+  createdAt: Date;
+  read: boolean;
+}
 
 export function AlertNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { connected, lastMessage } = useWebSocket();
-  const [notifications, setNotifications] = useState<AlertTrigger[]>([]);
+  const { socket, connected } = useWebSocket();
+  const [notifications, setNotifications] = useState<AlertMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // Process incoming alert triggers from WebSocket
+  const [open, setOpen] = useState(false);
+
+  // Fetch user's alert preferences
+  const { data: alertPreferences } = useQuery<AlertPreference[]>({
+    queryKey: ['/api/alert-preferences'],
+    enabled: !!user,
+  });
+
+  // Fetch stock alerts to get symbols
+  const { data: stockAlerts } = useQuery<StockAlert[]>({
+    queryKey: ['/api/stock-alerts'],
+    enabled: !!user,
+  });
+
   useEffect(() => {
-    if (lastMessage && lastMessage.type === "alert_trigger") {
-      const trigger = lastMessage.data as AlertTrigger;
+    if (!socket || !connected || !user) return;
+
+    const handleAlertTrigger = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
       
-      // Only process alerts for the current user
-      if (user && trigger.userId === user.id) {
-        // Add timestamp for display purposes
-        const notificationWithTimestamp = {
-          ...trigger,
-          timestamp: new Date().toISOString(),
+      if (data.type === 'alert_trigger' && data.data.userId === user.id) {
+        const stockAlert = stockAlerts?.find(alert => alert.id === data.data.stockAlertId);
+        const stockSymbol = stockAlert?.symbol || 'Unknown';
+        
+        // Create a new notification
+        const newNotification: AlertMessage = {
+          id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          userId: data.data.userId,
+          stockAlertId: data.data.stockAlertId,
+          stockSymbol,
+          triggerType: data.data.triggerType,
+          message: data.data.message,
+          createdAt: new Date(),
+          read: false
         };
         
-        // Add to notifications list
-        setNotifications(prev => [notificationWithTimestamp, ...prev]);
+        setNotifications(prev => [newNotification, ...prev].slice(0, 10));
+        setUnreadCount(prev => prev + 1);
         
-        // Increment unread count if popover is closed
-        if (!isOpen) {
-          setUnreadCount(prev => prev + 1);
-        }
-        
-        // Show toast notification
+        // Show toast for new notification
         toast({
-          title: `Alert for ${getTriggerTitle(trigger.triggerType)}`,
-          description: trigger.message,
+          title: `${stockSymbol} Alert`,
+          description: data.data.message,
         });
       }
+    };
+
+    // Check for custom event listener or fallback to basic
+    if (socket.addEventListener) {
+      socket.addEventListener('message', handleAlertTrigger);
+    } else {
+      socket.onmessage = handleAlertTrigger;
     }
-  }, [lastMessage, user, toast, isOpen]);
-  
-  // Reset unread count when opening the popover
-  useEffect(() => {
-    if (isOpen) {
-      setUnreadCount(0);
-    }
-  }, [isOpen]);
-  
-  // Helper function to format trigger types for display
-  const getTriggerTitle = (triggerType: string) => {
-    switch (triggerType) {
-      case 'target1':
-        return 'Target 1';
-      case 'target2':
-        return 'Target 2';
-      case 'target3':
-        return 'Target 3';
-      case 'percent':
-        return 'Percent Change';
-      case 'custom':
-        return 'Custom Target';
-      default:
-        return 'Price Alert';
-    }
+
+    return () => {
+      if (socket.removeEventListener) {
+        socket.removeEventListener('message', handleAlertTrigger);
+      } else {
+        socket.onmessage = null;
+      }
+    };
+  }, [socket, connected, user, stockAlerts, toast]);
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(note => ({ ...note, read: true })));
+    setUnreadCount(0);
   };
 
-  // Format timestamps
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(note => 
+        note.id === id ? { ...note, read: true } : note
+      )
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
-  
-  if (!user || !connected) {
-    return null;
-  }
-  
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => {
+      const notification = prev.find(note => note.id === id);
+      if (notification && !notification.read) {
+        setUnreadCount(count => Math.max(0, count - 1));
+      }
+      return prev.filter(note => note.id !== id);
+    });
+  };
+
+  if (!user) return null;
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative"
+          aria-label="Notifications"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge
+              className="absolute -top-1 -right-1 px-1.5 min-w-[20px] h-5 flex items-center justify-center"
+              variant="destructive"
+            >
               {unreadCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-4 flex items-center justify-between">
-          <h3 className="font-medium">Alerts</h3>
-          {notifications.length > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setNotifications([])}
-            >
-              Clear All
+        <div className="p-3 border-b flex items-center justify-between">
+          <h3 className="font-medium">Notifications</h3>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+              Mark all as read
             </Button>
-          )}
+          </div>
         </div>
-        <Separator />
-        <ScrollArea className="h-80">
+
+        <div className="max-h-80 overflow-y-auto divide-y">
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 p-4 text-center">
-              <Bell className="text-muted-foreground h-8 w-8 mb-2" />
-              <p className="text-muted-foreground">No alerts yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Alerts will appear here when stock prices hit your targets</p>
+            <div className="p-4 text-center text-muted-foreground">
+              No notifications
             </div>
           ) : (
-            <div className="flex flex-col">
-              {notifications.map((notification, index) => (
-                <div key={`${notification.stockAlertId}-${index}`} className="p-4 border-b last:border-b-0">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <Badge variant="outline" className="mr-2">
-                          {getTriggerTitle(notification.triggerType)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {notification.timestamp && formatTime(notification.timestamp)}
-                        </span>
-                      </div>
-                      <p className="mt-2">{notification.message}</p>
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-3 relative ${
+                  notification.read ? "" : "bg-primary-50"
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      markAsRead(notification.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{notification.stockSymbol}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(notification.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-1">{notification.message}</p>
+                    <div className="mt-2">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-primary"
+                        asChild
+                      >
+                        <Link href={`/stock/${notification.stockAlertId}`}>
+                          View Stock Details
+                        </Link>
+                      </Button>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => removeNotification(notification.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
-        </ScrollArea>
+        </div>
+
+        <div className="p-3 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            asChild
+          >
+            <Link href="/alert-settings">
+              Manage Alert Settings
+            </Link>
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );

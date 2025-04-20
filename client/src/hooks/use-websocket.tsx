@@ -4,12 +4,14 @@ type WebSocketContextType = {
   connected: boolean;
   sendMessage: (message: object) => void;
   lastMessage: any | null;
+  socket: WebSocket | null;
 };
 
 const WebSocketContext = createContext<WebSocketContextType>({
   connected: false,
   sendMessage: () => {},
-  lastMessage: null
+  lastMessage: null,
+  socket: null
 });
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
@@ -131,6 +133,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     connected,
     sendMessage,
     lastMessage,
+    socket: socketRef.current
   };
   
   return (
