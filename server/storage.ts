@@ -878,6 +878,67 @@ export class MemStorage implements IStorage {
         target3: 300,
         technicalReasons: ['Oversold RSI', 'Support Level', 'Volume Increase'],
         chartImageUrl: 'https://images.unsplash.com/photo-1617704548623-340376564e1c?q=80&w=800&auto=format&fit=crop'
+      },
+      // Additional active alerts
+      {
+        symbol: 'AMD',
+        companyName: 'Advanced Micro Devices, Inc.',
+        currentPrice: 156.12,
+        buyZoneMin: 150,
+        buyZoneMax: 160,
+        target1: 175,
+        target2: 190,
+        target3: 200,
+        technicalReasons: ['Breakout Confirmation', 'Sector Strength', 'Earnings Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1591488320905-4b1e5c9cafa7?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'DIS',
+        companyName: 'The Walt Disney Company',
+        currentPrice: 113.45,
+        buyZoneMin: 110,
+        buyZoneMax: 120,
+        target1: 130,
+        target2: 140,
+        target3: 150,
+        technicalReasons: ['Technical Support', 'Turnaround Story', 'Streaming Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1605123728064-a0421ab21732?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'PYPL',
+        companyName: 'PayPal Holdings, Inc.',
+        currentPrice: 64.80,
+        buyZoneMin: 60,
+        buyZoneMax: 65,
+        target1: 70,
+        target2: 75,
+        target3: 80,
+        technicalReasons: ['Oversold Conditions', 'Value Play', 'Fintech Recovery'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'INTC',
+        companyName: 'Intel Corporation',
+        currentPrice: 34.20,
+        buyZoneMin: 32,
+        buyZoneMax: 36,
+        target1: 38,
+        target2: 42,
+        target3: 45,
+        technicalReasons: ['Manufacturing Progress', 'Chip Recovery', 'Government Incentives'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'ABNB',
+        companyName: 'Airbnb, Inc.',
+        currentPrice: 155.90,
+        buyZoneMin: 150,
+        buyZoneMax: 160,
+        target1: 170,
+        target2: 180,
+        target3: 190,
+        technicalReasons: ['Travel Resurgence', 'Technical Breakout', 'International Growth'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=800&auto=format&fit=crop'
       }
     ];
     
@@ -898,7 +959,7 @@ export class MemStorage implements IStorage {
         target2: 210,
         target3: 225,
         status: 'closed',
-        maxPrice: 197.50,
+        maxPrice: 197.50,  // Hit target 1
         technicalReasons: ['Support Level', 'Earnings Beat', 'Volume Pattern'],
         chartImageUrl: 'https://images.unsplash.com/photo-1523474438810-b998697493e7?q=80&w=800&auto=format&fit=crop'
       },
@@ -912,9 +973,23 @@ export class MemStorage implements IStorage {
         target2: 180,
         target3: 190,
         status: 'closed',
-        maxPrice: 182.86,
+        maxPrice: 182.86,  // Hit target 2
         technicalReasons: ['Breakout Pattern', 'AI Integration', 'Revenue Growth'],
         chartImageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?q=80&w=800&auto=format&fit=crop'
+      },
+      {
+        symbol: 'NFLX',
+        companyName: 'Netflix, Inc.',
+        currentPrice: 632.15,
+        buyZoneMin: 580,
+        buyZoneMax: 610,
+        target1: 650,
+        target2: 680,
+        target3: 700,
+        status: 'closed',
+        maxPrice: 701.25,  // Hit target 3
+        technicalReasons: ['Subscriber Growth', 'Ad Tier Success', 'Content Slate'],
+        chartImageUrl: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=800&auto=format&fit=crop'
       }
     ] as InsertStockAlert[];
     

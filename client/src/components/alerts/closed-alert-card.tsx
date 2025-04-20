@@ -231,9 +231,17 @@ export default function ClosedAlertCard({ alert, className = "" }: ClosedAlertCa
       <div className="flex justify-between items-end mt-8">
         <div className="grid grid-cols-3 gap-4 flex-1 mr-4">
           <div className="bg-green-50 border border-green-100 rounded-lg p-3 flex flex-col items-center justify-center">
-            <Award className="h-5 w-5 text-green-600 mb-1" />
+            <div className="flex mb-1">
+              {/* Display 1, 2, or 3 ribbons based on highest target achieved */}
+              <Award className="h-5 w-5 text-green-600" />
+              {isTarget2Hit && <Award className="h-5 w-5 text-green-600 -ml-2" />}
+              {isTarget3Hit && <Award className="h-5 w-5 text-green-600 -ml-2" />}
+            </div>
             <div className="text-xs font-medium text-green-800">Max Gain</div>
             <div className="text-sm font-bold text-green-700">+{maxGainPercent}%</div>
+            <div className="text-xs text-green-600 mt-1">
+              {getHighestTargetHit()} Achieved
+            </div>
           </div>
           <Link href={`/stock-detail/${alert.symbol}`} className="w-full">
             <Button 
@@ -262,9 +270,9 @@ export default function ClosedAlertCard({ alert, className = "" }: ClosedAlertCa
           </Button>
         </div>
         <div className="text-right">
-          <p className="text-xs font-medium text-black">Closed Date</p>
+          <p className="text-xs font-medium text-black">Alert Date</p>
           <p className="text-sm font-medium text-black font-mono">
-            {format(new Date(alert.updatedAt || alert.createdAt), 'MM/dd/yy')}
+            {format(new Date(alert.createdAt), 'MM/dd/yy')}
           </p>
         </div>
       </div>

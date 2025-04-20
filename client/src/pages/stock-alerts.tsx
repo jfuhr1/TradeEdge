@@ -72,163 +72,145 @@ export default function StockAlerts() {
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl font-semibold">Stock Alerts</h2>
         
-        {isAdmin && (
-          <Link href="/admin/create-alert">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Alert
-            </Button>
-          </Link>
-        )}
+        {/* Removed Create Alert button for regular users */}
       </div>
       
-      <Tabs defaultValue="active">
+      <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="active">
-            Active Alerts ({activeAlerts.length})
+          <TabsTrigger value="all">
+            All Active ({activeAlerts.length})
+          </TabsTrigger>
+          <TabsTrigger value="buy-zone">
+            In Buy Zone ({buyZoneAlerts?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="high-risk">
+            <div className="flex items-center">
+              <AlertTriangle className="w-4 h-4 mr-1 text-amber-500" />
+              High Risk/Reward ({highRiskAlerts.length})
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="targets">
+            Nearing Targets ({(targetAlerts?.target1.length || 0) + 
+              (targetAlerts?.target2.length || 0) + 
+              (targetAlerts?.target3.length || 0)})
           </TabsTrigger>
           <TabsTrigger value="closed">
             <div className="flex items-center">
               <CheckCircle2 className="w-4 h-4 mr-1 text-blue-500" />
-              Closed Alerts ({closedAlerts?.length || 0})
+              Closed ({closedAlerts?.length || 0})
             </div>
           </TabsTrigger>
         </TabsList>
         
-        {/* Active Alerts Section */}
-        <TabsContent value="active">
-          <Tabs defaultValue="all">
-            <TabsList>
-              <TabsTrigger value="all">
-                All Active ({activeAlerts.length})
-              </TabsTrigger>
-              <TabsTrigger value="buy-zone">
-                In Buy Zone ({buyZoneAlerts?.length || 0})
-              </TabsTrigger>
-              <TabsTrigger value="high-risk">
-                <div className="flex items-center">
-                  <AlertTriangle className="w-4 h-4 mr-1 text-amber-500" />
-                  High Risk/Reward ({highRiskAlerts.length})
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="targets">
-                Nearing Targets ({(targetAlerts?.target1.length || 0) + 
-                  (targetAlerts?.target2.length || 0) + 
-                  (targetAlerts?.target3.length || 0)})
-              </TabsTrigger>
-            </TabsList>
-        
-            {/* All Alerts Tab */}
-            <TabsContent value="all">
-              {activeAlerts.length === 0 ? (
-                <div className="bg-white p-6 rounded-lg shadow text-center">
-                  <p className="text-neutral-600">No stock alerts available yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activeAlerts.map((alert) => (
-                    <AlertCard key={alert.id} alert={alert} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* Buy Zone Alerts Tab */}
-            <TabsContent value="buy-zone">
-              {buyZoneAlerts?.length === 0 ? (
-                <div className="bg-white p-6 rounded-lg shadow text-center">
-                  <p className="text-neutral-600">No stocks currently in the buy zone.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {buyZoneAlerts?.map((alert) => (
-                    <AlertCard key={alert.id} alert={alert} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* High Risk/Reward Tab */}
-            <TabsContent value="high-risk">
-              {highRiskAlerts.length === 0 ? (
-                <div className="bg-white p-6 rounded-lg shadow text-center">
-                  <p className="text-neutral-600">No stocks currently in the high risk/reward zone.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-start">
-                      <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
-                      <div>
-                        <h3 className="font-medium text-amber-800">High Risk/Reward Zone</h3>
-                        <p className="text-sm text-amber-700 mt-1">
-                          These stocks are trading below their buy zone but within 10% of the lower limit. 
-                          They offer higher potential returns but with increased risk. Consider your risk 
-                          tolerance before investing.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {highRiskAlerts.map((alert) => (
-                    <AlertCard key={`hr-${alert.id}`} alert={alert} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* Targets Tab */}
-            <TabsContent value="targets">
-              {(targetAlerts?.target1.length === 0 && 
-                targetAlerts?.target2.length === 0 && 
-                targetAlerts?.target3.length === 0) ? (
-                <div className="bg-white p-6 rounded-lg shadow text-center">
-                  <p className="text-neutral-600">No stocks currently nearing targets.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Target 1 */}
-                  {targetAlerts && targetAlerts.target1 && targetAlerts.target1.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-3">Nearing Target 1</h3>
-                      <div className="space-y-4">
-                        {targetAlerts.target1.map((alert) => (
-                          <AlertCard key={`t1-${alert.id}`} alert={alert} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Target 2 */}
-                  {targetAlerts && targetAlerts.target2 && targetAlerts.target2.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-3">Nearing Target 2</h3>
-                      <div className="space-y-4">
-                        {targetAlerts.target2.map((alert) => (
-                          <AlertCard key={`t2-${alert.id}`} alert={alert} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Target 3 */}
-                  {targetAlerts && targetAlerts.target3 && targetAlerts.target3.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-3">Nearing Target 3</h3>
-                      <div className="space-y-4">
-                        {targetAlerts.target3.map((alert) => (
-                          <AlertCard key={`t3-${alert.id}`} alert={alert} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+        {/* All Alerts Tab */}
+        <TabsContent value="all">
+          {activeAlerts.length === 0 ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stock alerts available yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activeAlerts.map((alert) => (
+                <AlertCard key={alert.id} alert={alert} />
+              ))}
+            </div>
+          )}
         </TabsContent>
         
-        {/* Closed Alerts Section */}
+        {/* Buy Zone Alerts Tab */}
+        <TabsContent value="buy-zone">
+          {buyZoneAlerts?.length === 0 ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stocks currently in the buy zone.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {buyZoneAlerts?.map((alert) => (
+                <AlertCard key={alert.id} alert={alert} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* High Risk/Reward Tab */}
+        <TabsContent value="high-risk">
+          {highRiskAlerts.length === 0 ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stocks currently in the high risk/reward zone.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-amber-800">High Risk/Reward Zone</h3>
+                    <p className="text-sm text-amber-700 mt-1">
+                      These stocks are trading below their buy zone but within 10% of the lower limit. 
+                      They offer higher potential returns but with increased risk. Consider your risk 
+                      tolerance before investing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {highRiskAlerts.map((alert) => (
+                <AlertCard key={`hr-${alert.id}`} alert={alert} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* Targets Tab */}
+        <TabsContent value="targets">
+          {(targetAlerts?.target1.length === 0 && 
+            targetAlerts?.target2.length === 0 && 
+            targetAlerts?.target3.length === 0) ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stocks currently nearing targets.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Target 1 */}
+              {targetAlerts && targetAlerts.target1 && targetAlerts.target1.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">Nearing Target 1</h3>
+                  <div className="space-y-4">
+                    {targetAlerts.target1.map((alert) => (
+                      <AlertCard key={`t1-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Target 2 */}
+              {targetAlerts && targetAlerts.target2 && targetAlerts.target2.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">Nearing Target 2</h3>
+                  <div className="space-y-4">
+                    {targetAlerts.target2.map((alert) => (
+                      <AlertCard key={`t2-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Target 3 */}
+              {targetAlerts && targetAlerts.target3 && targetAlerts.target3.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">Nearing Target 3</h3>
+                  <div className="space-y-4">
+                    {targetAlerts.target3.map((alert) => (
+                      <AlertCard key={`t3-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* Closed Alerts Tab */}
         <TabsContent value="closed">
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start">
