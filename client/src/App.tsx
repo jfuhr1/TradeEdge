@@ -21,8 +21,9 @@ function App() {
       <AppLayout>
         <Switch>
           <Route path="/auth" component={AuthPage} />
-          <Route path="/" component={Dashboard} />
           <Route path="/success-center" component={SuccessCenter} />
+          <Route path="/ws-test" component={WebSocketTest} />
+          <ProtectedRoute path="/" component={Dashboard} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
           <ProtectedRoute path="/stock/:id" component={StockDetail} />
           <ProtectedRoute path="/portfolio" component={Portfolio} />
@@ -30,7 +31,6 @@ function App() {
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
-          <Route path="/ws-test" component={WebSocketTest} />
           <Route component={NotFound} />
         </Switch>
       </AppLayout>

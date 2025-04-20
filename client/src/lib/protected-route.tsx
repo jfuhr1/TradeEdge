@@ -1,8 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
-// Simple version that just renders the component directly without auth check
-// We'll handle auth checking at the page level for now
 export function ProtectedRoute({
   path,
   component: Component,
@@ -10,5 +9,19 @@ export function ProtectedRoute({
   path: string;
   component: () => React.JSX.Element;
 }) {
-  return <Route path={path} component={Component} />;
+  const { user, isLoading } = useAuth();
+
+  return (
+    <Route path={path}>
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : user ? (
+        <Component />
+      ) : (
+        <Redirect to="/auth" />
+      )}
+    </Route>
+  );
 }
