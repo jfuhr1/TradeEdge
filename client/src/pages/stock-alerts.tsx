@@ -80,6 +80,12 @@ export default function StockAlerts() {
           <TabsTrigger value="buy-zone">
             In Buy Zone ({buyZoneAlerts?.length || 0})
           </TabsTrigger>
+          <TabsTrigger value="high-risk">
+            <div className="flex items-center">
+              <AlertTriangle className="w-4 h-4 mr-1 text-amber-500" />
+              High Risk/Reward ({highRiskAlerts.length})
+            </div>
+          </TabsTrigger>
           <TabsTrigger value="targets">
             Nearing Targets ({(targetAlerts?.target1.length || 0) + 
               (targetAlerts?.target2.length || 0) + 
@@ -112,6 +118,35 @@ export default function StockAlerts() {
             <div className="space-y-4">
               {buyZoneAlerts?.map((alert) => (
                 <AlertCard key={alert.id} alert={alert} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* High Risk/Reward Tab */}
+        <TabsContent value="high-risk">
+          {highRiskAlerts.length === 0 ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stocks currently in the high risk/reward zone.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-amber-800">High Risk/Reward Zone</h3>
+                    <p className="text-sm text-amber-700 mt-1">
+                      These stocks are trading below their buy zone but within 10% of the lower limit. 
+                      They offer higher potential returns but with increased risk. Consider your risk 
+                      tolerance before investing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {highRiskAlerts.map((alert) => (
+                <AlertCard key={`hr-${alert.id}`} alert={alert} />
               ))}
             </div>
           )}
