@@ -16,8 +16,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  const connectWebSocket = () => {
     // Create WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
@@ -33,6 +34,12 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       socket.addEventListener("open", () => {
         console.log("WebSocket connected");
         setConnected(true);
+        
+        // Clear any reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          window.clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
         
         // Subscribe to stock updates by default
         socket.send(JSON.stringify({ 
@@ -55,29 +62,56 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       // Handle errors
       socket.addEventListener("error", (event) => {
         console.error("WebSocket error:", event);
+        setConnected(false);
       });
       
       // Handle connection close
       socket.addEventListener("close", () => {
         console.log("WebSocket disconnected");
         setConnected(false);
+        
+        // Attempt to reconnect after a delay
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          console.log("Attempting to reconnect WebSocket...");
+          connectWebSocket();
+        }, 3000);
       });
       
-      // Implement ping for keep-alive
-      const pingInterval = setInterval(() => {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: "ping" }));
-        }
-      }, 30000);
-      
-      // Clean up on unmount
-      return () => {
-        clearInterval(pingInterval);
-        socket.close();
-      };
+      return socket;
     } catch (error) {
       console.error("Error creating WebSocket:", error);
+      
+      // Attempt to reconnect after a delay
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        console.log("Attempting to reconnect WebSocket after error...");
+        connectWebSocket();
+      }, 3000);
+      
+      return null;
     }
+  };
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    const socket = connectWebSocket();
+    
+    // Implement ping for keep-alive
+    const pingInterval = setInterval(() => {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 30000);
+    
+    // Clean up on unmount
+    return () => {
+      clearInterval(pingInterval);
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (socket) {
+        socket.close();
+      }
+    };
   }, []); // Empty dependency array means this runs once on mount
   
   // Function to send messages to the server
@@ -85,7 +119,11 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(message));
     } else {
-      console.error("WebSocket is not connected");
+      console.log("WebSocket is not connected, attempting to reconnect...");
+      // If not connected, try to reconnect and queue the message
+      if (!connected && !reconnectTimeoutRef.current) {
+        connectWebSocket();
+      }
     }
   };
   
