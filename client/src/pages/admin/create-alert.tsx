@@ -404,21 +404,38 @@ export default function CreateAlert() {
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       </div>
                     ) : (
-                      ['Support Level', 'Resistance Breakout', 'Oversold RSI', 'Upward Trend', 'Volume Increase', 'Moving Average Crossover', 'Earnings Beat', 'Sector Momentum', 'Bullish Pattern'].map(reason => (
-                        <div key={reason} className="flex items-start space-x-2">
+                      technicalReasons ? technicalReasons.map(reason => (
+                        <div key={reason.id} className="flex items-start space-x-2">
                           <Checkbox 
-                            id={`reason-${reason}`}
-                            checked={selectedReasons.includes(reason)}
-                            onCheckedChange={() => toggleReasonSelection(reason)}
+                            id={`reason-${reason.id}`}
+                            checked={selectedReasons.includes(reason.name)}
+                            onCheckedChange={() => toggleReasonSelection(reason.name)}
                           />
                           <label 
-                            htmlFor={`reason-${reason}`}
+                            htmlFor={`reason-${reason.id}`}
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                           >
-                            {reason}
+                            {reason.name}
                           </label>
                         </div>
-                      ))
+                      )) : (
+                        // Fallback to common technical reasons if API fails
+                        ['Support Level', 'Resistance Breakout', 'Oversold RSI', 'Upward Trend', 'Volume Increase', 'Moving Average Crossover', 'Earnings Beat', 'Sector Momentum', 'Bullish Pattern'].map(reason => (
+                          <div key={reason} className="flex items-start space-x-2">
+                            <Checkbox 
+                              id={`reason-${reason}`}
+                              checked={selectedReasons.includes(reason)}
+                              onCheckedChange={() => toggleReasonSelection(reason)}
+                            />
+                            <label 
+                              htmlFor={`reason-${reason}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {reason}
+                            </label>
+                          </div>
+                        ))
+                      )
                     )}
                   </div>
                 </div>
