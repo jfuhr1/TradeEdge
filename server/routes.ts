@@ -462,15 +462,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Success Center API - Success Cards
   app.get("/api/success-cards", async (req, res) => {
     try {
-      // For demo purposes, return sample data for unauthenticated users
-      if (!req.isAuthenticated()) {
-        // Return empty array for unauthenticated users so UI still works
-        return res.json([]);
+      // For demo purposes, create some sample success cards if none exist
+      if (storage.successCards.size === 0) {
+        console.log("Creating sample success cards for demonstration");
+        
+        // Create sample success cards for demonstration
+        await storage.createSuccessCard({
+          userId: 1,
+          stockAlertId: 12, // AMZN
+          percentGained: 12.73,
+          daysToTarget: 28,
+          targetHit: 1,
+          imageUrl: "https://images.unsplash.com/photo-1523474438810-b998697493e7?q=80&w=800&auto=format&fit=crop",
+          shared: false,
+          sharedPlatform: null
+        });
+        
+        await storage.createSuccessCard({
+          userId: 1,
+          stockAlertId: 13, // GOOGL
+          percentGained: 16.65,
+          daysToTarget: 45,
+          targetHit: 2,
+          imageUrl: "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?q=80&w=800&auto=format&fit=crop",
+          shared: true,
+          sharedPlatform: "twitter"
+        });
+        
+        await storage.createSuccessCard({
+          userId: 1,
+          stockAlertId: 14, // NFLX
+          percentGained: 17.81,
+          daysToTarget: 65,
+          targetHit: 3,
+          imageUrl: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=800&auto=format&fit=crop",
+          shared: false,
+          sharedPlatform: null
+        });
       }
       
-      const cards = await storage.getSuccessCardsByUser(req.user.id);
+      // Get all success cards
+      const cards = Array.from(storage.successCards.values());
       res.json(cards);
     } catch (error) {
+      console.error("Error fetching success cards:", error);
       res.status(500).json({ message: "Failed to fetch success cards" });
     }
   });

@@ -68,17 +68,13 @@ interface SuccessCard {
   id: number;
   userId: number;
   stockAlertId: number;
-  stockSymbol: string;
-  companyName: string;
-  boughtPrice: number;
-  soldPrice: number;
-  percentGain: number;
-  daysHeld: number;
+  percentGained: number;
+  daysToTarget: number;
   targetHit: number;
   imageUrl: string;
   shared: boolean;
   sharedPlatform: string | null;
-  createdAt: Date;
+  dateCreated: string;
 }
 
 // Badge component
@@ -118,10 +114,25 @@ const SuccessCardComponent = ({ card, onShare }: {
   onShare: (id: number, platform: string) => void 
 }) => {
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [stockInfo, setStockInfo] = useState<{symbol: string, companyName: string} | null>(null);
+  
+  // Fetch stock info based on stockAlertId
+  useQuery({
+    queryKey: [`/api/stock-alerts/${card.stockAlertId}`],
+    enabled: !!card.stockAlertId,
+    onSuccess: (data) => {
+      if (data && data.symbol) {
+        setStockInfo({
+          symbol: data.symbol,
+          companyName: data.companyName
+        });
+      }
+    }
+  });
   
   // Helper function to format a date as MM/DD/YYYY
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric'
@@ -130,22 +141,29 @@ const SuccessCardComponent = ({ card, onShare }: {
   
   return (
     <Card className="border-primary overflow-hidden">
-      <div className="relative h-40 bg-gradient-to-r from-blue-500 to-primary">
+      <div 
+        className="relative h-40 bg-gradient-to-r from-blue-500 to-primary"
+        style={{
+          backgroundImage: card.imageUrl ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${card.imageUrl})` : 'linear-gradient(to right, #1E88E5, #64B5F6)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
         <div className="absolute top-0 left-0 right-0 bottom-0 flex flex-col justify-between p-4 text-white">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="text-xl font-bold">{card.stockSymbol}</h3>
-              <p className="text-sm opacity-90">{card.companyName}</p>
+              <h3 className="text-xl font-bold shadow-sm">{stockInfo?.symbol || 'Loading...'}</h3>
+              <p className="text-sm opacity-90 shadow-sm">{stockInfo?.companyName || ''}</p>
             </div>
             <div className="bg-green-500 px-3 py-1 rounded-full text-sm font-semibold">
-              +{card.percentGain.toFixed(2)}%
+              +{card.percentGained.toFixed(2)}%
             </div>
           </div>
           
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-xs opacity-80">Held for {card.daysHeld} days</p>
-              <p className="text-xs opacity-80">Created on {formatDate(card.createdAt)}</p>
+              <p className="text-xs opacity-80 shadow-sm">Held for {card.daysToTarget} days</p>
+              <p className="text-xs opacity-80 shadow-sm">Created on {formatDate(card.dateCreated)}</p>
             </div>
             <div className="flex space-x-1">
               {Array.from({ length: card.targetHit }).map((_, i) => (
@@ -158,8 +176,8 @@ const SuccessCardComponent = ({ card, onShare }: {
       
       <CardFooter className="flex justify-between pt-4">
         <div className="text-sm">
-          <div>Entry: ${card.boughtPrice}</div>
-          <div>Exit: ${card.soldPrice}</div>
+          <div>Target {card.targetHit} Reached!</div>
+          <div>TradeEdge Pro Success</div>
         </div>
         
         {!showShareOptions ? (

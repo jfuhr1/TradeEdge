@@ -121,7 +121,7 @@ export class MemStorage implements IStorage {
   private educationProgressList: Map<number, EducationProgress>;
   private userAchievementsList: Map<number, UserAchievement>;
   private alertPreferencesList: Map<number, AlertPreference>;
-  private successCards: Map<number, SuccessCard>;
+  successCards: Map<number, SuccessCard>; // Made public for access from routes
   private achievementBadgesList: Map<number, AchievementBadge>;
   private userAchievementProgressList: Map<number, UserAchievementProgress>;
   
