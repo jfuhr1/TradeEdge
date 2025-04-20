@@ -122,10 +122,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                 {dateDisplay}
               </Badge>
             </div>
-            <div className="mt-1">
-              <span className="text-lg font-bold font-mono">${alert.currentPrice.toFixed(2)}</span>
-              <span className="text-profit text-sm ml-1">+1.8%</span>
-            </div>
+
           </div>
           <div className="text-right">
             <p className="text-sm text-neutral-600">Buy Zone</p>
