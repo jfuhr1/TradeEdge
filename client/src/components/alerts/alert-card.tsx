@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+import { ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
 
 interface AlertCardProps {
   alert: StockAlert;
@@ -22,6 +23,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
   const queryClient = useQueryClient();
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Calculate the position on the progress bar (0-100%)
   const calculatePricePosition = (price: number, min: number, max: number) => {
@@ -279,9 +281,29 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
         </div>
         
+        {/* Chart Image (Expandable) */}
+        {isExpanded && (
+          <div className="mt-6 mb-4 bg-gray-50 p-2 rounded">
+            <div className="aspect-w-16 aspect-h-9 rounded overflow-hidden">
+              {alert.chartImageUrl ? (
+                <img 
+                  src={alert.chartImageUrl} 
+                  alt={`${alert.symbol} Stock Chart`} 
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
+                  <BarChart2 size={48} />
+                  <span className="ml-2">Chart image not available</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons and Date */}
         <div className="flex justify-between items-end mt-8">
-          <div className="grid grid-cols-2 gap-4 flex-1 mr-4">
+          <div className="grid grid-cols-3 gap-4 flex-1 mr-4">
             <Button 
               className="py-4 w-full"
               onClick={() => setIsAddingToPortfolio(true)}
@@ -296,6 +318,23 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                 View Details
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="py-4 w-full"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  Collapse
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Expand
+                </>
+              )}
+            </Button>
           </div>
           <div className="text-right">
             <p className="text-xs font-medium text-black">Alert Date</p>
