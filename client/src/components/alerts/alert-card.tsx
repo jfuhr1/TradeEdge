@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AlertCardProps {
   alert: StockAlert;
@@ -21,15 +22,36 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
-  // Calculate current price position in buy zone (as percentage)
-  const buyZoneRange = alert.buyZoneMax - alert.buyZoneMin;
-  const pricePosition = Math.min(
-    Math.max(
-      ((alert.currentPrice - alert.buyZoneMin) / buyZoneRange) * 100,
-      0
-    ),
-    100
-  );
+  // Calculate the position on the progress bar (0-100%)
+  const calculatePricePosition = (price: number, min: number, max: number) => {
+    // Create a scale from min to max, mapping to 0-100%
+    const range = max - min;
+    const position = ((price - min) / range) * 100;
+    return Math.min(Math.max(position, 0), 100);
+  };
+
+  // Calculate price status category
+  const getPriceStatus = () => {
+    const highRiskMin = alert.buyZoneMin * 0.9;
+    
+    if (alert.currentPrice < highRiskMin) {
+      return "below-high-risk"; // Below high risk/reward zone
+    } else if (alert.currentPrice < alert.buyZoneMin) {
+      return "high-risk"; // In high risk/reward zone
+    } else if (alert.currentPrice <= alert.buyZoneMax) {
+      return "buy-zone"; // In buy zone
+    } else if (alert.currentPrice <= alert.target1) {
+      return "above-buy-zone"; // Between buy zone and target 1
+    } else if (alert.currentPrice <= alert.target2) {
+      return "target-1"; // Between target 1 and target 2
+    } else if (alert.currentPrice <= alert.target3) {
+      return "target-2"; // Between target 2 and target 3
+    } else {
+      return "above-target-3"; // Above target 3
+    }
+  };
+  
+  const priceStatus = getPriceStatus();
 
   // Calculate target percentages
   const target1Percent = ((alert.target1 / alert.currentPrice) - 1) * 100;
@@ -77,7 +99,13 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
 
   return (
     <>
-      <div className={`bg-white p-4 rounded-lg shadow transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${className}`}>
+      <div className={`bg-white p-4 rounded-lg shadow transition-all duration-200 hover:-translate-y-1 hover:shadow-md border ${
+        priceStatus === "high-risk" 
+          ? "border-amber-500" 
+          : priceStatus === "buy-zone"
+            ? "border-green-500"
+            : "border-gray-200"
+      } ${className}`}>
         <div className="flex justify-between">
           <div>
             <div className="flex items-center">
@@ -105,23 +133,124 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
         </div>
         
-        {/* Buy Zone Visualization */}
-        <div className="mt-4 mb-2">
+        {/* Advanced Price Visualization */}
+        <div className="mt-4 mb-4">
           <div className="flex justify-between text-xs text-neutral-500 mb-1">
-            <span>${alert.buyZoneMin}</span>
-            <span>${alert.buyZoneMax}</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help">
+                    ${(alert.buyZoneMin * 0.9).toFixed(2)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>High Risk/Reward Zone (-10%)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span className="font-medium">${alert.buyZoneMin}</span>
+            <span className="font-medium">${alert.buyZoneMax}</span>
+            <span>${alert.target1}</span>
+            <span>${alert.target2}</span>
+            <span>${alert.target3}</span>
           </div>
-          <div className="relative">
-            <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+          
+          <div className="relative h-10 mt-2 mb-4">
+            {/* Main progress bar container */}
+            <div className="absolute top-3 w-full h-4 bg-gray-100 rounded-full overflow-visible">
+              {/* High Risk/Reward Zone (10% below buy zone) */}
               <div 
-                className="bg-primary h-full" 
-                style={{ width: `${pricePosition}%` }}
+                className="absolute h-full bg-amber-100 rounded-l-full"
+                style={{ 
+                  width: "20%",
+                  left: "0%"
+                }}
               ></div>
+
+              {/* Buy Zone */}
+              <div 
+                className="absolute h-full bg-green-100"
+                style={{ 
+                  width: "20%",
+                  left: "20%"
+                }}
+              ></div>
+
+              {/* From buy zone to target 1 */}
+              <div 
+                className="absolute h-full bg-gray-100"
+                style={{ 
+                  width: "20%",
+                  left: "40%"
+                }}
+              ></div>
+
+              {/* From target 1 to target 2 */}
+              <div 
+                className="absolute h-full bg-gray-100"
+                style={{ 
+                  width: "15%",
+                  left: "60%"
+                }}
+              ></div>
+
+              {/* From target 2 to target 3 */}
+              <div 
+                className="absolute h-full bg-gray-100"
+                style={{ 
+                  width: "15%",
+                  left: "75%"
+                }}
+              ></div>
+
+              {/* Beyond target 3 */}
+              <div 
+                className="absolute h-full bg-gray-100 rounded-r-full"
+                style={{ 
+                  width: "10%",
+                  left: "90%"
+                }}
+              ></div>
+
+              {/* Vertical indicators */}
+              {/* Buy Zone Min indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 -top-1" style={{ left: "20%" }}>
+                <div className="absolute -top-4 -ml-3 text-[10px] text-green-700">Min</div>
+              </div>
+              
+              {/* Buy Zone Max indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 -top-1" style={{ left: "40%" }}>
+                <div className="absolute -top-4 -ml-3 text-[10px] text-green-700">Max</div>
+              </div>
+              
+              {/* Target 1 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "60%" }}>
+                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T1</div>
+              </div>
+              
+              {/* Target 2 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "75%" }}>
+                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T2</div>
+              </div>
+              
+              {/* Target 3 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary -top-1" style={{ left: "90%" }}>
+                <div className="absolute -top-4 -ml-3 text-[10px] text-primary">T3</div>
+              </div>
+
+              {/* Current price indicator (thicker) */}
+              <div className="absolute w-1 h-8 bg-black -top-2 z-10" style={{ 
+                left: (() => {
+                  const lowPrice = alert.buyZoneMin * 0.9;
+                  const highPrice = alert.target3 * 1.05;
+                  const range = highPrice - lowPrice;
+                  const position = ((alert.currentPrice - lowPrice) / range) * 100;
+                  return `${Math.min(Math.max(position, 0), 100)}%`;
+                })()
+              }}>
+                <div className="absolute top-8 -ml-7 text-[11px] font-medium">Current: ${alert.currentPrice.toFixed(2)}</div>
+              </div>
             </div>
-            <div 
-              className="absolute w-0.5 h-4 bg-black -mt-2.5" 
-              style={{ left: `${pricePosition}%` }}
-            ></div>
           </div>
         </div>
         

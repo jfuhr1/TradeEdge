@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { StockAlert } from "@shared/schema";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, AlertTriangle } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import AlertCard from "@/components/alerts/alert-card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   Tabs, 
   TabsContent, 
@@ -34,6 +35,12 @@ export default function StockAlerts() {
   }>({
     queryKey: ["/api/stock-alerts/targets"],
   });
+
+  // Calculate high risk/reward stocks (below buy zone)
+  const highRiskAlerts = allAlerts?.filter(alert => 
+    alert.currentPrice < alert.buyZoneMin && 
+    alert.currentPrice >= (alert.buyZoneMin * 0.9)
+  ) || [];
   
   const isLoading = isLoadingAlerts || isLoadingBuyZone || isLoadingTargets;
   
