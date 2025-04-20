@@ -108,26 +108,26 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
       } ${className}`}>
         <div className="flex justify-between">
           <div>
-            <div className="flex items-center">
+            <div className="flex items-center flex-wrap">
               <h3 className="font-bold text-lg">{alert.symbol}</h3>
               <span className="ml-2 text-neutral-600">{alert.companyName}</span>
-            </div>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {isNew && (
-                <Badge variant="outline" className="bg-green-100 text-green-800">
-                  New Alert
-                </Badge>
-              )}
-              {priceStatus === "buy-zone" && (
-                <Badge variant="outline" className="bg-green-100 text-green-800">
-                  Buy Zone
-                </Badge>
-              )}
-              {priceStatus === "high-risk" && (
-                <Badge variant="outline" className="bg-orange-100 text-amber-800">
-                  High R/R
-                </Badge>
-              )}
+              <div className="flex gap-1 ml-2">
+                {isNew && (
+                  <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                    New Alert
+                  </Badge>
+                )}
+                {priceStatus === "buy-zone" && (
+                  <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                    Buy Zone
+                  </Badge>
+                )}
+                {priceStatus === "high-risk" && (
+                  <Badge variant="outline" className="bg-orange-100 text-amber-800 text-xs">
+                    High R/R
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
           <div className="text-right">
