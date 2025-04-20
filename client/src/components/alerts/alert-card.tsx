@@ -156,12 +156,21 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                 }}
               ></div>
 
-              {/* From buy zone to target 3 + 10% buffer */}
+              {/* Target Zone - from buy zone max to target 3 */}
               <div 
-                className="absolute h-full bg-gray-100 rounded-r-full"
+                className="absolute h-full bg-gray-100"
                 style={{ 
-                  width: "70%",
+                  width: "55%",
                   left: "30%"
+                }}
+              ></div>
+
+              {/* Overperform Zone - beyond target 3 */}
+              <div 
+                className="absolute h-full bg-blue-50 rounded-r-full"
+                style={{ 
+                  width: "15%",
+                  left: "85%"
                 }}
               ></div>
 
@@ -178,9 +187,10 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               {/* Target 1 indicator */}
               <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
                 left: (() => {
-                  // Calculate position in the 70% remaining space (30% to 100%)
-                  const t1Pos = ((alert.target1 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
-                  return `${t1Pos}%`;
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                  const t1Position = (alert.target1 - alert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t1Position * 55)}%`;
                 })()
               }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
@@ -192,9 +202,10 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               {/* Target 2 indicator */}
               <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
                 left: (() => {
-                  // Calculate position in the 70% remaining space (30% to 100%)
-                  const t2Pos = ((alert.target2 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
-                  return `${t2Pos}%`;
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                  const t2Position = (alert.target2 - alert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t2Position * 55)}%`;
                 })()
               }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
@@ -204,13 +215,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               </div>
               
               {/* Target 3 indicator */}
-              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
-                left: (() => {
-                  // Calculate position in the 70% remaining space (30% to 100%)
-                  const t3Pos = ((alert.target3 - alert.buyZoneMax) / (alert.target3 * 1.1 - alert.buyZoneMax)) * 70 + 30;
-                  return `${Math.min(t3Pos, 90)}%`;
-                })()
-              }}>
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ left: "85%" }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
                   <span className="text-xs font-medium text-primary">Target 3</span>
                   <span className="block text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
@@ -232,24 +237,27 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                     const buyRange = alert.buyZoneMax - alert.buyZoneMin;
                     const posInRange = (alert.currentPrice - alert.buyZoneMin) / buyRange;
                     return `${15 + (posInRange * 15)}%`;
-                  } else if (alert.currentPrice <= alert.target3 * 1.1) {
-                    // Between buy zone and beyond target 3 (30-100%)
-                    const upperRange = alert.target3 * 1.1 - alert.buyZoneMax;
-                    const posInRange = (alert.currentPrice - alert.buyZoneMax) / upperRange;
-                    return `${30 + (posInRange * 70)}%`;
+                  } else if (alert.currentPrice <= alert.target3) {
+                    // Between buy zone max and target 3 (30-85%)
+                    const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                    const posInRange = (alert.currentPrice - alert.buyZoneMax) / targetZoneWidth;
+                    return `${30 + (posInRange * 55)}%`;
                   } else {
-                    return "100%"; // Above target 3 + buffer
+                    // In overperform zone or beyond
+                    const overRange = alert.target3 * 1.1 - alert.target3;
+                    const posInRange = Math.min((alert.currentPrice - alert.target3) / overRange, 1);
+                    return `${85 + (posInRange * 15)}%`;
                   }
                 })()
-              }}>
-                <div className="absolute top-8 -ml-10 text-xs font-medium text-center w-20">${alert.currentPrice.toFixed(2)}</div>
-              </div>
+              }}></div>
             </div>
             
             {/* Zone labels below progress bar */}
             <div className="absolute top-14 left-0 w-full flex text-[10px]">
               <div className="w-[15%] text-center text-amber-700">High Risk/Reward</div>
               <div className="w-[15%] text-center text-green-700">Buy Zone</div>
+              <div className="w-[55%]"></div>
+              <div className="w-[15%] text-center text-blue-700">Overperform</div>
             </div>
           </div>
         </div>
