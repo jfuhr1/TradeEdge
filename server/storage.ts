@@ -179,6 +179,8 @@ export class MemStorage implements IStorage {
     this.seedStockAlerts();
     // Initialize with some achievement badges
     this.seedAchievementBadges();
+    // Initialize with some success cards and achievement progress
+    this.seedSuccessCardsAndAchievements();
   }
 
   // User operations
@@ -870,6 +872,122 @@ export class MemStorage implements IStorage {
     });
   }
   
+  // Seed success cards and achievement progress for demo
+  private seedSuccessCardsAndAchievements() {
+    // Create a demo user if none exists
+    let demoUserId = 1;
+    if (!this.users.has(demoUserId)) {
+      this.createUser({
+        username: 'demouser',
+        password: 'password',
+        email: 'demo@example.com',
+        name: 'Demo User',
+        tier: 'standard'
+      });
+    }
+    
+    // Create sample achievement progress records
+    const achievements = [];
+    
+    // Trading Rookie - completed
+    achievements.push({
+      userId: demoUserId,
+      badgeId: 1,
+      progress: 1,
+      maxProgress: 1,
+      completed: true,
+      completedAt: new Date(new Date().setDate(new Date().getDate() - 90))
+    });
+    
+    // Target Hunter - completed
+    achievements.push({
+      userId: demoUserId,
+      badgeId: 2,
+      progress: 1,
+      maxProgress: 1,
+      completed: true,
+      completedAt: new Date(new Date().setDate(new Date().getDate() - 60))
+    });
+    
+    // Master Trader - in progress
+    achievements.push({
+      userId: demoUserId,
+      badgeId: 3,
+      progress: 0,
+      maxProgress: 1,
+      completed: false,
+      completedAt: null
+    });
+    
+    // Trading Scholar - completed
+    achievements.push({
+      userId: demoUserId,
+      badgeId: 4,
+      progress: 5,
+      maxProgress: 5,
+      completed: true,
+      completedAt: new Date(new Date().setDate(new Date().getDate() - 45))
+    });
+    
+    // Add achievements to the storage
+    achievements.forEach(achievement => {
+      const id = this.userAchievementProgressId++;
+      this.userAchievementProgressList.set(id, { ...achievement, id });
+    });
+    
+    // Create sample success cards for closed alerts
+    // AMZN success card (hit target 1)
+    this.createSuccessCard({
+      userId: demoUserId,
+      stockAlertId: 12, // AMZN
+      stockSymbol: "AMZN",
+      companyName: "Amazon.com Inc.",
+      boughtPrice: 175.20,
+      soldPrice: 197.50,
+      percentGain: 12.73,
+      daysHeld: 28,
+      targetHit: 1,
+      imageUrl: "https://images.unsplash.com/photo-1523474438810-b998697493e7?q=80&w=800&auto=format&fit=crop",
+      shared: false,
+      sharedPlatform: null,
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 60))
+    });
+    
+    // GOOGL success card (hit target 2)
+    this.createSuccessCard({
+      userId: demoUserId,
+      stockAlertId: 13, // GOOGL
+      stockSymbol: "GOOGL",
+      companyName: "Alphabet Inc.",
+      boughtPrice: 156.75,
+      soldPrice: 182.86,
+      percentGain: 16.65,
+      daysHeld: 45,
+      targetHit: 2,
+      imageUrl: "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?q=80&w=800&auto=format&fit=crop",
+      shared: true,
+      sharedPlatform: "twitter",
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 30))
+    });
+    
+    // NFLX success card (hit target 3)
+    this.createSuccessCard({
+      userId: demoUserId,
+      stockAlertId: 14, // NFLX
+      stockSymbol: "NFLX",
+      companyName: "Netflix, Inc.",
+      boughtPrice: 595.25,
+      soldPrice: 701.25,
+      percentGain: 17.81,
+      daysHeld: 65,
+      targetHit: 3,
+      imageUrl: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=800&auto=format&fit=crop",
+      shared: false,
+      sharedPlatform: null,
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 15))
+    });
+  }
+  
   private seedEducationContent() {
     const contents: InsertEducationContent[] = [
       {
@@ -1161,7 +1279,19 @@ export class MemStorage implements IStorage {
   async createSuccessCard(card: InsertSuccessCard): Promise<SuccessCard> {
     const id = this.successCardId++;
     const now = new Date();
-    const successCard: SuccessCard = { ...card, id, createdAt: now };
+    
+    // Our schema uses dateCreated instead of createdAt for SuccessCard
+    // Handle the conversion here
+    const { createdAt, stockSymbol, companyName, boughtPrice, soldPrice, percentGain, daysHeld, ...rest } = card as any;
+    
+    const successCard: SuccessCard = { 
+      ...rest, 
+      id, 
+      percentGained: percentGain || 0, 
+      daysToTarget: daysHeld || 0,
+      dateCreated: createdAt || now 
+    };
+    
     this.successCards.set(id, successCard);
     return successCard;
   }
@@ -1169,7 +1299,7 @@ export class MemStorage implements IStorage {
   async getSuccessCardsByUser(userId: number): Promise<SuccessCard[]> {
     return Array.from(this.successCards.values())
       .filter(card => card.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
   }
   
   async getSuccessCard(id: number): Promise<SuccessCard | undefined> {
