@@ -278,22 +278,30 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
           </div>
         </div>
         
-        {/* Action Buttons */}
-        <div className="mt-8 grid grid-cols-2 gap-4">
-          <Button 
-            className="py-6 w-full"
-            onClick={() => setIsAddingToPortfolio(true)}
-          >
-            Add to Portfolio
-          </Button>
-          <Link href={`/stock-detail/${alert.symbol}`} className="w-full">
+        {/* Action Buttons and Date */}
+        <div className="mt-8">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <Button 
-              variant="outline" 
-              className="py-6 w-full h-full"
+              className="py-6 w-full bg-primary hover:bg-primary/90"
+              onClick={() => setIsAddingToPortfolio(true)}
             >
-              View Details
+              Add to Portfolio
             </Button>
-          </Link>
+            <Link href={`/stock-detail/${alert.symbol}`} className="w-full">
+              <Button 
+                variant="outline" 
+                className="py-6 w-full h-full border-primary text-primary hover:bg-primary/10"
+              >
+                View Details
+              </Button>
+            </Link>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-medium text-black">Alert Date</p>
+            <p className="text-sm font-medium text-black">
+              {format(new Date(alert.createdAt), 'MM/dd/yy')}
+            </p>
+          </div>
         </div>
       </div>
 
