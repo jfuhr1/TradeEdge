@@ -1,5 +1,5 @@
 import MainLayout from "@/components/layout/main-layout";
-import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter } from "lucide-react";
+import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter, CalendarDays, Clock, UserCircle, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -102,36 +102,146 @@ const approachingTargets = {
   ]
 };
 
-// Sample education content
-const educationContent = [
+// Sample curriculum outline
+const curriculumSections = [
   {
     id: 1,
-    title: "Technical Analysis Fundamentals",
-    description: "Learn how to read charts and identify key patterns",
+    title: "Market Basics",
+    description: "Understanding the stock market fundamentals",
     tier: "free",
-    type: "article",
-    duration: "15 min read"
+    progress: 85,
+    modules: 6,
+    completedModules: 5
   },
   {
     id: 2,
-    title: "Mastering Risk Management",
-    description: "Advanced strategies to protect your portfolio",
-    tier: "premium",
-    type: "video",
-    duration: "45 min"
+    title: "Chart Reading Essentials",
+    description: "Learn to interpret different chart patterns",
+    tier: "free",
+    progress: 100,
+    modules: 4,
+    completedModules: 4
   },
   {
     id: 3,
-    title: "Options Trading Workshop",
-    description: "Complete guide from basics to advanced strategies",
+    title: "Technical Analysis",
+    description: "Using indicators to predict price movements",
     tier: "premium",
-    type: "course",
-    duration: "5 hours"
+    progress: 60,
+    modules: 10,
+    completedModules: 6
+  },
+  {
+    id: 4,
+    title: "Risk Management",
+    description: "Strategies to protect your portfolio",
+    tier: "premium",
+    progress: 40,
+    modules: 5,
+    completedModules: 2
+  },
+  {
+    id: 5,
+    title: "Options Trading",
+    description: "Complete options trading course",
+    tier: "premium",
+    progress: 20,
+    modules: 10,
+    completedModules: 2
+  },
+  {
+    id: 6,
+    title: "Advanced Swing Trading",
+    description: "Multi-day trading strategies",
+    tier: "premium",
+    progress: 0,
+    modules: 8,
+    completedModules: 0
+  },
+  {
+    id: 7,
+    title: "Sector Rotation Strategies",
+    description: "Timing sector investments for maximum returns",
+    tier: "premium",
+    progress: 0,
+    modules: 6,
+    completedModules: 0
+  },
+  {
+    id: 8,
+    title: "Algorithmic Trading Principles",
+    description: "Understanding automated trading systems",
+    tier: "premium",
+    progress: 0,
+    modules: 7,
+    completedModules: 0
+  },
+  {
+    id: 9,
+    title: "Market Psychology",
+    description: "Understanding emotions in trading",
+    tier: "premium",
+    progress: 0,
+    modules: 5,
+    completedModules: 0
+  },
+  {
+    id: 10,
+    title: "Position Sizing Strategies",
+    description: "Optimizing your trade sizes",
+    tier: "premium",
+    progress: 0,
+    modules: 4,
+    completedModules: 0
   }
 ];
 
-// Sample coaching sessions
-const coachingSessions = [
+// Sample recent articles
+const recentArticles = [
+  {
+    id: 1,
+    title: "Three Breakout Patterns To Watch This Week",
+    publicationDate: new Date(2025, 3, 18),
+    read: true,
+    category: "Technical Analysis",
+    tier: "premium"
+  },
+  {
+    id: 2,
+    title: "How The Fed's Latest Decision Affects Your Portfolio",
+    publicationDate: new Date(2025, 3, 15),
+    read: true,
+    category: "Market News",
+    tier: "free"
+  },
+  {
+    id: 3,
+    title: "Sector Rotation: Why Tech Is Heating Up Again",
+    publicationDate: new Date(2025, 3, 12),
+    read: false,
+    category: "Sector Analysis",
+    tier: "premium"
+  },
+  {
+    id: 4,
+    title: "Five Risk Management Rules Every Trader Should Follow",
+    publicationDate: new Date(2025, 3, 10),
+    read: false,
+    category: "Risk Management",
+    tier: "free"
+  },
+  {
+    id: 5,
+    title: "Options Strategy: Profiting From Sideways Markets",
+    publicationDate: new Date(2025, 3, 5),
+    read: true,
+    category: "Options",
+    tier: "premium"
+  }
+];
+
+// Sample individual coaching sessions
+const individualCoaches = [
   {
     id: 1,
     coachName: "Sarah Johnson",
@@ -147,6 +257,41 @@ const coachingSessions = [
     availability: "Tue, Thu, Sat",
     price: 150,
     image: "https://randomuser.me/api/portraits/men/26.jpg"
+  }
+];
+
+// Sample group coaching sessions
+const groupCoachingSessions = [
+  {
+    id: 1,
+    title: "Weekly Market Overview",
+    coach: "Sarah Johnson",
+    date: new Date(2025, 3, 25),
+    time: "7:00 PM - 8:30 PM ET",
+    participants: 18,
+    maxParticipants: 25,
+    price: 35
+  },
+  {
+    id: 2,
+    title: "Swing Trading Strategies",
+    coach: "Michael Chen",
+    date: new Date(2025, 3, 26),
+    time: "6:00 PM - 7:30 PM ET",
+    participants: 12,
+    maxParticipants: 20,
+    price: 40
+  },
+  {
+    id: 3,
+    title: "Options Trading Workshop",
+    coach: "Jessica Miller",
+    date: new Date(2025, 3, 28),
+    time: "7:00 PM - 9:00 PM ET",
+    participants: 15,
+    maxParticipants: 15,
+    price: 50,
+    isFull: true
   }
 ];
 
@@ -770,80 +915,232 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {educationContent.map((content) => (
-            <Card key={content.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-bold">{content.title}</p>
-                    <p className="text-sm text-muted-foreground">{content.description}</p>
+          {/* Curriculum Outline with Progress */}
+          <Card className="overflow-hidden md:col-span-1">
+            <CardHeader className="p-4 pb-2">
+              <h3 className="text-lg font-semibold">Curriculum Outline</h3>
+              <p className="text-sm text-muted-foreground">Track your learning progress</p>
+            </CardHeader>
+            <CardContent className="p-4 pt-2 max-h-96 overflow-y-auto">
+              <div className="space-y-4">
+                {curriculumSections.map((section) => (
+                  <div key={section.id} className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-start gap-2">
+                        <div>
+                          <p className="font-medium">{section.title}</p>
+                          <p className="text-xs text-muted-foreground">{section.description}</p>
+                        </div>
+                        <Badge variant={section.tier === "premium" ? "default" : "outline"} className="ml-2">
+                          {section.tier === "premium" ? "Premium" : "Free"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div 
+                          className="bg-blue-600 h-1.5 rounded-full" 
+                          style={{ width: `${section.progress}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs whitespace-nowrap">
+                        {section.completedModules}/{section.modules} modules
+                      </span>
+                    </div>
                   </div>
-                  <Badge variant={content.tier === "premium" ? "default" : "outline"}>
-                    {content.tier === "premium" ? "Premium" : "Free"}
-                  </Badge>
-                </div>
-                
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center">
-                    <Badge variant="outline" className="mr-2">
-                      {content.type}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{content.duration}</span>
-                  </div>
-                  <Button size="sm" variant="secondary">
-                    View Content
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Recent Articles */}
+          <Card className="overflow-hidden md:col-span-1">
+            <CardHeader className="p-4 pb-2">
+              <h3 className="text-lg font-semibold">Recent Articles</h3>
+              <p className="text-sm text-muted-foreground">Latest trading insights</p>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <ul className="space-y-3">
+                {recentArticles.map((article) => (
+                  <li key={article.id} className="flex items-start space-x-2">
+                    <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${article.read ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                    <div className="flex-1">
+                      <a 
+                        href="#" 
+                        className={`text-sm hover:underline ${article.read ? 'text-muted-foreground' : 'font-medium'}`}
+                      >
+                        {article.title}
+                      </a>
+                      <div className="flex items-center mt-1 text-xs">
+                        <span className="text-muted-foreground">
+                          {article.publicationDate.toLocaleDateString()}
+                        </span>
+                        <Badge 
+                          variant="outline" 
+                          className="ml-2 text-[10px] py-0 h-4"
+                        >
+                          {article.category}
+                        </Badge>
+                        {article.tier === "premium" && (
+                          <Badge className="ml-1 text-[10px] py-0 h-4">
+                            Premium
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 text-center">
+                <Button variant="ghost" size="sm" className="w-full text-xs">
+                  View All Articles
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Trading Tips */}
+          <Card className="overflow-hidden md:col-span-1">
+            <CardHeader className="p-4 pb-2">
+              <h3 className="text-lg font-semibold">Today's Trading Tip</h3>
+              <p className="text-sm text-muted-foreground">Daily insights for better trading</p>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <blockquote className="italic text-sm border-l-2 border-primary pl-4 py-2">
+                "The most important rule of trading is to play great defense, not great offense."
+              </blockquote>
+              <p className="text-right text-sm mt-2">- Paul Tudor Jones</p>
+              
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
+                <h4 className="font-medium text-sm">Tip of the Day:</h4>
+                <p className="text-sm mt-1">Always set a stop loss for every trade to protect your capital from unexpected market moves.</p>
+              </div>
+              
+              <div className="mt-4">
+                <p className="text-sm font-medium">Popular This Week:</p>
+                <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
+                  <li>Understanding PE Ratios</li>
+                  <li>Moving Average Crossover Strategies</li>
+                  <li>Using Volume to Confirm Breakouts</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
       
       {/* Coaching Section */}
-      <div>
+      <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
             <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
             <h2 className="text-2xl font-bold">Coaching Sessions</h2>
           </div>
           <Link href="/coaching">
-            <Button variant="outline" size="sm">View All Coaches</Button>
+            <Button variant="outline" size="sm">View All Coaching</Button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {coachingSessions.map((coach) => (
-            <Card key={coach.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex">
-                  <div className="mr-4">
-                    <div className="h-16 w-16 rounded-full overflow-hidden">
-                      <img src={coach.image} alt={coach.coachName} className="h-full w-full object-cover" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-lg">{coach.coachName}</p>
-                    <p className="text-sm text-muted-foreground">{coach.specialty}</p>
-                    
-                    <div className="flex justify-between items-center mt-2">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Upcoming Group Sessions */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <Users className="h-5 w-5 mr-2 text-blue-500" />
+              Upcoming Group Sessions
+            </h3>
+            
+            <div className="space-y-4">
+              {groupCoachingSessions.map((session) => (
+                <Card key={session.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between">
                       <div>
-                        <p className="text-xs text-muted-foreground">Availability</p>
-                        <p className="text-sm">{coach.availability}</p>
+                        <h4 className="font-semibold">{session.title}</h4>
+                        <p className="text-sm text-muted-foreground">with {session.coach}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Session Price</p>
-                        <p className="font-semibold">${coach.price}/hour</p>
-                      </div>
+                      <Badge variant={session.isFull ? "destructive" : "outline"} className={!session.isFull ? "bg-green-50 text-green-700" : ""}>
+                        {session.isFull ? "Full" : `${session.participants}/${session.maxParticipants} spots`}
+                      </Badge>
                     </div>
                     
-                    <Button className="w-full mt-3" size="sm">
-                      Book Session
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <div className="flex items-center mt-3 text-sm">
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      <span className="mr-3">{session.date.toLocaleDateString()}</span>
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>{session.time}</span>
+                    </div>
+                    
+                    <div className="mt-3 flex justify-between items-center">
+                      <p className="font-medium">${session.price}</p>
+                      <Button 
+                        size="sm" 
+                        variant={session.isFull ? "outline" : "default"}
+                        disabled={session.isFull}
+                      >
+                        {session.isFull ? "Join Waitlist" : "Register"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              <div className="text-center">
+                <Button variant="ghost" size="sm" className="mt-2">
+                  View All Group Sessions
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Individual Coaching */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
+              Individual Coaching
+            </h3>
+            
+            <div className="space-y-4">
+              {individualCoaches.map((coach) => (
+                <Card key={coach.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex">
+                      <div className="mr-4">
+                        <div className="h-16 w-16 rounded-full overflow-hidden">
+                          <img src={coach.image} alt={coach.coachName} className="h-full w-full object-cover" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg">{coach.coachName}</p>
+                        <p className="text-sm text-muted-foreground">{coach.specialty}</p>
+                        
+                        <div className="flex justify-between items-center mt-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Availability</p>
+                            <p className="text-sm">{coach.availability}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Session Price</p>
+                            <p className="font-semibold">${coach.price}/hour</p>
+                          </div>
+                        </div>
+                        
+                        <Button className="w-full mt-3" size="sm">
+                          Book Session
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              <div className="text-center">
+                <Button variant="ghost" size="sm" className="mt-2">
+                  View All Coaches
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>
