@@ -198,6 +198,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
                   <span className="text-xs font-medium text-primary">Target 1</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target1}</span>
                   <span className="block text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
                 </div>
               </div>
@@ -213,6 +214,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
                   <span className="text-xs font-medium text-primary">Target 2</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target2}</span>
                   <span className="block text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
                 </div>
               </div>
@@ -221,6 +223,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
               <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ left: "85%" }}>
                 <div className="absolute top-6 -ml-16 w-32 text-center">
                   <span className="text-xs font-medium text-primary">Target 3</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target3}</span>
                   <span className="block text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
                 </div>
               </div>
