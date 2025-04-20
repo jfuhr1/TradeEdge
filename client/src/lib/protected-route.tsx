@@ -1,8 +1,8 @@
 import { Loader2 } from "lucide-react";
-import { Redirect, Route, useLocation } from "wouter";
+import { Redirect, Route } from "wouter";
 
-// Simple route component that renders the component directly
-// We're temporarily bypassing auth checks to get the app working
+// Simple version that just renders the component directly without auth check
+// We'll handle auth checking at the page level for now
 export function ProtectedRoute({
   path,
   component: Component,

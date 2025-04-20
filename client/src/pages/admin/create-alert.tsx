@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { insertStockAlertSchema, StockAlert } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import MainLayout from '@/components/layout/main-layout';
 import { Loader2, Plus, X, Info } from 'lucide-react';
@@ -37,8 +38,40 @@ type StockAlertFormValues = z.infer<typeof stockAlertFormSchema>;
 
 export default function CreateAlert() {
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState('');
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdminStatus() {
+      try {
+        const res = await apiRequest('GET', '/api/user/is-admin');
+        const data = await res.json();
+        setIsAdmin(data.isAdmin);
+        
+        if (!data.isAdmin) {
+          toast({
+            title: 'Access Denied',
+            description: 'You do not have permission to access this page.',
+            variant: 'destructive'
+          });
+        }
+      } catch (error) {
+        setIsAdmin(false);
+        toast({
+          title: 'Access Denied',
+          description: 'There was an error checking your permissions.',
+          variant: 'destructive'
+        });
+      }
+    }
+    
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user, toast]);
 
   // Fetch technical reasons
   const { data: technicalReasons, isLoading: loadingReasons } = useQuery<{ id: number, name: string }[]>({
@@ -143,6 +176,76 @@ export default function CreateAlert() {
   };
 
   const buyZoneError = priceValidationError();
+
+  // Check if user is logged in
+  if (authLoading) {
+    return (
+      <MainLayout title="Loading" description="Checking authentication">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <MainLayout title="Authentication Required" description="Please log in">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-amber-600">Authentication Required</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>You need to be logged in to access this page.</p>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => window.location.href = "/auth"}>Go to Login</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show access denied message if not admin
+  if (isAdmin === false) {
+    return (
+      <MainLayout title="Access Denied" description="Admin access required">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-red-600">Access Denied</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>You do not have permission to access this page. Only administrators can create stock alerts.</p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" onClick={() => window.history.back()}>Go Back</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show loading state while checking admin status
+  if (isAdmin === null) {
+    return (
+      <MainLayout title="Loading" description="Checking permissions">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Checking permissions...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Create Stock Alert" description="Add a new stock alert to the system">

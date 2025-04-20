@@ -137,4 +137,18 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+  
+  // Check if user is admin
+  app.get("/api/user/is-admin", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      res.json({ isAdmin });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check admin status" });
+    }
+  });
 }

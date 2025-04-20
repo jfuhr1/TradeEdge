@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { ProtectedRoute } from "./lib/protected-route";
 import AuthPage from "./pages/auth-page";
 import Dashboard from "./pages/dashboard";
 import StockAlerts from "./pages/stock-alerts";
@@ -14,13 +15,13 @@ function App() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/stock-alerts" component={StockAlerts} />
-      <Route path="/stock/:id" component={StockDetail} />
-      <Route path="/portfolio" component={Portfolio} />
-      <Route path="/education" component={Education} />
-      <Route path="/coaching" component={Coaching} />
-      <Route path="/admin/create-alert" component={CreateAlert} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
+      <ProtectedRoute path="/stock/:id" component={StockDetail} />
+      <ProtectedRoute path="/portfolio" component={Portfolio} />
+      <ProtectedRoute path="/education" component={Education} />
+      <ProtectedRoute path="/coaching" component={Coaching} />
+      <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
       <Route path="/ws-test" component={WebSocketTest} />
       <Route component={NotFound} />
     </Switch>
