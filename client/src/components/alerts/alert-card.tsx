@@ -249,7 +249,16 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
                     return `${85 + (posInRange * 15)}%`;
                   }
                 })()
-              }}></div>
+              }}>
+                <div className="absolute -top-8 -ml-8 text-center w-16">
+                  <span className="text-xs font-medium block">${alert.currentPrice.toFixed(2)}</span>
+                  {alert.currentPrice > alert.buyZoneMax && (
+                    <span className="text-[10px] text-green-600 block">
+                      +{(((alert.currentPrice / alert.buyZoneMax) - 1) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             
             {/* Zone labels below progress bar */}
