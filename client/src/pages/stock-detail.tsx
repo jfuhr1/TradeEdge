@@ -485,16 +485,14 @@ export default function StockDetail() {
           <TabsContent value="narrative">
             <div className="py-4">
               <div className="prose prose-blue">
-                {alert.narrative ? (
-                  <p>{alert.narrative}</p>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {alert.symbol} ({alert.companyName}) is currently trading at ${alert.currentPrice.toFixed(2)}. 
-                    Our analysis suggests a buy zone between ${alert.buyZoneMin.toFixed(2)} and ${alert.buyZoneMax.toFixed(2)}, 
-                    with targets at ${alert.target1.toFixed(2)}, ${alert.target2.toFixed(2)}, and ${alert.target3.toFixed(2)}.
-                    The recommendation is based on {alert.technicalReasons?.join(", ")}.
-                  </p>
-                )}
+                <p className="text-muted-foreground">
+                  {alert.symbol} ({alert.companyName}) is currently trading at ${alert.currentPrice.toFixed(2)}. 
+                  Our analysis suggests a buy zone between ${alert.buyZoneMin.toFixed(2)} and ${alert.buyZoneMax.toFixed(2)}, 
+                  with targets at ${alert.target1.toFixed(2)}, ${alert.target2.toFixed(2)}, and ${alert.target3.toFixed(2)}.
+                  {Array.isArray(alert.technicalReasons) && alert.technicalReasons.length > 0 && (
+                    <span> The recommendation is based on {alert.technicalReasons.join(", ")}.</span>
+                  )}
+                </p>
               </div>
             </div>
           </TabsContent>
