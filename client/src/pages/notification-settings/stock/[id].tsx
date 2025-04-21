@@ -34,6 +34,7 @@ interface NotificationPreference {
   id?: number;
   userId: number;
   stockAlertId: number; 
+  // Target Alerts
   target1: {
     web: boolean;
     email: boolean;
@@ -49,13 +50,25 @@ interface NotificationPreference {
     email: boolean;
     sms: boolean;
   };
-  buyZone: {
+  customTarget: {
+    percent: number | null;
     web: boolean;
     email: boolean;
     sms: boolean;
   };
-  customTarget: {
-    percent: number | null;
+  // Buy Zone Alerts
+  buyZoneLow: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  buyZoneHigh: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  buyLimit: {
+    price: number | null;
     web: boolean;
     email: boolean;
     sms: boolean;
@@ -80,6 +93,7 @@ export default function StockNotificationSettings() {
   const [preferences, setPreferences] = useState<NotificationPreference>({
     userId: demoUser.id,
     stockAlertId: stockId || 0,
+    // Target Alerts
     target1: {
       web: true,
       email: false,
@@ -95,13 +109,25 @@ export default function StockNotificationSettings() {
       email: false,
       sms: false
     },
-    buyZone: {
+    customTarget: {
+      percent: null,
+      web: false,
+      email: false,
+      sms: false
+    },
+    // Buy Zone Alerts
+    buyZoneLow: {
       web: true,
       email: false,
       sms: false
     },
-    customTarget: {
-      percent: null,
+    buyZoneHigh: {
+      web: true,
+      email: false,
+      sms: false
+    },
+    buyLimit: {
+      price: null,
       web: false,
       email: false,
       sms: false
@@ -161,7 +187,7 @@ export default function StockNotificationSettings() {
   });
 
   const handleCheckboxChange = (
-    target: 'target1' | 'target2' | 'target3' | 'buyZone' | 'customTarget',
+    target: 'target1' | 'target2' | 'target3' | 'customTarget' | 'buyZoneLow' | 'buyZoneHigh' | 'buyLimit',
     channel: 'web' | 'email' | 'sms',
     checked: boolean
   ) => {
@@ -181,6 +207,17 @@ export default function StockNotificationSettings() {
       customTarget: {
         ...prev.customTarget,
         percent: percent
+      }
+    }));
+  };
+  
+  const handlePriceChange = (value: string) => {
+    const price = value === '' ? null : parseFloat(value);
+    setPreferences(prev => ({
+      ...prev,
+      buyLimit: {
+        ...prev.buyLimit,
+        price: price
       }
     }));
   };
@@ -217,20 +254,23 @@ export default function StockNotificationSettings() {
           </p>
         </div>
 
-        {/* Main Settings Matrix */}
+        {/* Target Alerts */}
         <Card>
           <CardHeader>
             <CardTitle className="text-xl flex items-center">
               <Target className="mr-2 h-5 w-5 text-primary" />
-              Price Target Notifications
+              Target Alerts
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Get notified when price targets are hit for the first time
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[25%]">Notification Trigger</TableHead>
+                    <TableHead className="w-[25%]">Target</TableHead>
                     <TableHead className="w-[25%] text-center">Web Notification</TableHead>
                     <TableHead className="w-[25%] text-center">Email Notification</TableHead>
                     <TableHead className="w-[25%] text-center">SMS Notification</TableHead>
@@ -338,39 +378,6 @@ export default function StockNotificationSettings() {
 
                   <TableRow>
                     <TableCell className="font-medium">
-                      Buy Zone Entry/Exit
-                      <span className="block text-xs text-muted-foreground">
-                        ${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Checkbox
-                        checked={preferences.buyZone.web}
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange('buyZone', 'web', !!checked)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Checkbox
-                        checked={preferences.buyZone.email}
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange('buyZone', 'email', !!checked)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Checkbox
-                        checked={preferences.buyZone.sms}
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange('buyZone', 'sms', !!checked)
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-
-                  <TableRow>
-                    <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <div className="w-14">
                           <Input
@@ -385,6 +392,9 @@ export default function StockNotificationSettings() {
                         </div>
                         <span>% Custom Target</span>
                       </div>
+                      <span className="block text-xs text-muted-foreground">
+                        Percentage from midpoint of buy zone
+                      </span>
                     </TableCell>
                     <TableCell className="text-center">
                       <Checkbox
@@ -413,6 +423,146 @@ export default function StockNotificationSettings() {
                   </TableRow>
                 </TableBody>
               </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Buy Zone Alerts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center">
+              <ArrowDownToLine className="mr-2 h-5 w-5 text-primary" />
+              Buy Zone Alerts
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Get notified when price enters the buy zone or hits custom buy points
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[25%]">Alert Type</TableHead>
+                    <TableHead className="w-[25%] text-center">Web Notification</TableHead>
+                    <TableHead className="w-[25%] text-center">Email Notification</TableHead>
+                    <TableHead className="w-[25%] text-center">SMS Notification</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      Buy Zone Low
+                      <span className="block text-xs text-muted-foreground">
+                        When price reaches ${alert.buyZoneMin.toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneLow.web}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneLow', 'web', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneLow.email}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneLow', 'email', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneLow.sms}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneLow', 'sms', !!checked)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      Buy Zone High
+                      <span className="block text-xs text-muted-foreground">
+                        When price reaches ${alert.buyZoneMax.toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneHigh.web}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneHigh', 'web', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneHigh.email}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneHigh', 'email', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyZoneHigh.sms}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyZoneHigh', 'sms', !!checked)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="w-20">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            pattern="[0-9]*\.?[0-9]*"
+                            placeholder="$"
+                            value={preferences.buyLimit.price !== null ? preferences.buyLimit.price : ''}
+                            onChange={(e) => handlePriceChange(e.target.value)}
+                            className="w-full appearance-none"
+                          />
+                        </div>
+                        <span>Buy Limit</span>
+                      </div>
+                      <span className="block text-xs text-muted-foreground">
+                        Must be below current price (${alert.currentPrice.toFixed(2)})
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyLimit.web}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyLimit', 'web', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyLimit.email}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyLimit', 'email', !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={preferences.buyLimit.sms}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('buyLimit', 'sms', !!checked)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
 
               <Alert className="bg-primary/10 border-primary/20">
                 <Info className="h-4 w-4 text-primary" />
@@ -425,18 +575,25 @@ export default function StockNotificationSettings() {
                   </ul>
                 </AlertDescription>
               </Alert>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => savePreferences.mutate()}
-                  disabled={savePreferences.isPending}
-                >
-                  {savePreferences.isPending ? "Saving..." : "Save Notification Settings"}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
+
+        <div className="p-6 bg-white rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Notification Settings</h3>
+              <p className="text-sm text-muted-foreground">All notifications are one-time only when price targets are first reached.</p>
+            </div>
+            <Button
+              onClick={() => savePreferences.mutate()}
+              disabled={savePreferences.isPending}
+              size="lg"
+            >
+              {savePreferences.isPending ? "Saving..." : "Save Notification Settings"}
+            </Button>
+          </div>
+        </div>
 
         {/* Link to global notification settings */}
         <div className="flex items-center justify-between p-4 bg-muted rounded-lg">

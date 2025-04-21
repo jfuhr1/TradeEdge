@@ -202,15 +202,48 @@ export const alertPreferences = pgTable("alert_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   stockAlertId: integer("stock_alert_id").notNull(),
-  targetOne: boolean("target_one").notNull().default(true),
-  targetTwo: boolean("target_two").notNull().default(true),
-  targetThree: boolean("target_three").notNull().default(true),
-  percentChange: integer("percent_change").default(10), // Default 10% change alerts
-  customTargetPrice: doublePrecision("custom_target_price"),
-  daysHold: integer("days_hold"), // Alert after X days of holding
-  emailEnabled: boolean("email_enabled").notNull().default(true),
-  pushEnabled: boolean("push_enabled").notNull().default(true),
-  textEnabled: boolean("text_enabled").notNull().default(false),
+  
+  // Target Alerts
+  target1: json("target1").notNull().default({
+    web: true,
+    email: false,
+    sms: false
+  }),
+  target2: json("target2").notNull().default({
+    web: true,
+    email: false,
+    sms: false
+  }),
+  target3: json("target3").notNull().default({
+    web: true,
+    email: false,
+    sms: false
+  }),
+  customTarget: json("custom_target").notNull().default({
+    percent: null,
+    web: false,
+    email: false,
+    sms: false
+  }),
+  
+  // Buy Zone Alerts
+  buyZoneLow: json("buy_zone_low").notNull().default({
+    web: true,
+    email: false,
+    sms: false
+  }),
+  buyZoneHigh: json("buy_zone_high").notNull().default({
+    web: true,
+    email: false,
+    sms: false
+  }),
+  buyLimit: json("buy_limit").notNull().default({
+    price: null,
+    web: false,
+    email: false,
+    sms: false
+  }),
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
