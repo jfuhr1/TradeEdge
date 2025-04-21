@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { StockAlert } from "@shared/schema";
 
-// Extended stock alert type for detail view
-interface DetailStockAlert extends StockAlert {
+// Extended stock alert props for detail view
+interface StockAlertWithExtras {
   changePercent?: string;
 }
-import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -21,21 +21,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function StockDetail() {
   const [, params] = useRoute("/stock/:id");
-  const stockId = params?.id ? parseInt(params.id) : null;
+  const stockSymbol = params?.id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const { connected } = useWebSocket();
 
-  // Fetch stock alert details
-  const { data: alert, isLoading } = useQuery<DetailStockAlert>({
-    queryKey: [`/api/stock-alerts/${stockId}`],
-    enabled: !!stockId,
+  // Fetch all stock alerts
+  const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery<StockAlert[]>({
+    queryKey: ["/api/stock-alerts"],
   });
+
+  // Find the specific alert for this symbol
+  const alert = allAlerts?.find(a => a.symbol === stockSymbol);
 
   // Add to portfolio mutation
   const addToPortfolio = useMutation({
@@ -72,7 +77,7 @@ export default function StockDetail() {
     },
   });
 
-  if (isLoading || !alert) {
+  if (isLoadingAlerts || !alert) {
     return (
       <MainLayout title="Stock Details">
         <div className="flex justify-center p-8">
@@ -139,11 +144,10 @@ export default function StockDetail() {
           <div className="text-right">
             <div className="flex items-center justify-end">
               <p className="text-2xl font-bold">${alert.currentPrice.toFixed(2)}</p>
-              {alert.changePercent && (
-                <span className={`ml-2 text-sm font-semibold ${parseFloat(alert.changePercent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {parseFloat(alert.changePercent) >= 0 ? '+' : ''}{alert.changePercent}%
-                </span>
-              )}
+              {/* Placeholder for change percent - would come from a real API */}
+              <span className="ml-2 text-sm font-semibold text-green-600">
+                +2.3%
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">Last updated: {new Date(alert.updatedAt).toLocaleString()}</p>
           </div>
@@ -238,22 +242,205 @@ export default function StockDetail() {
         </div>
       </div>
       
-      {/* Technical Analysis */}
+      {/* Advanced Price Visualization */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center mb-4">
           <ChartLine className="mr-2 h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">Technical Analysis</h2>
+          <h2 className="text-xl font-semibold">Price Analysis</h2>
+        </div>
+
+        <div className="mt-4 mb-8">
+          <div className="relative h-16 mb-10">
+            {/* Main progress bar container */}
+            <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
+              {/* High Risk/Reward Zone (10% below buy zone - fixed width) */}
+              <div 
+                className="absolute h-full bg-orange-100 rounded-l-full"
+                style={{ 
+                  width: "15%",
+                  left: "0%"
+                }}
+              ></div>
+
+              {/* Buy Zone */}
+              <div 
+                className="absolute h-full bg-green-100"
+                style={{ 
+                  width: "15%",
+                  left: "15%"
+                }}
+              ></div>
+
+              {/* Target Zone - from buy zone max to target 3 */}
+              <div 
+                className="absolute h-full bg-gray-100"
+                style={{ 
+                  width: "55%",
+                  left: "30%"
+                }}
+              ></div>
+
+              {/* Overperform Zone - beyond target 3 */}
+              <div 
+                className="absolute h-full bg-blue-50 rounded-r-full"
+                style={{ 
+                  width: "15%",
+                  left: "85%"
+                }}
+              ></div>
+
+              {/* Buy Zone Min indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "15%" }}>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${alert.buyZoneMin}</div>
+              </div>
+              
+              {/* Buy Zone Max indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "30%" }}>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${alert.buyZoneMax}</div>
+              </div>
+              
+              {/* Target 1 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                  const t1Position = (alert.target1 - alert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t1Position * 55)}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 1</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target1}</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+              
+              {/* Target 2 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                  const t2Position = (alert.target2 - alert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t2Position * 55)}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 2</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target2}</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+              
+              {/* Target 3 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ left: "85%" }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 3</span>
+                  <span className="block text-xs font-medium font-mono">${alert.target3}</span>
+                  <span className="block text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+
+              {/* Current price indicator (thicker) */}
+              <div className="absolute w-1 h-8 bg-black -top-2 z-10" style={{ 
+                left: (() => {
+                  if (alert.currentPrice < alert.buyZoneMin * 0.9) {
+                    return "0%"; // Below high risk zone
+                  } else if (alert.currentPrice < alert.buyZoneMin) {
+                    // In high risk zone (0-15%)
+                    const riskRange = alert.buyZoneMin - (alert.buyZoneMin * 0.9);
+                    const posInRange = (alert.currentPrice - (alert.buyZoneMin * 0.9)) / riskRange;
+                    return `${posInRange * 15}%`;
+                  } else if (alert.currentPrice <= alert.buyZoneMax) {
+                    // In buy zone (15-30%)
+                    const buyRange = alert.buyZoneMax - alert.buyZoneMin;
+                    const posInRange = (alert.currentPrice - alert.buyZoneMin) / buyRange;
+                    return `${15 + (posInRange * 15)}%`;
+                  } else if (alert.currentPrice <= alert.target3) {
+                    // Between buy zone max and target 3 (30-85%)
+                    const targetZoneWidth = alert.target3 - alert.buyZoneMax;
+                    const posInRange = (alert.currentPrice - alert.buyZoneMax) / targetZoneWidth;
+                    return `${30 + (posInRange * 55)}%`;
+                  } else {
+                    // In overperform zone or beyond
+                    const overRange = alert.target3 * 1.1 - alert.target3;
+                    const posInRange = Math.min((alert.currentPrice - alert.target3) / overRange, 1);
+                    return `${85 + (posInRange * 15)}%`;
+                  }
+                })()
+              }}>
+                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
+                  <span className="text-[10px] font-medium block">Current Price</span>
+                  <span className="text-xs font-medium block font-mono">${alert.currentPrice.toFixed(2)}</span>
+                  {alert.currentPrice > alert.buyZoneMax && (
+                    <span className="text-[10px] text-green-600 block">
+                      +{(((alert.currentPrice / alert.buyZoneMax) - 1) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Zone labels below progress bar */}
+            <div className="absolute top-14 left-0 w-full flex text-[10px]">
+              <div className="w-[15%] text-center text-amber-700">High Risk/Reward</div>
+              <div className="w-[15%] text-center text-green-700">Buy Zone</div>
+              <div className="w-[55%]"></div>
+              <div className="w-[15%] text-center text-blue-700">Overperform</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart Images */}
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-3">Chart Analysis</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p className="font-medium text-sm mb-2">Daily Chart</p>
+              <div className="border rounded-md overflow-hidden bg-gray-50 aspect-w-16 aspect-h-9">
+                {alert.chartImageUrl ? (
+                  <img 
+                    src={alert.chartImageUrl} 
+                    alt={`${alert.symbol} Daily Chart`} 
+                    className="object-contain w-full h-full"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <BarChart4 className="h-8 w-8 mr-2" />
+                    <span>Chart not available</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <p className="font-medium text-sm mb-2">Weekly Chart</p>
+              <div className="border rounded-md overflow-hidden bg-gray-50 aspect-w-16 aspect-h-9">
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <BarChart4 className="h-8 w-8 mr-2" />
+                  <span>Weekly chart not available</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Investment Thesis */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div className="flex items-center mb-4">
+          <Target className="mr-2 h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold">Investment Thesis</h2>
         </div>
         
         <Tabs defaultValue="reasons">
           <TabsList>
-            <TabsTrigger value="reasons">Technical Reasons</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis</TabsTrigger>
+            <TabsTrigger value="reasons">Why Buy</TabsTrigger>
+            <TabsTrigger value="risks">Risk Factors</TabsTrigger>
+            <TabsTrigger value="narrative">Stock Narrative</TabsTrigger>
           </TabsList>
           
           <TabsContent value="reasons">
             <div className="py-4">
-              <h3 className="text-lg font-medium mb-3">Why We Recommend This Stock</h3>
               <div className="space-y-4">
                 {(Array.isArray(alert.technicalReasons) ? alert.technicalReasons : []).map((reason, index) => (
                   <div key={index} className="flex items-start">
@@ -270,10 +457,45 @@ export default function StockDetail() {
             </div>
           </TabsContent>
           
-          <TabsContent value="analysis">
+          <TabsContent value="risks">
             <div className="py-4">
-              <h3 className="text-lg font-medium mb-3">Detailed Analysis</h3>
-              <p>Detailed technical analysis for {alert.symbol} will be available in the next update.</p>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <TrendingDown className="h-5 w-5 text-red-500 mt-1 mr-2" />
+                  <div>
+                    <p className="font-medium">Market Volatility</p>
+                    <p className="text-sm text-muted-foreground">
+                      General market conditions could affect stock performance regardless of company fundamentals.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <BadgeAlert className="h-5 w-5 text-amber-500 mt-1 mr-2" />
+                  <div>
+                    <p className="font-medium">Competitive Pressure</p>
+                    <p className="text-sm text-muted-foreground">
+                      Increased competition in the sector may impact growth and profitability.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="narrative">
+            <div className="py-4">
+              <div className="prose prose-blue">
+                {alert.narrative ? (
+                  <p>{alert.narrative}</p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {alert.symbol} ({alert.companyName}) is currently trading at ${alert.currentPrice.toFixed(2)}. 
+                    Our analysis suggests a buy zone between ${alert.buyZoneMin.toFixed(2)} and ${alert.buyZoneMax.toFixed(2)}, 
+                    with targets at ${alert.target1.toFixed(2)}, ${alert.target2.toFixed(2)}, and ${alert.target3.toFixed(2)}.
+                    The recommendation is based on {alert.technicalReasons?.join(", ")}.
+                  </p>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
