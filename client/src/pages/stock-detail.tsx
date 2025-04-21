@@ -6,7 +6,7 @@ import { StockAlert } from "@shared/schema";
 interface StockAlertWithExtras {
   changePercent?: string;
 }
-import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert } from "lucide-react";
+import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,7 @@ export default function StockDetail() {
             <p className="text-lg text-muted-foreground">{alert.companyName}</p>
           </div>
           <div className="text-right">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Current Price</p>
             <div className="flex items-center justify-end">
               <p className="text-2xl font-bold">${alert.currentPrice.toFixed(2)}</p>
               {/* Placeholder for change percent - would come from a real API */}
@@ -162,7 +163,6 @@ export default function StockDetail() {
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Buy Zone Min</p>
                       <p className="text-xl font-bold">${alert.buyZoneMin.toFixed(2)}</p>
-                      <p className="text-sm text-amber-600">{(((alert.buyZoneMin / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -171,7 +171,6 @@ export default function StockDetail() {
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Buy Zone Max</p>
                       <p className="text-xl font-bold">${alert.buyZoneMax.toFixed(2)}</p>
-                      <p className="text-sm text-amber-600">{(((alert.buyZoneMax / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -186,7 +185,33 @@ export default function StockDetail() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <p>{alert.status}</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {inBuyZone && (
+                    <Badge variant="success" className="flex items-center gap-1">
+                      <ArrowDownToLine className="h-3 w-3" /> Buy Zone
+                    </Badge>
+                  )}
+                  {alert.currentPrice < alert.buyZoneMin && (
+                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3" /> Below Buy Zone
+                    </Badge>
+                  )}
+                  {alert.currentPrice > alert.buyZoneMax && alert.currentPrice < alert.target1 && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> Above Buy Zone
+                    </Badge>
+                  )}
+                  {alert.currentPrice >= alert.target1 && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+                      <Target className="h-3 w-3" /> Target Hit
+                    </Badge>
+                  )}
+                  {alert.status === "closed" && (
+                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" /> Closed
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -469,7 +494,13 @@ export default function StockDetail() {
         
         {/* Target Prices Section */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">Target Prices & Potential Returns</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Target Prices & Potential Returns</h3>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Current Price</p>
+              <p className="text-xl font-bold">${alert.currentPrice.toFixed(2)}</p>
+            </div>
+          </div>
           
           <Table>
             <TableHeader>
@@ -483,14 +514,6 @@ export default function StockDetail() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">Current Price</TableCell>
-                <TableCell>${alert.currentPrice.toFixed(2)}</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>{(((alert.currentPrice / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell>{(((alert.currentPrice / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell>{(((alert.currentPrice / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
-              </TableRow>
               <TableRow>
                 <TableCell className="font-medium">Target 1</TableCell>
                 <TableCell>${alert.target1.toFixed(2)}</TableCell>
@@ -521,11 +544,11 @@ export default function StockDetail() {
         
         {/* Confluence Section */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">Technical Confluences</h3>
+          <h3 className="text-lg font-medium mb-4">Confluences Supporting the Buy</h3>
           <div className="space-y-4">
             {(Array.isArray(alert.technicalReasons) ? alert.technicalReasons : []).map((reason, index) => (
-              <div key={index} className="flex items-start bg-gray-50 p-4 rounded-md">
-                <TrendingUp className="h-5 w-5 text-primary mt-1 mr-3 flex-shrink-0" />
+              <div key={index} className="flex items-start bg-green-50 p-4 rounded-md border border-green-100">
+                <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
                 <div>
                   <p className="font-medium">{reason}</p>
                   <p className="text-sm text-muted-foreground mt-1">
