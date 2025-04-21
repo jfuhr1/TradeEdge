@@ -24,6 +24,7 @@ import { useWebSocket } from "@/hooks/use-websocket";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function StockDetail() {
   const [, params] = useRoute("/stock-detail/:id");
@@ -155,21 +156,25 @@ export default function StockDetail() {
           <div>
             <h3 className="font-medium mb-2">Buy Zone</h3>
             <div className="mb-4">
-              <div className="flex justify-between text-sm mb-1">
-                <span>${alert.buyZoneMin.toFixed(2)}</span>
-                <span>${alert.buyZoneMax.toFixed(2)}</span>
-              </div>
-              <div className="relative">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-primary h-full" 
-                    style={{ width: `${pricePosition}%` }}
-                  ></div>
-                </div>
-                <div 
-                  className="absolute w-0.5 h-4 bg-black -mt-3" 
-                  style={{ left: `${pricePosition}%` }}
-                ></div>
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Buy Zone Min</p>
+                      <p className="text-xl font-bold">${alert.buyZoneMin.toFixed(2)}</p>
+                      <p className="text-sm text-amber-600">{(((alert.buyZoneMin / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Buy Zone Max</p>
+                      <p className="text-xl font-bold">${alert.buyZoneMax.toFixed(2)}</p>
+                      <p className="text-sm text-amber-600">{(((alert.buyZoneMax / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
             
@@ -396,11 +401,23 @@ export default function StockDetail() {
               <p className="font-medium text-sm mb-2">Daily Chart</p>
               <div className="border rounded-md overflow-hidden bg-gray-50 aspect-w-16 aspect-h-9">
                 {alert.chartImageUrl ? (
-                  <img 
-                    src={alert.chartImageUrl} 
-                    alt={`${alert.symbol} Daily Chart`} 
-                    className="object-contain w-full h-full"
-                  />
+                  <a 
+                    href={alert.chartImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    <img 
+                      src={alert.chartImageUrl} 
+                      alt={`${alert.symbol} Daily Chart`} 
+                      className="object-contain w-full h-full hover:opacity-90 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="bg-black bg-opacity-50 text-white p-2 rounded-md">
+                        Click to enlarge
+                      </div>
+                    </div>
+                  </a>
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400">
                     <BarChart4 className="h-8 w-8 mr-2" />
@@ -413,10 +430,30 @@ export default function StockDetail() {
             <div>
               <p className="font-medium text-sm mb-2">Weekly Chart</p>
               <div className="border rounded-md overflow-hidden bg-gray-50 aspect-w-16 aspect-h-9">
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  <BarChart4 className="h-8 w-8 mr-2" />
-                  <span>Weekly chart not available</span>
-                </div>
+                {alert.chartImageUrl ? (
+                  <a 
+                    href={alert.chartImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    <img 
+                      src={alert.chartImageUrl} 
+                      alt={`${alert.symbol} Weekly Chart`} 
+                      className="object-contain w-full h-full hover:opacity-90 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="bg-black bg-opacity-50 text-white p-2 rounded-md">
+                        Click to enlarge
+                      </div>
+                    </div>
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <BarChart4 className="h-8 w-8 mr-2" />
+                    <span>Weekly chart not available</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -425,76 +462,133 @@ export default function StockDetail() {
 
       {/* Investment Thesis */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center mb-4">
+        <div className="flex items-center mb-6">
           <Target className="mr-2 h-5 w-5 text-primary" />
           <h2 className="text-xl font-semibold">Investment Thesis</h2>
         </div>
         
-        <Tabs defaultValue="reasons">
-          <TabsList>
-            <TabsTrigger value="reasons">Why Buy</TabsTrigger>
-            <TabsTrigger value="risks">Risk Factors</TabsTrigger>
-            <TabsTrigger value="narrative">Stock Narrative</TabsTrigger>
-          </TabsList>
+        {/* Target Prices Section */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4">Target Prices & Potential Returns</h3>
           
-          <TabsContent value="reasons">
-            <div className="py-4">
-              <div className="space-y-4">
-                {(Array.isArray(alert.technicalReasons) ? alert.technicalReasons : []).map((reason, index) => (
-                  <div key={index} className="flex items-start">
-                    <TrendingUp className="h-5 w-5 text-primary mt-1 mr-2" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="risks">
-            <div className="py-4">
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <TrendingDown className="h-5 w-5 text-red-500 mt-1 mr-2" />
-                  <div>
-                    <p className="font-medium">Market Volatility</p>
-                    <p className="text-sm text-muted-foreground">
-                      General market conditions could affect stock performance regardless of company fundamentals.
-                    </p>
-                  </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Price Point</TableHead>
+                <TableHead>Price ($)</TableHead>
+                <TableHead>From Current</TableHead>
+                <TableHead>From Buy Zone Low</TableHead>
+                <TableHead>From Buy Zone Mid</TableHead>
+                <TableHead>From Buy Zone High</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Current Price</TableCell>
+                <TableCell>${alert.currentPrice.toFixed(2)}</TableCell>
+                <TableCell>-</TableCell>
+                <TableCell>{(((alert.currentPrice / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell>{(((alert.currentPrice / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell>{(((alert.currentPrice / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Target 1</TableCell>
+                <TableCell>${alert.target1.toFixed(2)}</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target1 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Target 2</TableCell>
+                <TableCell>${alert.target2.toFixed(2)}</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target2 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Target 3</TableCell>
+                <TableCell>${alert.target3.toFixed(2)}</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target3 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+        
+        {/* Confluence Section */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4">Technical Confluences</h3>
+          <div className="space-y-4">
+            {(Array.isArray(alert.technicalReasons) ? alert.technicalReasons : []).map((reason, index) => (
+              <div key={index} className="flex items-start bg-gray-50 p-4 rounded-md">
+                <TrendingUp className="h-5 w-5 text-primary mt-1 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">{reason}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {getTechnicalReasonDescription(reason)}
+                  </p>
                 </div>
-                <div className="flex items-start">
-                  <BadgeAlert className="h-5 w-5 text-amber-500 mt-1 mr-2" />
-                  <div>
-                    <p className="font-medium">Competitive Pressure</p>
-                    <p className="text-sm text-muted-foreground">
-                      Increased competition in the sector may impact growth and profitability.
-                    </p>
-                  </div>
-                </div>
               </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="narrative">
-            <div className="py-4">
-              <div className="prose prose-blue">
-                <p className="text-muted-foreground">
-                  {alert.symbol} ({alert.companyName}) is currently trading at ${alert.currentPrice.toFixed(2)}. 
-                  Our analysis suggests a buy zone between ${alert.buyZoneMin.toFixed(2)} and ${alert.buyZoneMax.toFixed(2)}, 
-                  with targets at ${alert.target1.toFixed(2)}, ${alert.target2.toFixed(2)}, and ${alert.target3.toFixed(2)}.
-                  {Array.isArray(alert.technicalReasons) && alert.technicalReasons.length > 0 && (
-                    <span> The recommendation is based on {alert.technicalReasons.join(", ")}.</span>
-                  )}
+            ))}
+          </div>
+        </div>
+        
+        {/* Qualitative Analysis */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4">Qualitative Analysis</h3>
+          <div className="prose prose-blue max-w-none bg-gray-50 p-4 rounded-md">
+            <p>
+              {alert.symbol} ({alert.companyName}) is currently trading at ${alert.currentPrice.toFixed(2)}. 
+              Our analysis suggests a buy zone between ${alert.buyZoneMin.toFixed(2)} and ${alert.buyZoneMax.toFixed(2)}, 
+              with targets at ${alert.target1.toFixed(2)}, ${alert.target2.toFixed(2)}, and ${alert.target3.toFixed(2)}.
+            </p>
+            <p>
+              {alert.symbol} presents a compelling opportunity based on our technical analysis and market positioning. 
+              The stock has shown resilience in recent market conditions and demonstrates potential for continued growth.
+              {Array.isArray(alert.technicalReasons) && alert.technicalReasons.length > 0 && (
+                <span> Key factors supporting our thesis include {alert.technicalReasons.join(", ")}.</span>
+              )}
+            </p>
+          </div>
+        </div>
+        
+        {/* Risk Factors */}
+        <div>
+          <h3 className="text-lg font-medium mb-4">Risk Factors</h3>
+          <div className="space-y-4">
+            <div className="flex items-start bg-red-50 p-4 rounded-md">
+              <TrendingDown className="h-5 w-5 text-red-500 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Market Volatility</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  General market conditions could affect stock performance regardless of company fundamentals.
                 </p>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+            <div className="flex items-start bg-amber-50 p-4 rounded-md">
+              <BadgeAlert className="h-5 w-5 text-amber-500 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Competitive Pressure</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Increased competition in the sector may impact growth and profitability.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start bg-amber-50 p-4 rounded-md">
+              <BadgeAlert className="h-5 w-5 text-amber-500 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Earnings Expectations</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Failure to meet earnings expectations in upcoming quarters could result in downward pressure on the stock.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Add to Portfolio Dialog */}
