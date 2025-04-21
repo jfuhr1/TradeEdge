@@ -17,7 +17,6 @@ export default function Sidebar() {
     { href: "/", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Stock Alerts" },
     { href: "/portfolio", icon: <Briefcase className="w-5 h-5" />, label: "My Portfolio" },
-    { href: "/success-center", icon: <Trophy className="w-5 h-5" />, label: "Success Center" },
     { href: "/education", icon: <GraduationCap className="w-5 h-5" />, label: "Education" },
     { href: "/coaching", icon: <Calendar className="w-5 h-5" />, label: "Book Coaching" },
     { href: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
