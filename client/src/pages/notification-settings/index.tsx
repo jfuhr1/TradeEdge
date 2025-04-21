@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StockAlert } from "@shared/schema";
-import { BellRing, Clock, Cog, ExternalLink, Info, Search, Settings, Shield, Sliders } from "lucide-react";
+import { 
+  BellRing, 
+  Clock, 
+  Cog, 
+  ExternalLink, 
+  Info, 
+  Search, 
+  Settings, 
+  Shield, 
+  Sliders,
+  Check,
+  X
+} from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +25,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Demo user data - hardcoded for display purposes
 const demoUser = {
@@ -22,6 +43,54 @@ const demoUser = {
   email: "jane.smith@example.com",
   phone: "+1 555-123-4567"
 };
+
+// Type for alert preferences - simplified for demo
+interface NotificationPreference {
+  id?: number;
+  userId: number;
+  stockAlertId: number; 
+  // Target Alerts
+  target1: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  target2: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  target3: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  customTarget: {
+    percent: number | null;
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  // Buy Zone Alerts
+  buyZoneLow: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  buyZoneHigh: {
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  buyLimit: {
+    price: number | null;
+    web: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function NotificationSettings() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,15 +105,88 @@ export default function NotificationSettings() {
   });
 
   // Fetch all stock alerts
-  const { data: alerts, isLoading: isLoadingAlerts } = useQuery<StockAlert[]>({
+  const { data: alerts, isLoading: isLoadingAlerts, error } = useQuery<StockAlert[]>({
     queryKey: ["/api/stock-alerts"],
+    
+    // Using retry false to avoid multiple unnecessary requests in demo mode
+    retry: false
   });
+  
+  // Log any errors for debugging
+  if (error) {
+    console.error("Error fetching stock alerts:", error);
+  }
 
-  // Filter alerts based on search query
-  const filteredAlerts = alerts?.filter(alert => 
+  // For demo purposes, create dummy preferences
+  const generateDummyPreferences = () => {
+    if (!alerts) return [];
+    
+    return alerts.map(alert => ({
+      alert,
+      preference: {
+        id: Math.floor(Math.random() * 1000),
+        userId: demoUser.id,
+        stockAlertId: alert.id,
+        target1: {
+          web: Math.random() > 0.3,
+          email: Math.random() > 0.5,
+          sms: Math.random() > 0.7,
+        },
+        target2: {
+          web: Math.random() > 0.3,
+          email: Math.random() > 0.5,
+          sms: Math.random() > 0.7,
+        },
+        target3: {
+          web: Math.random() > 0.3,
+          email: Math.random() > 0.5,
+          sms: Math.random() > 0.7,
+        },
+        customTarget: {
+          percent: null,
+          web: false,
+          email: false,
+          sms: false,
+        },
+        buyZoneLow: {
+          web: Math.random() > 0.3,
+          email: Math.random() > 0.5,
+          sms: Math.random() > 0.7,
+        },
+        buyZoneHigh: {
+          web: Math.random() > 0.3,
+          email: Math.random() > 0.5,
+          sms: Math.random() > 0.7,
+        },
+        buyLimit: {
+          price: null,
+          web: false,
+          email: false,
+          sms: false,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    }));
+  };
+
+  // Generate dummy preferences
+  const alertsWithPreferences = generateDummyPreferences();
+
+  // Filter based on search query
+  const filteredPreferences = alertsWithPreferences.filter(({ alert }) => 
     alert.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
     alert.companyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Helper function to render a checkmark or X for notification status
+  const renderNotificationStatus = (isEnabled: boolean) => {
+    return isEnabled ? (
+      <Check className="h-4 w-4 text-green-500" />
+    ) : (
+      <X className="h-4 w-4 text-gray-300" />
+    );
+  };
 
   return (
     <MainLayout title="Notification Settings">
@@ -84,53 +226,121 @@ export default function NotificationSettings() {
               <div className="mt-8 grid place-items-center">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
               </div>
-            ) : filteredAlerts && filteredAlerts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                {filteredAlerts.map(alert => (
-                  <Card key={alert.id} className="transition-all hover:shadow-md">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          {alert.symbol}
-                          {alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax && (
-                            <Badge variant="success" className="text-xs">In Buy Zone</Badge>
-                          )}
-                        </CardTitle>
-                        <span className="text-lg font-medium">${alert.currentPrice.toFixed(2)}</span>
-                      </div>
-                      <CardDescription>{alert.companyName}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-sm pb-2">
-                      <div className="grid grid-cols-3 gap-1">
-                        <div>
-                          <p className="text-muted-foreground text-xs">Target 1</p>
-                          <p className="font-medium">${alert.target1.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">Target 2</p>
-                          <p className="font-medium">${alert.target2.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">Target 3</p>
-                          <p className="font-medium">${alert.target3.toFixed(2)}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Link href={`/notification-settings/stock/${alert.id}`}>
-                        <Button variant="outline" className="w-full">
-                          <Sliders className="mr-2 h-4 w-4" />
-                          Manage Notifications
-                        </Button>
-                      </Link>
-                    </CardFooter>
-                  </Card>
-                ))}
+            ) : filteredPreferences.length > 0 ? (
+              <div className="overflow-x-auto mt-4">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="w-[12%]">Stock Symbol</TableHead>
+                      <TableHead className="w-[12%]">Alert Date</TableHead>
+                      <TableHead className="w-[9%] text-center">Target 1</TableHead>
+                      <TableHead className="w-[9%] text-center">Target 2</TableHead>
+                      <TableHead className="w-[9%] text-center">Target 3</TableHead>
+                      <TableHead className="w-[10%] text-center">Custom Target</TableHead>
+                      <TableHead className="w-[9%] text-center">Buy Zone Low</TableHead>
+                      <TableHead className="w-[9%] text-center">Buy Zone High</TableHead>
+                      <TableHead className="w-[9%] text-center">Custom Buy Limit</TableHead>
+                      <TableHead className="w-[12%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPreferences.map(({ alert, preference }) => (
+                      <TableRow key={alert.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {alert.symbol}
+                            {alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax && (
+                              <Badge variant="success" className="text-xs">In Buy Zone</Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {alert.companyName}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(alert.createdAt), 'MM/dd/yyyy')}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">${alert.target1.toFixed(2)}</span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.target1.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">${alert.target2.toFixed(2)}</span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.target2.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">${alert.target3.toFixed(2)}</span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.target3.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">
+                              {preference.customTarget.percent ? 
+                                `${preference.customTarget.percent}%` : 
+                                '—'}
+                            </span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.customTarget.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">${alert.buyZoneMin.toFixed(2)}</span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.buyZoneLow.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">${alert.buyZoneMax.toFixed(2)}</span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.buyZoneHigh.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs">
+                              {preference.buyLimit.price ? 
+                                `$${preference.buyLimit.price.toFixed(2)}` : 
+                                '—'}
+                            </span>
+                            <div className="flex justify-center gap-1">
+                              {renderNotificationStatus(preference.buyLimit.web)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link href={`/notification-settings/stock/${alert.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Sliders className="mr-2 h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <div className="mt-8 text-center p-8 border rounded-lg bg-muted/30">
                 <p className="text-muted-foreground">
-                  {searchQuery ? "No stocks found matching your search" : "No stocks available"}
+                  {searchQuery ? "No stocks found matching your search" : "No notification preferences set. Add stock alerts to your watchlist first."}
                 </p>
               </div>
             )}
