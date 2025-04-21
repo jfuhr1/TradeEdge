@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StockAlert } from "@shared/schema";
-import { ArrowLeft, BellRing, Check, Info, Plus, Target } from "lucide-react";
+import { ArrowLeft, BellRing, Check, Info, Plus, Target, ArrowDownToLine } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
