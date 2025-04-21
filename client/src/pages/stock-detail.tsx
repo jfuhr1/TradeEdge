@@ -33,6 +33,8 @@ export default function StockDetail() {
   const queryClient = useQueryClient();
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [boughtPrice, setBoughtPrice] = useState(0);
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
   const { connected } = useWebSocket();
 
   // Fetch stock alert details by ID
@@ -48,8 +50,9 @@ export default function StockDetail() {
       
       const portfolioItem = {
         stockAlertId: alert.id,
-        boughtPrice: alert.currentPrice,
+        boughtPrice: boughtPrice,
         quantity,
+        purchaseDate: purchaseDate,
         notifyTarget1: true,
         notifyTarget2: true,
         notifyTarget3: true,
@@ -268,7 +271,11 @@ export default function StockDetail() {
             <div className="mt-4 space-y-2">
               <Button 
                 className="w-full"
-                onClick={() => setIsAddingToPortfolio(true)}
+                onClick={() => {
+                  setBoughtPrice(alert.currentPrice);
+                  setPurchaseDate(new Date().toISOString().split('T')[0]);
+                  setIsAddingToPortfolio(true);
+                }}
               >
                 Add to Portfolio
               </Button>
@@ -747,13 +754,8 @@ export default function StockDetail() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Current Price:</span>
-              <span className="font-mono">${alert.currentPrice.toFixed(2)}</span>
-            </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Quantity Bought</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -764,9 +766,31 @@ export default function StockDetail() {
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Total Value:</span>
-              <span className="font-mono">${(alert.currentPrice * quantity).toFixed(2)}</span>
+            <div className="space-y-2">
+              <Label htmlFor="purchaseDate">Date</Label>
+              <Input
+                id="purchaseDate"
+                type="date"
+                value={purchaseDate}
+                onChange={e => setPurchaseDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="boughtPrice">Stock Price Paid</Label>
+              <Input
+                id="boughtPrice"
+                type="number"
+                min="0.01" 
+                step="0.01"
+                value={boughtPrice}
+                onChange={e => setBoughtPrice(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+              <span className="font-medium">Total Amount Purchased:</span>
+              <span className="font-mono text-lg">${(boughtPrice * quantity).toFixed(2)}</span>
             </div>
           </div>
           
@@ -779,7 +803,7 @@ export default function StockDetail() {
             </Button>
             <Button
               onClick={() => addToPortfolio.mutate()}
-              disabled={quantity <= 0 || addToPortfolio.isPending}
+              disabled={quantity <= 0 || boughtPrice <= 0 || addToPortfolio.isPending}
             >
               {addToPortfolio.isPending ? "Adding..." : "Add to Portfolio"}
             </Button>
