@@ -358,6 +358,13 @@ export default function NotificationSettings() {
                   These settings apply to all notifications across the platform
                 </CardDescription>
               </CardHeader>
+              <Alert className="mt-2 mb-4">
+                <Info className="h-4 w-4" />
+                <AlertTitle>How Notifications Work</AlertTitle>
+                <AlertDescription>
+                  Global settings override individual stock settings. If you disable a notification channel globally, you won't receive any notifications through that channel, even if enabled for individual stocks.
+                </AlertDescription>
+              </Alert>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Notification Channels</h3>
@@ -408,6 +415,15 @@ export default function NotificationSettings() {
                 
                 <div className="space-y-4 mt-6">
                   <h3 className="text-lg font-medium">Notification Types</h3>
+                  
+                  <Alert variant="warning" className="mb-4">
+                    <Clock className="h-4 w-4" />
+                    <AlertTitle>Avoid Notification Fatigue</AlertTitle>
+                    <AlertDescription>
+                      We recommend not overdoing alerts as it can create fatigue with the app over time. There may be multiple stock alerts per day and multiple previous alerts hitting buy zones and targets each day, so keep your notifications focused on what matters most to you.
+                    </AlertDescription>
+                  </Alert>
+                  
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -425,29 +441,15 @@ export default function NotificationSettings() {
                     <Separator />
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="system-announcements">System Announcements</Label>
+                        <Label htmlFor="new-stock-alerts">New Stock Alerts</Label>
                         <p className="text-sm text-muted-foreground">
-                          Important platform updates and announcements
+                          When a new stock alert is added by our team
                         </p>
                       </div>
                       <Switch 
-                        id="system-announcements" 
+                        id="new-stock-alerts" 
                         checked={globalSettingsEnabled.systemAnnouncements} 
                         onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, systemAnnouncements: checked})}
-                      />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="educational-content">Educational Content</Label>
-                        <p className="text-sm text-muted-foreground">
-                          New courses and educational materials
-                        </p>
-                      </div>
-                      <Switch 
-                        id="educational-content" 
-                        checked={globalSettingsEnabled.educationalContent} 
-                        onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, educationalContent: checked})}
                       />
                     </div>
                     <Separator />
@@ -473,14 +475,6 @@ export default function NotificationSettings() {
                 </Button>
               </CardFooter>
             </Card>
-            
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>How Notifications Work</AlertTitle>
-              <AlertDescription>
-                Global settings override individual stock settings. If you disable a notification channel globally, you won't receive any notifications through that channel, even if enabled for individual stocks.
-              </AlertDescription>
-            </Alert>
           </TabsContent>
           
           {/* Contact information for notifications */}
