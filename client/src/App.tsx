@@ -9,6 +9,8 @@ import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 import CreateAlert from "./pages/admin/create-alert";
 import AlertSettings from "./pages/alert-settings";
+import NotificationSettings from "./pages/notification-settings";
+import StockNotificationSettings from "./pages/notification-settings/stock/[id]";
 import SuccessCenter from "./pages/success-center";
 import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
@@ -30,6 +32,8 @@ function App() {
           <ProtectedRoute path="/education" component={Education} />
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
+          <ProtectedRoute path="/notification-settings" component={NotificationSettings} />
+          <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
           <Route component={NotFound} />
         </Switch>

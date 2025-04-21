@@ -332,6 +332,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get("/api/alert-preferences/stock/:stockId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const stockId = parseInt(req.params.stockId);
+      if (isNaN(stockId)) {
+        return res.status(400).json({ message: "Invalid stock ID format" });
+      }
+      
+      const preference = await storage.getAlertPreferenceByUserAndStock(req.user.id, stockId);
+      
+      // If no preference exists yet, return a 404 (the frontend will handle this by showing defaults)
+      if (!preference) {
+        return res.status(404).json({ message: "Alert preference not found" });
+      }
+      
+      res.json(preference);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch alert preference" });
+    }
+  });
+  
   app.post("/api/alert-preferences", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
