@@ -43,11 +43,12 @@ export default function CreateAlert() {
   const [customReason, setCustomReason] = useState('');
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   
+  // Get demo mode state from localStorage
+  const isDemoMode = localStorage.getItem('demoMode') === 'true';
+  
   // Check if user is admin or using demo mode
   useEffect(() => {
     async function checkAdminStatus() {
-      // Check for demo mode in localStorage
-      const isDemoMode = localStorage.getItem('demoMode') === 'true';
       
       if (isDemoMode) {
         // In demo mode, automatically grant admin access
@@ -56,7 +57,13 @@ export default function CreateAlert() {
       }
       
       try {
-        const res = await apiRequest('GET', '/api/user/is-admin');
+        // Include demo mode header if in demo mode
+        const headers: Record<string, string> = {};
+        if (isDemoMode) {
+          headers['X-Demo-Mode'] = 'true';
+        }
+        
+        const res = await apiRequest('GET', '/api/user/is-admin', undefined, headers);
         const data = await res.json();
         setIsAdmin(data.isAdmin);
         
@@ -111,7 +118,17 @@ export default function CreateAlert() {
       
       // Normal behavior without demo mode
       const endpoint = queryKey[0] as string;
-      const res = await fetch(endpoint);
+      // Add demo mode header if needed
+      const headers: Record<string, string> = {};
+      if (isDemoMode) {
+        headers['X-Demo-Mode'] = 'true';
+      }
+      
+      const res = await fetch(endpoint, {
+        headers,
+        credentials: 'include'
+      });
+      
       if (!res.ok) {
         throw new Error('Failed to fetch technical reasons');
       }
@@ -162,7 +179,11 @@ export default function CreateAlert() {
       }
       
       // Normal API request if not in demo mode
-      const res = await apiRequest('POST', '/api/stock-alerts', data);
+      const headers: Record<string, string> = {};
+      if (isDemoMode) {
+        headers['X-Demo-Mode'] = 'true';
+      }
+      const res = await apiRequest('POST', '/api/stock-alerts', data, headers);
       return res.json();
     },
     onSuccess: (data: StockAlert) => {

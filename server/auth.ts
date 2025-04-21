@@ -140,6 +140,14 @@ export function setupAuth(app: Express) {
   
   // Check if user is admin
   app.get("/api/user/is-admin", async (req, res) => {
+    // Check for demo mode header
+    const isDemoMode = req.headers['x-demo-mode'] === 'true';
+    
+    if (isDemoMode) {
+      // In demo mode, grant admin access
+      return res.json({ isAdmin: true });
+    }
+    
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }

@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     completedLessons: [],
     stripeCustomerId: null,
     stripeSubscriptionId: null,
-    isAdmin: false,
+    isAdmin: true, // Set to true to allow admin access in demo mode
     createdAt: new Date()
   };
   
