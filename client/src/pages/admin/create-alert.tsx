@@ -1040,6 +1040,45 @@ export default function CreateAlert() {
                 )}
               </div>
 
+              {/* Narrative Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Stock Narrative</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Provide a compelling narrative for why this stock is a good investment opportunity.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="narrative"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Explain the investment thesis, catalysts, and why this stock has potential. Include key factors that make this a compelling opportunity."
+                          className="min-h-[150px]" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        This will be shown to users to help them understand the investment opportunity.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               {/* Technical Analysis Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -1147,29 +1186,9 @@ export default function CreateAlert() {
                 </div>
               </div>
 
-              {/* Narrative Section */}
+              {/* Notes Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Analysis Details</h3>
-                <FormField
-                  control={form.control}
-                  name="narrative"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Narrative</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Provide a detailed analysis of why this stock is being recommended..." 
-                          {...field} 
-                          className="min-h-32"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Include key insights about this stock pick (up to 500 words)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <h3 className="text-lg font-medium">Additional Notes</h3>
                 <FormField
                   control={form.control}
                   name="notes"
