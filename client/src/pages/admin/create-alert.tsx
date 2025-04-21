@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import MainLayout from '@/components/layout/main-layout';
-import { Loader2, Plus, X, Info } from 'lucide-react';
+import { Loader2, Plus, X, Info, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1077,7 +1077,7 @@ export default function CreateAlert() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Enter a URL to the daily chart image
+                          Upload your daily timeframe chart image (max 5MB)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -1154,7 +1154,7 @@ export default function CreateAlert() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Enter a URL to the weekly chart image
+                          Upload your weekly timeframe chart image (max 5MB)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
