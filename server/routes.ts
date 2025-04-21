@@ -428,6 +428,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Technical Reasons API
   app.get("/api/technical-reasons", async (req, res) => {
+    // Special handling for demo mode
+    const isDemoMode = req.query.demo === 'true';
+    if (isDemoMode) {
+      console.log('Demo mode technical reasons access granted');
+      return res.json([
+        { id: 1, name: 'Support Level' },
+        { id: 2, name: 'Resistance Level' },
+        { id: 3, name: 'Oversold RSI' },
+        { id: 4, name: 'Overbought RSI' },
+        { id: 5, name: 'Moving Average Crossover' },
+        { id: 6, name: 'MACD Crossover' },
+        { id: 7, name: 'Earnings Beat' },
+        { id: 8, name: 'Revenue Growth' },
+        { id: 9, name: 'Bullish Pattern' },
+        { id: 10, name: 'Bearish Pattern' },
+        { id: 11, name: 'Breakout Pattern' },
+        { id: 12, name: 'Upward Trend' },
+        { id: 13, name: 'Downward Trend' },
+        { id: 14, name: 'Volume Increase' },
+        { id: 15, name: 'Sector Momentum' },
+      ]);
+    }
+    
     try {
       const reasons = await storage.getTechnicalReasons();
       res.json(reasons);

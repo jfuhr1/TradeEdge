@@ -140,14 +140,21 @@ export function setupAuth(app: Express) {
   
   // Check if user is admin
   app.get("/api/user/is-admin", async (req, res) => {
-    // Check for demo mode header
-    const isDemoMode = req.headers['x-demo-mode'] === 'true';
-    
-    if (isDemoMode) {
-      // In demo mode, grant admin access
+    // Special handling for both authentication and admin checks in demo mode
+    // This is intentionally using a simpler method than headers for demo detection
+    if (req.query.demo === 'true') {
+      console.log('Demo mode admin access granted via query parameter');
       return res.json({ isAdmin: true });
     }
     
+    // Also check for demo mode header
+    const isDemoMode = req.headers['x-demo-mode'] === 'true';
+    if (isDemoMode) {
+      console.log('Demo mode admin access granted via header');
+      return res.json({ isAdmin: true });
+    }
+    
+    // Regular authentication check
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }

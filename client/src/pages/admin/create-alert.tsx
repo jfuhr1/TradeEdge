@@ -57,13 +57,9 @@ export default function CreateAlert() {
       }
       
       try {
-        // Include demo mode header if in demo mode
-        const headers: Record<string, string> = {};
-        if (isDemoMode) {
-          headers['X-Demo-Mode'] = 'true';
-        }
-        
-        const res = await apiRequest('GET', '/api/user/is-admin', undefined, headers);
+        // Use query parameter approach for demo mode simplicity
+        const endpoint = isDemoMode ? '/api/user/is-admin?demo=true' : '/api/user/is-admin';
+        const res = await apiRequest('GET', endpoint);
         const data = await res.json();
         setIsAdmin(data.isAdmin);
         
@@ -117,15 +113,11 @@ export default function CreateAlert() {
       }
       
       // Normal behavior without demo mode
-      const endpoint = queryKey[0] as string;
-      // Add demo mode header if needed
-      const headers: Record<string, string> = {};
-      if (isDemoMode) {
-        headers['X-Demo-Mode'] = 'true';
-      }
+      const baseEndpoint = queryKey[0] as string;
+      // Use query parameter approach for demo mode 
+      const endpoint = isDemoMode ? `${baseEndpoint}?demo=true` : baseEndpoint;
       
       const res = await fetch(endpoint, {
-        headers,
         credentials: 'include'
       });
       
@@ -179,11 +171,9 @@ export default function CreateAlert() {
       }
       
       // Normal API request if not in demo mode
-      const headers: Record<string, string> = {};
-      if (isDemoMode) {
-        headers['X-Demo-Mode'] = 'true';
-      }
-      const res = await apiRequest('POST', '/api/stock-alerts', data, headers);
+      // Use query parameter approach for demo mode
+      const endpoint = isDemoMode ? '/api/stock-alerts?demo=true' : '/api/stock-alerts';
+      const res = await apiRequest('POST', endpoint, data);
       return res.json();
     },
     onSuccess: (data: StockAlert) => {
