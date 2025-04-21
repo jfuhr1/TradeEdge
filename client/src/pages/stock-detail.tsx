@@ -6,7 +6,7 @@ import { StockAlert } from "@shared/schema";
 interface StockAlertWithExtras {
   changePercent?: string;
 }
-import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check } from "lucide-react";
+import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check, Activity, CheckSquare } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -144,10 +144,6 @@ export default function StockDetail() {
             <p className="text-sm font-medium text-muted-foreground mb-1">Current Price</p>
             <div className="flex items-center justify-end">
               <p className="text-2xl font-bold">${alert.currentPrice.toFixed(2)}</p>
-              {/* Placeholder for change percent - would come from a real API */}
-              <span className="ml-2 text-sm font-semibold text-green-600">
-                +2.3%
-              </span>
             </div>
             <p className="text-sm text-muted-foreground">Last updated: {new Date(alert.updatedAt).toLocaleString()}</p>
           </div>
@@ -186,26 +182,46 @@ export default function StockDetail() {
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {inBuyZone && (
+                  {/* 1. Active - currently active and not marked "closed" */}
+                  {alert.status !== "closed" && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
+                      <Activity className="h-3 w-3" /> Active
+                    </Badge>
+                  )}
+                  
+                  {/* 2. Buy zone - currently active and price is between buy zone high and low */}
+                  {alert.status !== "closed" && inBuyZone && (
                     <Badge variant="success" className="flex items-center gap-1">
                       <ArrowDownToLine className="h-3 w-3" /> Buy Zone
                     </Badge>
                   )}
-                  {alert.currentPrice < alert.buyZoneMin && (
+                  
+                  {/* 3. High risk/reward - currently active and price has dropped below the buy zone low */}
+                  {alert.status !== "closed" && alert.currentPrice < alert.buyZoneMin && (
                     <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3" /> Below Buy Zone
+                      <TrendingDown className="h-3 w-3" /> High Risk/Reward
                     </Badge>
                   )}
-                  {alert.currentPrice > alert.buyZoneMax && alert.currentPrice < alert.target1 && (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" /> Above Buy Zone
+                  
+                  {/* 4. Nearing targets - can be either active or closed, but is within 10% of any of the listed targets */}
+                  {((alert.currentPrice >= alert.target1 * 0.9 && alert.currentPrice < alert.target1) ||
+                    (alert.currentPrice >= alert.target2 * 0.9 && alert.currentPrice < alert.target2) ||
+                    (alert.currentPrice >= alert.target3 * 0.9 && alert.currentPrice < alert.target3)) && (
+                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1">
+                      <Target className="h-3 w-3" /> Nearing Targets
                     </Badge>
                   )}
-                  {alert.currentPrice >= alert.target1 && (
+                  
+                  {/* 5. Hit targets - recently hit one of the targets */}
+                  {((alert.currentPrice >= alert.target1) || 
+                    (alert.currentPrice >= alert.target2) || 
+                    (alert.currentPrice >= alert.target3)) && (
                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-                      <Target className="h-3 w-3" /> Target Hit
+                      <CheckSquare className="h-3 w-3" /> Target Hit
                     </Badge>
                   )}
+                  
+                  {/* 6. Closed - has hit target 1 at some point and is now considered closed */}
                   {alert.status === "closed" && (
                     <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200 flex items-center gap-1">
                       <CheckCircle className="h-3 w-3" /> Closed
@@ -508,9 +524,8 @@ export default function StockDetail() {
                 <TableHead>Price Point</TableHead>
                 <TableHead>Price ($)</TableHead>
                 <TableHead>From Current</TableHead>
-                <TableHead>From Buy Zone Low</TableHead>
-                <TableHead>From Buy Zone Mid</TableHead>
-                <TableHead>From Buy Zone High</TableHead>
+                <TableHead>From Buy Zone</TableHead>
+                <TableHead className="w-1/3">Target Reasoning</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -518,25 +533,28 @@ export default function StockDetail() {
                 <TableCell className="font-medium">Target 1</TableCell>
                 <TableCell>${alert.target1.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target1 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  Initial profit target at first resistance level. Look for momentum and volume to continue.
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-medium">Target 2</TableCell>
                 <TableCell>${alert.target2.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target2 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  Secondary target based on previous highs. Consider taking partial profits here.
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-medium">Target 3</TableCell>
                 <TableCell>${alert.target3.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
-                <TableCell className="text-green-600">+{(((alert.target3 / ((alert.buyZoneMin + alert.buyZoneMax) / 2)) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  Extended target for longer-term holders. Requires strong breakout and market conditions.
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -668,16 +686,46 @@ export default function StockDetail() {
 // Helper function to get descriptions for technical reasons
 function getTechnicalReasonDescription(reason: string): string {
   const descriptions: Record<string, string> = {
-    "Support Level": "The stock has reached a price level where historical trading shows buyer interest, suggesting a potential rebound.",
-    "Oversold RSI": "The Relative Strength Index indicates the stock may be undervalued after recent selling pressure.",
-    "Earnings Beat": "The company reported quarterly earnings that exceeded analyst expectations.",
+    // Price-Based Confluences
+    "Support Zone": "The stock price has reached a level where historical trading shows strong buyer interest, suggesting a potential rebound.",
+    "Price Consolidation": "The stock is trading within a narrow range, indicating potential energy buildup before the next move.",
+    "Oversold Conditions": "Technical indicators suggest the stock is undervalued after recent selling pressure.",
+    "Value Play": "Fundamental analysis indicates the stock is trading below its intrinsic value.",
+    
+    // Technical Pattern Confluences
+    "Bullish Pattern": "Chart patterns indicate a potential upward price movement in the near future.",
     "Breakout Pattern": "The stock has broken through a significant resistance level with increased volume.",
-    "Upward Trend": "The stock is demonstrating a consistent pattern of higher highs and higher lows.",
-    "Sector Momentum": "The industry sector is showing strong performance and positive momentum.",
+    "Technical Support": "Multiple technical indicators suggest strong support at current price levels.",
+    "Volume Pattern": "Recent volume activity indicates institutional accumulation rather than distribution.",
+
+    // Trend-Based Confluences
+    "Trend Resumption": "After a brief pullback, the primary upward trend appears to be resuming.",
+    "Upward Trend": "The stock is in an established uptrend, demonstrating a pattern of higher highs and higher lows.",
+    "Technical Breakout": "The stock has confirmed a break above a significant resistance level.",
+    
+    // Company-Specific Confluences
+    "Revenue Growth": "The company has demonstrated strong and sustainable revenue growth in recent reports.",
+    "Earnings Beat": "Recent quarterly earnings significantly exceeded analyst expectations.",
+    "Subscriber Growth": "User or subscriber metrics are showing accelerating growth beyond expectations.",
+    "Ad Tier Success": "New advertising-based revenue streams are exceeding expectations.",
+    "Content Slate": "Upcoming product releases or content offerings are anticipated to drive growth.",
+    "Growth Potential": "The company has multiple paths to expand market share and increase revenue.",
+    
+    // Industry/Sector Confluences
+    "Sector Momentum": "The entire industry sector is showing strong performance and positive momentum.",
+    "Manufacturing Progress": "Production challenges are being resolved faster than anticipated.",
+    "Chip Recovery": "Semiconductor shortages or supply chain issues are easing.",
+    "Government Incentives": "New policies or subsidies are favorable for the company's growth.",
+    "Fintech Recovery": "Digital payment and financial technology sector is showing renewed strength.",
+    "AI Integration": "Artificial intelligence implementation is creating new revenue opportunities.",
+    "Travel Resurgence": "Post-pandemic travel trends are accelerating beyond expectations.",
+    "International Growth": "Expansion into new markets is progressing faster than anticipated.",
+    "Turnaround Story": "New management or business strategy is showing early signs of success.",
+
+    // Momentum Confluences
     "Volume Increase": "Trading volume has increased significantly, indicating strong buyer interest.",
-    "Revenue Growth": "The company has demonstrated strong revenue growth in recent financial reports.",
-    "Bullish Pattern": "Technical chart patterns indicate a potential upward price movement.",
+    "Accumulation Phase": "Institutional investors appear to be accumulating shares over time.",
   };
   
-  return descriptions[reason] || "Additional technical analysis indicates a favorable entry point.";
+  return descriptions[reason] || "Additional technical analysis and confluence factors indicate a favorable entry point.";
 }
