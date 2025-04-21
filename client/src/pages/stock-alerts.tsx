@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { StockAlert } from "@shared/schema";
-import { Loader2, Plus, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import AlertCard from "@/components/alerts/alert-card";
 import ClosedAlertCard from "@/components/alerts/closed-alert-card";
@@ -41,15 +41,28 @@ export default function StockAlerts() {
   const { data: closedAlerts, isLoading: isLoadingClosed } = useQuery<StockAlert[]>({
     queryKey: ["/api/stock-alerts/closed"],
   });
-
-  // Calculate high risk/reward stocks (below buy zone)
-  const highRiskAlerts = allAlerts?.filter(alert => 
-    alert.currentPrice < alert.buyZoneMin && 
-    alert.currentPrice >= (alert.buyZoneMin * 0.9) &&
-    alert.status === 'active'
-  ) || [];
   
-  const isLoading = isLoadingAlerts || isLoadingBuyZone || isLoadingTargets || isLoadingClosed;
+  // Fetch high risk/reward stocks (below buy zone)
+  const { data: highRiskAlerts = [], isLoading: isLoadingHighRisk } = useQuery<StockAlert[]>({
+    queryKey: ["/api/stock-alerts/high-risk-reward"],
+  });
+  
+  // Fetch stocks that hit targets
+  const { data: hitTargetsAlerts, isLoading: isLoadingHitTargets } = useQuery<{
+    target1: StockAlert[];
+    target2: StockAlert[];
+    target3: StockAlert[];
+  }>({
+    queryKey: ["/api/stock-alerts/hit-targets"],
+  });
+  
+  const isLoading = 
+    isLoadingAlerts || 
+    isLoadingBuyZone || 
+    isLoadingTargets || 
+    isLoadingClosed || 
+    isLoadingHighRisk || 
+    isLoadingHitTargets;
   
   if (isLoading) {
     return (
@@ -76,7 +89,7 @@ export default function StockAlerts() {
       </div>
       
       <Tabs defaultValue="all">
-        <TabsList>
+        <TabsList className="flex flex-wrap">
           <TabsTrigger value="all">
             All Active ({activeAlerts.length})
           </TabsTrigger>
@@ -93,6 +106,16 @@ export default function StockAlerts() {
             Nearing Targets ({(targetAlerts?.target1.length || 0) + 
               (targetAlerts?.target2.length || 0) + 
               (targetAlerts?.target3.length || 0)})
+          </TabsTrigger>
+          <TabsTrigger value="hit-targets">
+            <div className="flex items-center">
+              <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
+              Hit Targets ({
+                (hitTargetsAlerts?.target1.length || 0) + 
+                (hitTargetsAlerts?.target2.length || 0) + 
+                (hitTargetsAlerts?.target3.length || 0)
+              })
+            </div>
           </TabsTrigger>
           <TabsTrigger value="closed">
             <div className="flex items-center">
@@ -202,6 +225,78 @@ export default function StockAlerts() {
                   <div className="space-y-4">
                     {targetAlerts.target3.map((alert) => (
                       <AlertCard key={`t3-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* Hit Targets Tab */}
+        <TabsContent value="hit-targets">
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <TrendingUp className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+              <div>
+                <h3 className="font-medium text-green-800">Hit Targets</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  These stocks have successfully reached their target prices. This section showcases our 
+                  successful stock picks and can help you understand what makes a winning trade.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {(!hitTargetsAlerts || 
+            (hitTargetsAlerts.target1.length === 0 && 
+             hitTargetsAlerts.target2.length === 0 && 
+             hitTargetsAlerts.target3.length === 0)) ? (
+            <div className="bg-white p-6 rounded-lg shadow text-center">
+              <p className="text-neutral-600">No stocks have hit their targets yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Target 1 */}
+              {hitTargetsAlerts && hitTargetsAlerts.target1 && hitTargetsAlerts.target1.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 mr-2">Target 1</Badge>
+                    Hit Target 1
+                  </h3>
+                  <div className="space-y-4">
+                    {hitTargetsAlerts.target1.map((alert) => (
+                      <ClosedAlertCard key={`ht1-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Target 2 */}
+              {hitTargetsAlerts && hitTargetsAlerts.target2 && hitTargetsAlerts.target2.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 mr-2">Target 2</Badge>
+                    Hit Target 2
+                  </h3>
+                  <div className="space-y-4">
+                    {hitTargetsAlerts.target2.map((alert) => (
+                      <ClosedAlertCard key={`ht2-${alert.id}`} alert={alert} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Target 3 */}
+              {hitTargetsAlerts && hitTargetsAlerts.target3 && hitTargetsAlerts.target3.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 mr-2">Target 3</Badge>
+                    Hit Target 3
+                  </h3>
+                  <div className="space-y-4">
+                    {hitTargetsAlerts.target3.map((alert) => (
+                      <ClosedAlertCard key={`ht3-${alert.id}`} alert={alert} />
                     ))}
                   </div>
                 </div>
