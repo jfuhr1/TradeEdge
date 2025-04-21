@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Bell, Briefcase, GraduationCap, User } from "lucide-react";
+import { Home, Bell, Briefcase, GraduationCap, User, Trophy } from "lucide-react";
 
 export default function MobileNav() {
   const [location] = useLocation();
@@ -8,7 +8,7 @@ export default function MobileNav() {
     { href: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Alerts" },
     { href: "/portfolio", icon: <Briefcase className="w-5 h-5" />, label: "Portfolio" },
-    { href: "/education", icon: <GraduationCap className="w-5 h-5" />, label: "Learn" },
+    { href: "/success-center", icon: <Trophy className="w-5 h-5" />, label: "Success" },
     { href: "/settings", icon: <User className="w-5 h-5" />, label: "Profile" },
   ];
 
