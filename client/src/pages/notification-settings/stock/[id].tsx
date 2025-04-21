@@ -262,7 +262,7 @@ export default function StockNotificationSettings() {
               Target Alerts
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Get notified when price targets are hit for the first time
+              Get notified when price targets are hit for the first time. Percentages are from the midpoint of the buy zone
             </p>
           </CardHeader>
           <CardContent>
@@ -435,7 +435,7 @@ export default function StockNotificationSettings() {
               Buy Zone Alerts
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Get notified when price enters the buy zone or hits custom buy points
+              Get notified when price sell off into the buy zone from above or hits custom buy points for a low cost entry
             </p>
           </CardHeader>
           <CardContent>
