@@ -110,8 +110,9 @@ const stockAlertFormSchema = z.object({
   target1Reasoning: z.string().min(1, "Reasoning for Target 1 is required"),
   target2Reasoning: z.string().min(1, "Reasoning for Target 2 is required"),
   target3Reasoning: z.string().min(1, "Reasoning for Target 3 is required"),
-  status: z.string().default("active"),
   narrative: z.string().min(10, "Narrative is required and should provide context"),
+  dailyChartUrl: z.string().optional(),
+  weeklyChartUrl: z.string().optional(),
   technicalReasons: z.array(z.string()),
   priceConfluences: z.array(z.string()),
   volumeConfluences: z.array(z.string()),
@@ -120,7 +121,6 @@ const stockAlertFormSchema = z.object({
   sentimentConfluences: z.array(z.string()),
   riskFactors: z.array(z.string()),
   currentPrice: z.coerce.number().positive("Current price must be positive").optional(),
-  sector: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -248,8 +248,9 @@ export default function CreateAlert() {
       target1Reasoning: '',
       target2Reasoning: '',
       target3Reasoning: '',
-      status: 'active',
       narrative: '',
+      dailyChartUrl: '',
+      weeklyChartUrl: '',
       technicalReasons: [],
       priceConfluences: [],
       volumeConfluences: [],
@@ -258,7 +259,6 @@ export default function CreateAlert() {
       sentimentConfluences: [],
       riskFactors: [],
       currentPrice: undefined,
-      sector: '',
       notes: '',
     },
   });
@@ -419,6 +419,8 @@ export default function CreateAlert() {
     // Make sure all selected data is properly set
     const formData = {
       ...data,
+      // Add status field for the API (not shown in the form)
+      status: "active",
       technicalReasons: selectedReasons,
       tags: selectedTags,
       priceConfluences: selectedPriceConfluences,
@@ -570,7 +572,7 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
                     name="currentPrice"
@@ -586,35 +588,6 @@ export default function CreateAlert() {
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="sector"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sector</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Technology" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <FormControl>
-                          <Input placeholder="active" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Default is "active"
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -795,7 +768,7 @@ export default function CreateAlert() {
                         <FormLabel>Target 1 Reasoning</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Explain why you expect the stock to reach Target 1"
+                            placeholder="Explain why this is a good place to take profit (resistance level, support turned resistance, fibonacci)"
                             className="min-h-[80px]" 
                             {...field} 
                           />
@@ -813,7 +786,7 @@ export default function CreateAlert() {
                         <FormLabel>Target 2 Reasoning</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Explain why you expect the stock to reach Target 2"
+                            placeholder="Explain why this is a good place to take profit (resistance level, support turned resistance, fibonacci)"
                             className="min-h-[80px]" 
                             {...field} 
                           />
@@ -831,7 +804,7 @@ export default function CreateAlert() {
                         <FormLabel>Target 3 Reasoning</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Explain why you expect the stock to reach Target 3"
+                            placeholder="Explain why this is a good place to take profit (resistance level, support turned resistance, fibonacci)"
                             className="min-h-[80px]" 
                             {...field} 
                           />
@@ -1186,6 +1159,91 @@ export default function CreateAlert() {
                 </div>
               </div>
 
+              {/* Chart Images Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Chart Images</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Upload both a daily and weekly chart for this stock</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="dailyChartUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Daily Chart Image</FormLabel>
+                        <FormControl>
+                          <div className="space-y-4">
+                            <Input
+                              type="url"
+                              placeholder="Enter image URL for daily chart"
+                              {...field}
+                            />
+                            {field.value && (
+                              <div className="border rounded-md overflow-hidden">
+                                <img
+                                  src={field.value}
+                                  alt="Daily Chart Preview"
+                                  className="max-w-full h-auto object-contain"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Enter a URL to the daily chart image
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="weeklyChartUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Weekly Chart Image</FormLabel>
+                        <FormControl>
+                          <div className="space-y-4">
+                            <Input
+                              type="url"
+                              placeholder="Enter image URL for weekly chart"
+                              {...field}
+                            />
+                            {field.value && (
+                              <div className="border rounded-md overflow-hidden">
+                                <img
+                                  src={field.value}
+                                  alt="Weekly Chart Preview"
+                                  className="max-w-full h-auto object-contain"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Enter a URL to the weekly chart image
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
               {/* Notes Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Additional Notes</h3>
