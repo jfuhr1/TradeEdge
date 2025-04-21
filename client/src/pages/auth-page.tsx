@@ -251,7 +251,15 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       variant="outline"
-                      onClick={() => window.location.href = "/"}
+                      onClick={() => {
+                        // Simulate successful login for demo purposes
+                        setIsLoggingIn(true);
+                        setTimeout(() => {
+                          setIsLoggingIn(false);
+                          // Use full page refresh to reload the app with demo login
+                          window.location.href = "/";
+                        }, 800);
+                      }}
                     >
                       Skip Login (Demo Mode)
                     </Button>
@@ -366,7 +374,15 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       variant="outline"
-                      onClick={() => window.location.href = "/"}
+                      onClick={() => {
+                        // Simulate successful registration for demo purposes
+                        setIsRegistering(true);
+                        setTimeout(() => {
+                          setIsRegistering(false);
+                          // Use full page refresh to reload the app with demo login
+                          window.location.href = "/";
+                        }, 800);
+                      }}
                     >
                       Skip Registration (Demo Mode)
                     </Button>
