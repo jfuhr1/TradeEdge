@@ -43,9 +43,18 @@ export default function CreateAlert() {
   const [customReason, setCustomReason] = useState('');
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   
-  // Check if user is admin
+  // Check if user is admin or using demo mode
   useEffect(() => {
     async function checkAdminStatus() {
+      // Check for demo mode in localStorage
+      const isDemoMode = localStorage.getItem('demoMode') === 'true';
+      
+      if (isDemoMode) {
+        // In demo mode, automatically grant admin access
+        setIsAdmin(true);
+        return;
+      }
+      
       try {
         const res = await apiRequest('GET', '/api/user/is-admin');
         const data = await res.json();
@@ -62,20 +71,52 @@ export default function CreateAlert() {
         setIsAdmin(false);
         toast({
           title: 'Access Denied',
-          description: 'There was an error checking your permissions.',
+          description: 'Access restricted. Enable demo mode to try this feature.',
           variant: 'destructive'
         });
       }
     }
     
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user, toast]);
+    checkAdminStatus();
+  }, [toast]);
 
   // Fetch technical reasons
   const { data: technicalReasons, isLoading: loadingReasons } = useQuery<{ id: number, name: string }[]>({
     queryKey: ['/api/technical-reasons'],
+    queryFn: async ({ queryKey }) => {
+      // Check for demo mode
+      const isDemoMode = localStorage.getItem('demoMode') === 'true';
+      
+      if (isDemoMode) {
+        // Return mock data for demo mode
+        console.log('Demo mode: Using mock technical reasons');
+        return [
+          { id: 1, name: 'Support Level' },
+          { id: 2, name: 'Resistance Level' },
+          { id: 3, name: 'Oversold RSI' },
+          { id: 4, name: 'Overbought RSI' },
+          { id: 5, name: 'Moving Average Crossover' },
+          { id: 6, name: 'MACD Crossover' },
+          { id: 7, name: 'Earnings Beat' },
+          { id: 8, name: 'Revenue Growth' },
+          { id: 9, name: 'Bullish Pattern' },
+          { id: 10, name: 'Bearish Pattern' },
+          { id: 11, name: 'Breakout Pattern' },
+          { id: 12, name: 'Upward Trend' },
+          { id: 13, name: 'Downward Trend' },
+          { id: 14, name: 'Volume Increase' },
+          { id: 15, name: 'Sector Momentum' },
+        ];
+      }
+      
+      // Normal behavior without demo mode
+      const endpoint = queryKey[0] as string;
+      const res = await fetch(endpoint);
+      if (!res.ok) {
+        throw new Error('Failed to fetch technical reasons');
+      }
+      return res.json();
+    },
   });
 
   // Form setup
@@ -101,6 +142,26 @@ export default function CreateAlert() {
   // Add stock alert mutation
   const createStockAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
+      // Check if in demo mode
+      const isDemoMode = localStorage.getItem('demoMode') === 'true';
+      
+      if (isDemoMode) {
+        // In demo mode, mock a successful response
+        console.log('Demo mode: Would create stock alert with data:', data);
+        
+        // Simulate a delay for realism
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Return mock response with provided data
+        return {
+          ...data,
+          id: Math.floor(Math.random() * 1000) + 100, // random ID
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      
+      // Normal API request if not in demo mode
       const res = await apiRequest('POST', '/api/stock-alerts', data);
       return res.json();
     },
@@ -112,6 +173,14 @@ export default function CreateAlert() {
       queryClient.invalidateQueries({ queryKey: ['/api/stock-alerts'] });
       form.reset();
       setSelectedReasons([]);
+      
+      // If in demo mode, provide additional context
+      if (localStorage.getItem('demoMode') === 'true') {
+        toast({
+          title: 'Demo Mode',
+          description: 'This alert was created in demo mode and won\'t persist.',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
