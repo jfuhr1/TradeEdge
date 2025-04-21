@@ -6,7 +6,7 @@ import { StockAlert } from "@shared/schema";
 interface StockAlertWithExtras {
   changePercent?: string;
 }
-import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check, Activity, CheckSquare, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check, Activity, CheckSquare, ExternalLink, BellRing } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -284,9 +284,9 @@ export default function StockDetail() {
                 className="w-full"
                 asChild
               >
-                <Link href={`/alert-settings?stock=${alert.id}`}>
-                  <AlertCircle className="mr-2 h-4 w-4" />
-                  Customize Alerts
+                <Link href={`/notification-settings/stock/${alert.id}`}>
+                  <BellRing className="mr-2 h-4 w-4" />
+                  Manage Notifications
                 </Link>
               </Button>
             </div>

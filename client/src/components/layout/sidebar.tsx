@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Bell, Briefcase, GraduationCap, Calendar, Settings, ChartLine, Trophy, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Bell, Briefcase, GraduationCap, Calendar, Settings, ChartLine, Trophy, ChevronLeft, ChevronRight, BellRing } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +17,7 @@ export default function Sidebar() {
     { href: "/", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Stock Alerts" },
     { href: "/portfolio", icon: <Briefcase className="w-5 h-5" />, label: "My Portfolio" },
+    { href: "/notification-settings", icon: <BellRing className="w-5 h-5" />, label: "Notification Settings" },
     { href: "/education", icon: <GraduationCap className="w-5 h-5" />, label: "Education" },
     { href: "/coaching", icon: <Calendar className="w-5 h-5" />, label: "Book Coaching" },
     { href: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
