@@ -888,21 +888,45 @@ export default function CreateAlert() {
                     <AccordionTrigger className="text-base">Momentum Indicators</AccordionTrigger>
                     <AccordionContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                        {MOMENTUM_CONFLUENCES.map((item) => (
-                          <div key={item} className="flex items-start space-x-2">
-                            <Checkbox
-                              id={`momentum-${item}`}
-                              checked={selectedMomentumConfluences.includes(item)}
-                              onCheckedChange={() => toggleMomentumConfluence(item)}
-                            />
-                            <label
-                              htmlFor={`momentum-${item}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {item}
-                            </label>
-                          </div>
-                        ))}
+                        {/* Daily Indicators (Left Column) */}
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium mb-2">Daily Indicators</h4>
+                          {MOMENTUM_CONFLUENCES.slice(0, 5).map((item) => (
+                            <div key={item} className="flex items-start space-x-2">
+                              <Checkbox
+                                id={`momentum-${item}`}
+                                checked={selectedMomentumConfluences.includes(item)}
+                                onCheckedChange={() => toggleMomentumConfluence(item)}
+                              />
+                              <label
+                                htmlFor={`momentum-${item}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {item}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Weekly Indicators (Right Column) */}
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium mb-2">Weekly Indicators</h4>
+                          {MOMENTUM_CONFLUENCES.slice(5).map((item) => (
+                            <div key={item} className="flex items-start space-x-2">
+                              <Checkbox
+                                id={`momentum-${item}`}
+                                checked={selectedMomentumConfluences.includes(item)}
+                                onCheckedChange={() => toggleMomentumConfluence(item)}
+                              />
+                              <label
+                                htmlFor={`momentum-${item}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {item}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -1052,112 +1076,7 @@ export default function CreateAlert() {
                 />
               </div>
 
-              {/* Technical Analysis Section */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Technical Analysis</h3>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Info className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">Select technical reasons that support this stock pick or add your own.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                
-                {/* Selected Reasons */}
-                <div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedReasons.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No technical reasons selected</p>
-                    ) : (
-                      selectedReasons.map(reason => (
-                        <Badge 
-                          key={reason} 
-                          variant="secondary"
-                          className="flex items-center gap-1 px-3 py-1"
-                        >
-                          {reason}
-                          <button 
-                            onClick={() => handleRemoveReason(reason)}
-                            className="ml-1 text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))
-                    )}
-                  </div>
-                </div>
-                
-                {/* Common Technical Reasons */}
-                <div>
-                  <FormLabel>Common Technical Reasons</FormLabel>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                    {loadingReasons ? (
-                      <div className="col-span-3 flex justify-center p-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    ) : (
-                      technicalReasons ? technicalReasons.map(reason => (
-                        <div key={reason.id} className="flex items-start space-x-2">
-                          <Checkbox 
-                            id={`reason-${reason.id}`}
-                            checked={selectedReasons.includes(reason.name)}
-                            onCheckedChange={() => toggleReasonSelection(reason.name)}
-                          />
-                          <label 
-                            htmlFor={`reason-${reason.id}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {reason.name}
-                          </label>
-                        </div>
-                      )) : (
-                        // Fallback to common technical reasons if API fails
-                        ['Support Level', 'Resistance Breakout', 'Oversold RSI', 'Upward Trend', 'Volume Increase', 'Moving Average Crossover', 'Earnings Beat', 'Sector Momentum', 'Bullish Pattern'].map(reason => (
-                          <div key={reason} className="flex items-start space-x-2">
-                            <Checkbox 
-                              id={`reason-${reason}`}
-                              checked={selectedReasons.includes(reason)}
-                              onCheckedChange={() => toggleReasonSelection(reason)}
-                            />
-                            <label 
-                              htmlFor={`reason-${reason}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {reason}
-                            </label>
-                          </div>
-                        ))
-                      )
-                    )}
-                  </div>
-                </div>
-                
-                {/* Custom Reason Input */}
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Add custom technical reason"
-                    value={customReason}
-                    onChange={(e) => setCustomReason(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    type="button" 
-                    onClick={handleAddReason}
-                    disabled={!customReason.trim()}
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> Add
-                  </Button>
-                </div>
-              </div>
+
 
               {/* Chart Images Section */}
               <div className="space-y-4">
