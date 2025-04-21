@@ -52,6 +52,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch closed stock alerts" });
     }
   });
+  
+  app.get("/api/stock-alerts/high-risk-reward", async (req, res) => {
+    try {
+      const alerts = await storage.getHighRiskRewardStockAlerts();
+      res.json(alerts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch high risk/reward stock alerts" });
+    }
+  });
+  
+  app.get("/api/stock-alerts/hit-targets", async (req, res) => {
+    try {
+      const targets = await storage.getRecentlyHitTargetsStockAlerts();
+      res.json(targets);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch stock alerts that hit targets" });
+    }
+  });
 
   app.get("/api/stock-alerts/:id", async (req, res) => {
     try {

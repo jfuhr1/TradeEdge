@@ -269,6 +269,48 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
+  async getHighRiskRewardStockAlerts(): Promise<StockAlert[]> {
+    return Array.from(this.stockAlerts.values())
+      .filter(alert => 
+        // Below buy zone but still active
+        alert.status !== 'closed' && 
+        alert.currentPrice < alert.buyZoneMin
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+  
+  async getRecentlyHitTargetsStockAlerts(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
+    const target1: StockAlert[] = [];
+    const target2: StockAlert[] = [];
+    const target3: StockAlert[] = [];
+    
+    const alerts = Array.from(this.stockAlerts.values());
+    
+    for (const alert of alerts) {
+      // For target 1: current price is at or above target 1
+      if (alert.currentPrice >= alert.target1) {
+        target1.push(alert);
+      }
+      
+      // For target 2: current price is at or above target 2
+      if (alert.currentPrice >= alert.target2) {
+        target2.push(alert);
+      }
+      
+      // For target 3: current price is at or above target 3
+      if (alert.currentPrice >= alert.target3) {
+        target3.push(alert);
+      }
+    }
+    
+    // Sort by most recent first
+    target1.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    target2.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    target3.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    return { target1, target2, target3 };
+  }
+  
   async getStockAlertsNearingTargets(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
     const target1: StockAlert[] = [];
     const target2: StockAlert[] = [];
