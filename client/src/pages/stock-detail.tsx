@@ -203,8 +203,9 @@ export default function StockDetail() {
                     </Badge>
                   )}
                   
-                  {/* 4. Nearing targets - can be either active or closed, but is within 10% of any of the listed targets */}
-                  {((alert.currentPrice >= alert.target1 * 0.9 && alert.currentPrice < alert.target1) ||
+                  {/* 4. Nearing targets - can be either active or closed, but is within 10% of any of the listed targets AND above buy zone */}
+                  {alert.currentPrice > alert.buyZoneMax && 
+                   ((alert.currentPrice >= alert.target1 * 0.9 && alert.currentPrice < alert.target1) ||
                     (alert.currentPrice >= alert.target2 * 0.9 && alert.currentPrice < alert.target2) ||
                     (alert.currentPrice >= alert.target3 * 0.9 && alert.currentPrice < alert.target3)) && (
                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1">
@@ -521,11 +522,11 @@ export default function StockDetail() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Price Point</TableHead>
-                <TableHead>Price ($)</TableHead>
-                <TableHead>From Current</TableHead>
-                <TableHead>From Buy Zone</TableHead>
-                <TableHead className="w-1/3">Target Reasoning</TableHead>
+                <TableHead className="w-[10%]">Target</TableHead>
+                <TableHead className="w-[10%]">Price</TableHead>
+                <TableHead className="w-[15%]">From Current</TableHead>
+                <TableHead className="w-[15%]">From Buy Zone</TableHead>
+                <TableHead className="w-[50%]">Target Reasoning</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
