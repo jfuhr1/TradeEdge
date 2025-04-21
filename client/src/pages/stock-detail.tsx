@@ -26,21 +26,19 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function StockDetail() {
-  const [, params] = useRoute("/stock/:id");
-  const stockSymbol = params?.id;
+  const [, params] = useRoute("/stock-detail/:id");
+  const stockId = params?.id ? parseInt(params.id) : null;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const { connected } = useWebSocket();
 
-  // Fetch all stock alerts
-  const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery<StockAlert[]>({
-    queryKey: ["/api/stock-alerts"],
+  // Fetch stock alert details by ID
+  const { data: alert, isLoading: isLoadingAlert } = useQuery<StockAlert>({
+    queryKey: [`/api/stock-alerts/${stockId}`],
+    enabled: !!stockId,
   });
-
-  // Find the specific alert for this symbol
-  const alert = allAlerts?.find(a => a.symbol === stockSymbol);
 
   // Add to portfolio mutation
   const addToPortfolio = useMutation({
@@ -77,7 +75,7 @@ export default function StockDetail() {
     },
   });
 
-  if (isLoadingAlerts || !alert) {
+  if (isLoadingAlert || !alert) {
     return (
       <MainLayout title="Stock Details">
         <div className="flex justify-center p-8">

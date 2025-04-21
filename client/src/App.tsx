@@ -25,7 +25,6 @@ function App() {
           <ProtectedRoute path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/" component={Dashboard} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
-          <ProtectedRoute path="/stock/:id" component={StockDetail} />
           <ProtectedRoute path="/stock-detail/:id" component={StockDetail} />
           <ProtectedRoute path="/portfolio" component={Portfolio} />
           <ProtectedRoute path="/education" component={Education} />

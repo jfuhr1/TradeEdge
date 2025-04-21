@@ -310,7 +310,7 @@ export default function AlertCard({ alert, className = "" }: AlertCardProps) {
             >
               Add to Portfolio
             </Button>
-            <Link href={`/stock/${alert.symbol}`} className="w-full">
+            <Link href={`/stock-detail/${alert.id}`} className="w-full">
               <Button 
                 variant="outline" 
                 className="py-4 w-full h-full"
