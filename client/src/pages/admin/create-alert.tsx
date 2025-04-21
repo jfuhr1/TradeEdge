@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from 'date-fns';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { insertStockAlertSchema, StockAlert } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import MainLayout from '@/components/layout/main-layout';
-import { Loader2, Plus, X, Info, Trash2, Upload } from 'lucide-react';
+import { Loader2, Plus, X, Info, Trash2, Upload, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { 
   Accordion,
   AccordionContent,
@@ -101,7 +104,9 @@ const RISK_FACTORS = [
 const stockAlertFormSchema = z.object({
   symbol: z.string().min(1, "Symbol is required").max(10),
   companyName: z.string().min(1, "Company name is required"),
+  dateAdded: z.date(),
   tags: z.array(z.string()).max(3, "Maximum 3 tags allowed"),
+  newTag: z.string().optional(),
   buyZoneMin: z.coerce.number().positive("Buy zone minimum must be positive"),
   buyZoneMax: z.coerce.number().positive("Buy zone maximum must be positive"),
   target1: z.coerce.number().positive("Target 1 must be positive"),
@@ -120,6 +125,7 @@ const stockAlertFormSchema = z.object({
   chartConfluences: z.array(z.string()),
   sentimentConfluences: z.array(z.string()),
   riskFactors: z.array(z.string()),
+  newRisk: z.string().optional(),
 
   notes: z.string().optional(),
 });
@@ -186,13 +192,19 @@ export default function CreateAlert() {
   const [selectedSentimentConfluences, setSelectedSentimentConfluences] = useState<string[]>([]);
   const [selectedRiskFactors, setSelectedRiskFactors] = useState<string[]>([]);
 
+  // State management for custom tags and risks
+  const [availableTags, setAvailableTags] = useState<string[]>([...STOCK_TAGS]);
+  const [availableRisks, setAvailableRisks] = useState<string[]>([...RISK_FACTORS]);
+  
   // Form setup
   const form = useForm<StockAlertFormValues>({
     resolver: zodResolver(stockAlertFormSchema),
     defaultValues: {
       symbol: '',
       companyName: '',
+      dateAdded: new Date(),
       tags: [],
+      newTag: '',
       buyZoneMin: undefined,
       buyZoneMax: undefined,
       target1: undefined,
@@ -211,6 +223,7 @@ export default function CreateAlert() {
       chartConfluences: [],
       sentimentConfluences: [],
       riskFactors: [],
+      newRisk: '',
 
       notes: '',
     },
@@ -344,8 +357,91 @@ export default function CreateAlert() {
     setSelectedRiskFactors(newSelection);
     form.setValue('riskFactors', newSelection);
   };
+  
+  // Add a new tag to the system
+  const addNewTag = (newTag: string) => {
+    if (!newTag || newTag.trim() === '') return;
+    
+    // Check if tag already exists
+    if (availableTags.includes(newTag)) {
+      toast({
+        title: "Tag already exists",
+        description: `The tag "${newTag}" is already in the system.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add to available tags
+    const updatedTags = [...availableTags, newTag];
+    setAvailableTags(updatedTags);
+    
+    // Clear the new tag field
+    form.setValue('newTag', '');
+    
+    // Also select it if we haven't reached our limit
+    if (selectedTags.length < 3) {
+      const updatedSelectedTags = [...selectedTags, newTag];
+      setSelectedTags(updatedSelectedTags);
+      form.setValue('tags', updatedSelectedTags);
+      
+      toast({
+        title: "Tag Added",
+        description: `New tag "${newTag}" has been added to the system.`
+      });
+    } else {
+      toast({
+        title: "Tag Added",
+        description: `New tag "${newTag}" has been added to the system but not selected due to 3-tag limit.`
+      });
+    }
+  };
+  
+  // Add a new risk factor to the system
+  const addNewRisk = (newRisk: string) => {
+    if (!newRisk || newRisk.trim() === '') return;
+    
+    // Check if risk already exists
+    if (availableRisks.includes(newRisk)) {
+      toast({
+        title: "Risk factor already exists",
+        description: `The risk factor "${newRisk}" is already in the system.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add to available risks
+    const updatedRisks = [...availableRisks, newRisk];
+    setAvailableRisks(updatedRisks);
+    
+    // Clear the new risk field
+    form.setValue('newRisk', '');
+    
+    // Also select it
+    const updatedSelectedRisks = [...selectedRiskFactors, newRisk];
+    setSelectedRiskFactors(updatedSelectedRisks);
+    form.setValue('riskFactors', updatedSelectedRisks);
+    
+    toast({
+      title: "Risk Factor Added",
+      description: `New risk factor "${newRisk}" has been added to the system.`
+    });
+  };
 
   function onSubmit(data: StockAlertFormValues) {
+    // Check if there's a new tag to add
+    if (data.newTag && data.newTag.trim() !== '') {
+      addNewTag(data.newTag);
+      return; // Don't submit yet, let user see the new tag first
+    }
+    
+    // Check if there's a new risk to add
+    if (data.newRisk && data.newRisk.trim() !== '') {
+      addNewRisk(data.newRisk);
+      return; // Don't submit yet, let user see the new risk first
+    }
+    
     // Make sure all selected data is properly set
     const formData = {
       ...data,
@@ -502,6 +598,51 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
+                
+                {/* Date Added */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="dateAdded"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date Added</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={`w-full pl-3 text-left font-normal ${!field.value ? "text-muted-foreground" : ""}`}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date > new Date() || date < new Date("2000-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormDescription>
+                          Date this stock alert was added to the system
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 
                 {/* Tags Section */}
@@ -554,6 +695,41 @@ export default function CreateAlert() {
                             </div>
                           </div>
                         )}
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Add New Tag Field */}
+                  <FormField
+                    control={form.control}
+                    name="newTag"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Add New Tag</FormLabel>
+                        <div className="flex space-x-2">
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter a new tag name" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              if (field.value?.trim()) {
+                                addNewTag(field.value);
+                              }
+                            }}
+                            className="whitespace-nowrap"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Tag
+                          </Button>
+                        </div>
+                        <FormDescription>
+                          Create a new tag that will be available for future stock alerts
+                        </FormDescription>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -945,6 +1121,42 @@ export default function CreateAlert() {
                     </div>
                   </div>
                 )}
+                
+                {/* Add New Risk Factor Field */}
+                <FormField
+                  control={form.control}
+                  name="newRisk"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Add New Risk Factor</FormLabel>
+                      <div className="flex space-x-2">
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter a new risk factor" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (field.value?.trim()) {
+                              addNewRisk(field.value);
+                            }
+                          }}
+                          className="whitespace-nowrap"
+                          variant="destructive"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Risk
+                        </Button>
+                      </div>
+                      <FormDescription>
+                        Create a new risk factor that will be available for future stock alerts
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Narrative Section */}
