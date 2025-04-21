@@ -6,7 +6,7 @@ import { StockAlert } from "@shared/schema";
 interface StockAlertWithExtras {
   changePercent?: string;
 }
-import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check, Activity, CheckSquare } from "lucide-react";
+import { Loader2, ArrowLeft, ChartLine, Target, TrendingUp, AlertCircle, Info, Calendar, BarChart4, TrendingDown, BadgeAlert, ArrowDownToLine, CheckCircle, Check, Activity, CheckSquare, ExternalLink } from "lucide-react";
 import MainLayout from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -576,30 +576,14 @@ export default function StockDetail() {
               {["Support Zone Strength", "Resistance Turned Support", "Bullish Trend Line Support", "Trendline Break", "4-Hour Trend Line Break"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
               
               {/* For demo, show at least one item from each category if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Support Zone Strength", "Resistance Turned Support", "Bullish Trend Line Support", "Trendline Break", "4-Hour Trend Line Break"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Support Zone Strength</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("Support Zone Strength")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="Support Zone Strength" />
               )}
             </div>
           </div>
@@ -611,30 +595,14 @@ export default function StockDetail() {
               {["Volume Spike/Volume - Buy at the Lows", "High Volume Node"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
               
               {/* For demo, show at least one item if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Volume Spike/Volume - Buy at the Lows", "High Volume Node"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">High Volume Node</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("High Volume Node")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="High Volume Node" />
               )}
             </div>
           </div>
@@ -649,30 +617,14 @@ export default function StockDetail() {
               {["Daily MACD Turning Up", "Daily MACD Cross", "Daily MACD Divergence", "Daily RSI Divergence", "Daily RSI Oversold"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
                 
               {/* For demo, show at least one item if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Daily MACD Turning Up", "Daily MACD Cross", "Daily MACD Divergence", "Daily RSI Divergence", "Daily RSI Oversold"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Daily RSI Oversold</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("Daily RSI Oversold")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="Daily RSI Oversold" />
               )}
             </div>
             
@@ -682,30 +634,14 @@ export default function StockDetail() {
               {["Weekly MACD Turning Up", "Weekly MACD Cross", "Weekly MACD Divergence", "Weekly RSI Divergence", "Weekly RSI Oversold"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
                 
               {/* For demo, show at least one item if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Weekly MACD Turning Up", "Weekly MACD Cross", "Weekly MACD Divergence", "Weekly RSI Divergence", "Weekly RSI Oversold"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Weekly MACD Turning Up</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("Weekly MACD Turning Up")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="Weekly MACD Turning Up" />
               )}
             </div>
           </div>
@@ -717,30 +653,14 @@ export default function StockDetail() {
               {["Wyckoff Pattern", "Weinstein Analysis"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
                 
               {/* For demo, show at least one item if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Wyckoff Pattern", "Weinstein Analysis"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Wyckoff Pattern</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("Wyckoff Pattern")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="Wyckoff Pattern" />
               )}
             </div>
           </div>
@@ -752,30 +672,14 @@ export default function StockDetail() {
               {["Insider Buys", "Dark Pool Print"]
                 .filter(reason => Array.isArray(alert.technicalReasons) && alert.technicalReasons.includes(reason))
                 .map((reason, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                    <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{reason}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getTechnicalReasonDescription(reason)}
-                      </p>
-                    </div>
-                  </div>
+                  <ConfluenceItem key={index} reason={reason} />
                 ))}
                 
               {/* For demo, show at least one item if there are no matches */}
               {(!Array.isArray(alert.technicalReasons) || !alert.technicalReasons.some(r => 
                 ["Insider Buys", "Dark Pool Print"].includes(r)
               )) && (
-                <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                  <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Insider Buys</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTechnicalReasonDescription("Insider Buys")}
-                    </p>
-                  </div>
-                </div>
+                <ConfluenceItem reason="Insider Buys" />
               )}
             </div>
           </div>
@@ -885,6 +789,101 @@ export default function StockDetail() {
     </MainLayout>
   );
 }
+
+// Reusable component for confluence item with education link
+function ConfluenceItem({ reason }: { reason: string }) {
+  const educationId = confluenceToEducationMap[reason] || 1;
+  
+  return (
+    <div className="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
+      <Check className="h-5 w-5 text-green-600 mt-1 mr-3 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <p className="font-medium">{reason}</p>
+          <Link href={`/education/${educationId}`}>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-blue-600 flex items-center gap-1 hover:text-blue-800 hover:bg-blue-50">
+              <span className="text-xs">Learn More</span>
+              <ExternalLink className="h-3 w-3" />
+            </Button>
+          </Link>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">
+          {getTechnicalReasonDescription(reason)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Map confluences to education content IDs
+const confluenceToEducationMap: Record<string, number> = {
+  // Price-Based Confluences
+  "Support Zone Strength": 1,
+  "Resistance Turned Support": 1,
+  "Bullish Trend Line Support": 2,
+  "Trendline Break": 2,
+  "4-Hour Trend Line Break": 2,
+  
+  // Volume-Based Confluences
+  "Volume Spike/Volume - Buy at the Lows": 3,
+  "High Volume Node": 3,
+  
+  // Momentum Indicators - Daily
+  "Daily MACD Turning Up": 4,
+  "Daily MACD Cross": 4,
+  "Daily MACD Divergence": 4,
+  "Daily RSI Divergence": 5,
+  "Daily RSI Oversold": 5,
+  
+  // Momentum Indicators - Weekly
+  "Weekly MACD Turning Up": 4,
+  "Weekly MACD Cross": 4,
+  "Weekly MACD Divergence": 4,
+  "Weekly RSI Divergence": 5,
+  "Weekly RSI Oversold": 5,
+  
+  // Chart Patterns
+  "Wyckoff Pattern": 6,
+  "Weinstein Analysis": 7,
+  
+  // Sentiment & Insider Activity
+  "Insider Buys": 8,
+  "Dark Pool Print": 9,
+  
+  // Legacy mappings
+  "Support Level": 1,
+  "Price Consolidation": 2,
+  "Oversold Conditions": 5,
+  "Value Play": 10,
+  "Bullish Pattern": 6,
+  "Breakout Pattern": 2,
+  "Technical Support": 1,
+  "Volume Pattern": 3,
+  "Trend Resumption": 2,
+  "Upward Trend": 2,
+  "Technical Breakout": 2,
+  "Revenue Growth": 10,
+  "Earnings Beat": 10,
+  "Subscriber Growth": 10,
+  "Ad Tier Success": 10,
+  "Content Slate": 10,
+  "Growth Potential": 10,
+  "Sector Momentum": 11,
+  "Manufacturing Progress": 10,
+  "Chip Recovery": 10,
+  "Government Incentives": 10,
+  "Fintech Recovery": 11,
+  "AI Integration": 11,
+  "Travel Resurgence": 11,
+  "International Growth": 10,
+  "Turnaround Story": 10,
+  "Volume Increase": 3,
+  "Accumulation Phase": 3,
+  "Breakout Confirmation": 2,
+  "Sector Strength": 11,
+  "Earnings Growth": 10,
+  "Streaming Growth": 10,
+};
 
 // Helper function to get descriptions for technical reasons
 function getTechnicalReasonDescription(reason: string): string {
