@@ -522,10 +522,11 @@ export default function StockDetail() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[10%]">Target</TableHead>
-                <TableHead className="w-[10%]">Price</TableHead>
-                <TableHead className="w-[15%]">From Current</TableHead>
-                <TableHead className="w-[15%]">From Buy Zone</TableHead>
+                <TableHead className="w-[8%]">Target</TableHead>
+                <TableHead className="w-[8%]">Price</TableHead>
+                <TableHead className="w-[12%]">From Current</TableHead>
+                <TableHead className="w-[11%]">From Buy Low</TableHead>
+                <TableHead className="w-[11%]">From Buy High</TableHead>
                 <TableHead className="w-[50%]">Target Reasoning</TableHead>
               </TableRow>
             </TableHeader>
@@ -534,6 +535,7 @@ export default function StockDetail() {
                 <TableCell className="font-medium">Target 1</TableCell>
                 <TableCell>${alert.target1.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target1 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   Initial profit target at first resistance level. Look for momentum and volume to continue.
@@ -543,6 +545,7 @@ export default function StockDetail() {
                 <TableCell className="font-medium">Target 2</TableCell>
                 <TableCell>${alert.target2.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target2 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   Secondary target based on previous highs. Consider taking partial profits here.
@@ -552,6 +555,7 @@ export default function StockDetail() {
                 <TableCell className="font-medium">Target 3</TableCell>
                 <TableCell>${alert.target3.toFixed(2)}</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(2)}%</TableCell>
+                <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMin) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-green-600">+{(((alert.target3 / alert.buyZoneMax) - 1) * 100).toFixed(2)}%</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   Extended target for longer-term holders. Requires strong breakout and market conditions.
@@ -602,8 +606,8 @@ export default function StockDetail() {
         <div>
           <h3 className="text-lg font-medium mb-4">Risk Factors</h3>
           <div className="space-y-4">
-            <div className="flex items-start bg-red-50 p-4 rounded-md">
-              <TrendingDown className="h-5 w-5 text-red-500 mt-1 mr-3 flex-shrink-0" />
+            <div className="flex items-start bg-amber-50 p-4 rounded-md">
+              <BadgeAlert className="h-5 w-5 text-amber-500 mt-1 mr-3 flex-shrink-0" />
               <div>
                 <p className="font-medium">Market Volatility</p>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -688,31 +692,57 @@ export default function StockDetail() {
 function getTechnicalReasonDescription(reason: string): string {
   const descriptions: Record<string, string> = {
     // Price-Based Confluences
-    "Support Zone": "The stock price has reached a level where historical trading shows strong buyer interest, suggesting a potential rebound.",
+    "Support Zone Strength": "The stock has repeatedly found support at this price level, indicating strong buyer interest.",
+    "Resistance Turned Support": "Previous resistance level has now become support, providing a solid foundation for upward movement.",
+    "Bullish Trend Line Support": "The stock is bouncing off an established upward trend line, confirming the trend's strength.",
+    "Trendline Break": "The stock has broken above a significant downtrend line, suggesting a potential trend reversal.",
+    "4-Hour Trend Line Break": "A break above a short-term trend line on the 4-hour chart indicates building momentum.",
+    
+    // Volume-Based Confluences
+    "Volume Spike/Volume - Buy at the Lows": "Significant volume increase at lower prices suggests institutional accumulation.",
+    "High Volume Node": "Price is consolidating at a level with historically high trading volume, indicating strong support.",
+    
+    // Momentum Indicators
+    // Daily Indicators
+    "Daily MACD Turning Up": "The Daily MACD indicator is turning upward, signaling potential buying momentum.",
+    "Daily MACD Cross": "The MACD line has crossed above the signal line on the daily chart, a bullish signal.",
+    "Daily MACD Divergence": "Positive divergence between price and MACD suggests underlying strength despite price action.",
+    "Daily RSI Divergence": "RSI is showing positive divergence from price, indicating potential reversal.",
+    "Daily RSI Oversold": "The daily RSI indicates the stock is oversold, suggesting a potential bounce.",
+    
+    // Weekly Indicators
+    "Weekly MACD Turning Up": "The Weekly MACD indicator is turning upward, signaling stronger long-term momentum.",
+    "Weekly MACD Cross": "The MACD line has crossed above the signal line on the weekly chart, a strong bullish signal.",
+    "Weekly MACD Divergence": "Positive divergence between price and MACD on the weekly timeframe suggests strong underlying bullish momentum.",
+    "Weekly RSI Divergence": "Weekly RSI shows positive divergence, indicating potential for longer-term reversal.",
+    "Weekly RSI Oversold": "The weekly RSI indicates the stock is oversold, suggesting potential for significant recovery.",
+    
+    // Chart Patterns
+    "Wyckoff Pattern": "Price action matches Wyckoff accumulation pattern, suggesting institutional buying.",
+    "Weinstein Analysis": "According to Weinstein's stage analysis, the stock is entering or in Stage 2 (advancing phase).",
+    
+    // Sentiment & Insider Activity
+    "Insider Buys": "Company insiders have been purchasing shares, indicating confidence in future prospects.",
+    "Dark Pool Print": "Significant dark pool buying activity detected, suggesting institutional accumulation.",
+    
+    // Legacy items (kept for backward compatibility)
+    "Support Level": "The stock has reached a price level where historical trading shows strong buyer interest, suggesting a potential rebound.",
     "Price Consolidation": "The stock is trading within a narrow range, indicating potential energy buildup before the next move.",
     "Oversold Conditions": "Technical indicators suggest the stock is undervalued after recent selling pressure.",
     "Value Play": "Fundamental analysis indicates the stock is trading below its intrinsic value.",
-    
-    // Technical Pattern Confluences
     "Bullish Pattern": "Chart patterns indicate a potential upward price movement in the near future.",
     "Breakout Pattern": "The stock has broken through a significant resistance level with increased volume.",
     "Technical Support": "Multiple technical indicators suggest strong support at current price levels.",
     "Volume Pattern": "Recent volume activity indicates institutional accumulation rather than distribution.",
-
-    // Trend-Based Confluences
     "Trend Resumption": "After a brief pullback, the primary upward trend appears to be resuming.",
     "Upward Trend": "The stock is in an established uptrend, demonstrating a pattern of higher highs and higher lows.",
     "Technical Breakout": "The stock has confirmed a break above a significant resistance level.",
-    
-    // Company-Specific Confluences
     "Revenue Growth": "The company has demonstrated strong and sustainable revenue growth in recent reports.",
     "Earnings Beat": "Recent quarterly earnings significantly exceeded analyst expectations.",
     "Subscriber Growth": "User or subscriber metrics are showing accelerating growth beyond expectations.",
     "Ad Tier Success": "New advertising-based revenue streams are exceeding expectations.",
     "Content Slate": "Upcoming product releases or content offerings are anticipated to drive growth.",
     "Growth Potential": "The company has multiple paths to expand market share and increase revenue.",
-    
-    // Industry/Sector Confluences
     "Sector Momentum": "The entire industry sector is showing strong performance and positive momentum.",
     "Manufacturing Progress": "Production challenges are being resolved faster than anticipated.",
     "Chip Recovery": "Semiconductor shortages or supply chain issues are easing.",
@@ -722,10 +752,12 @@ function getTechnicalReasonDescription(reason: string): string {
     "Travel Resurgence": "Post-pandemic travel trends are accelerating beyond expectations.",
     "International Growth": "Expansion into new markets is progressing faster than anticipated.",
     "Turnaround Story": "New management or business strategy is showing early signs of success.",
-
-    // Momentum Confluences
     "Volume Increase": "Trading volume has increased significantly, indicating strong buyer interest.",
     "Accumulation Phase": "Institutional investors appear to be accumulating shares over time.",
+    "Breakout Confirmation": "Recent price action has confirmed a successful breakout from a consolidation pattern.",
+    "Sector Strength": "The company's sector is showing exceptional strength against the broader market.",
+    "Earnings Growth": "The company has demonstrated consistent earnings growth in recent quarters.",
+    "Streaming Growth": "Streaming services show accelerating user adoption and revenue growth.",
   };
   
   return descriptions[reason] || "Additional technical analysis and confluence factors indicate a favorable entry point.";
