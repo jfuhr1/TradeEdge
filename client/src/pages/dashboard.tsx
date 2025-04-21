@@ -22,14 +22,14 @@ const initialLatestAlerts = [
     id: 1, 
     symbol: "AAPL", 
     companyName: "Apple Inc.", 
-    currentPrice: 175.50, 
-    buyZoneMin: 170.00, 
-    buyZoneMax: 175.00, 
-    target1: 185.00, 
-    target2: 195.00, 
-    target3: 205.00,
+    currentPrice: 170.50, 
+    buyZoneMin: 175.00, 
+    buyZoneMax: 185.00, 
+    target1: 195.00, 
+    target2: 210.00, 
+    target3: 225.00,
     createdAt: new Date(2025, 3, 15),
-    status: "in-buy-zone"
+    status: "high-risk"
   },
   { 
     id: 2, 
@@ -75,9 +75,9 @@ const approachingTargets = {
       id: 1, 
       symbol: "AAPL", 
       companyName: "Apple Inc.", 
-      currentPrice: 175.50, 
-      target1: 185.00, 
-      percentToTarget: 5.13
+      currentPrice: 170.50, 
+      target1: 195.00, 
+      percentToTarget: 9.86
     }
   ],
   target2: [
@@ -377,13 +377,13 @@ export default function Dashboard() {
       symbol: "AAPL",
       companyName: "Apple Inc.",
       alertDate: new Date(2025, 2, 10),
-      buyZoneMin: 165.00,
-      buyZoneMax: 175.00,
+      buyZoneMin: 175.00,
+      buyZoneMax: 185.00,
       targetName: "Target 1", 
-      targetValue: 182.00,
+      targetValue: 195.00,
       dateReached: new Date(2025, 2, 25),
       daysToTarget: 15,
-      percentGained: 7.1 // ((targetValue / buyZoneMidpoint) - 1) * 100
+      percentGained: 8.3 // ((targetValue / buyZoneMidpoint) - 1) * 100
     },
     {
       id: 3,
