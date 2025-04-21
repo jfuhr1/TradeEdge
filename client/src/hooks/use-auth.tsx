@@ -24,14 +24,38 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
+  // Check if we are in demo mode from localStorage
+  const isDemoMode = localStorage.getItem('demoMode') === 'true';
+  
+  // Create a demo user
+  const demoUser: SelectUser = {
+    id: 9999,
+    username: "demo_user",
+    password: "",
+    email: "demo@tradeedgepro.com",
+    name: "Jane Smith",
+    phone: null,
+    tier: "standard",
+    profilePicture: null,
+    completedLessons: [],
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    isAdmin: false,
+    createdAt: new Date()
+  };
+  
   const {
-    data: user,
+    data: serverUser,
     error,
     isLoading,
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Use demo user if in demo mode, otherwise use server user
+  const user = isDemoMode ? demoUser : serverUser;
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -77,7 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      // If in demo mode, clear localStorage
+      if (isDemoMode) {
+        localStorage.removeItem('demoMode');
+      } else {
+        // Otherwise, call the actual logout API
+        await apiRequest("POST", "/api/logout");
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);

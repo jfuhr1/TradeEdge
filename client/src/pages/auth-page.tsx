@@ -256,6 +256,8 @@ export default function AuthPage() {
                         setIsLoggingIn(true);
                         setTimeout(() => {
                           setIsLoggingIn(false);
+                          // Set demo mode in localStorage
+                          localStorage.setItem('demoMode', 'true');
                           // Use full page refresh to reload the app with demo login
                           window.location.href = "/";
                         }, 800);
@@ -379,6 +381,8 @@ export default function AuthPage() {
                         setIsRegistering(true);
                         setTimeout(() => {
                           setIsRegistering(false);
+                          // Set demo mode in localStorage
+                          localStorage.setItem('demoMode', 'true');
                           // Use full page refresh to reload the app with demo login
                           window.location.href = "/";
                         }, 800);

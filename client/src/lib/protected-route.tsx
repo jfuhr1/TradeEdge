@@ -11,8 +11,8 @@ export function ProtectedRoute({
 }) {
   const { user, isLoading } = useAuth();
   
-  // For demo purposes - allow access even if not authenticated
-  const allowDemoAccess = true;
+  // Check for demo mode in localStorage
+  const isDemoMode = localStorage.getItem('demoMode') === 'true';
 
   return (
     <Route path={path}>
@@ -20,7 +20,7 @@ export function ProtectedRoute({
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : user || allowDemoAccess ? (
+      ) : user || isDemoMode ? (
         <Component />
       ) : (
         <Redirect to="/auth" />
