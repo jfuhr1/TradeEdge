@@ -17,19 +17,109 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+// Available tags for stock alerts
+const STOCK_TAGS = [
+  "Fintech",
+  "Growth Stocks",
+  "Crypto Plays",
+  "Weinstein",
+  "Biotech",
+  "Leveraged Plays",
+  "Retail",
+  "Leveraged ETFs",
+  "Inverse Plays",
+  "Energy",
+  "Currency",
+  "Safe-Haven Plays",
+  "China",
+  "Emerging Markets"
+];
+
+// Price-based confluences
+const PRICE_CONFLUENCES = [
+  "Support Zone Strength",
+  "Resistance Turned Support",
+  "Bullish Trend Line Support",
+  "Trendline Break",
+  "4-Hour Trend Line Break"
+];
+
+// Volume-based confluences
+const VOLUME_CONFLUENCES = [
+  "Volume Spike/Volume - Buy at the Lows",
+  "High Volume Node"
+];
+
+// Momentum indicator confluences
+const MOMENTUM_CONFLUENCES = [
+  "Daily MACD Turning Up",
+  "Daily MACD Cross",
+  "Daily MACD Divergence",
+  "Daily RSI Divergence",
+  "Daily RSI Oversold",
+  "Weekly MACD Turning Up",
+  "Weekly MACD Cross",
+  "Weekly MACD Divergence",
+  "Weekly RSI Divergence",
+  "Weekly RSI Oversold"
+];
+
+// Chart pattern confluences
+const CHART_CONFLUENCES = [
+  "Wyckoff Pattern",
+  "Weinstein Analysis"
+];
+
+// Sentiment and insider activity confluences
+const SENTIMENT_CONFLUENCES = [
+  "Insider Buys",
+  "Dark Pool Print"
+];
+
+// Risk factors to watch for
+const RISK_FACTORS = [
+  "Market Downturn",
+  "Sector Rotation",
+  "Earnings Miss",
+  "Negative News",
+  "Analyst Downgrade",
+  "Increased Competition",
+  "Regulatory Issues",
+  "Technical Resistance",
+  "Trend Line Break (Bearish)",
+  "Volume Decrease",
+  "Insider Selling"
+];
 
 const stockAlertFormSchema = z.object({
   symbol: z.string().min(1, "Symbol is required").max(10),
   companyName: z.string().min(1, "Company name is required"),
-  currentPrice: z.coerce.number().positive("Current price must be positive"),
+  tags: z.array(z.string()).max(3, "Maximum 3 tags allowed"),
   buyZoneMin: z.coerce.number().positive("Buy zone minimum must be positive"),
   buyZoneMax: z.coerce.number().positive("Buy zone maximum must be positive"),
   target1: z.coerce.number().positive("Target 1 must be positive"),
   target2: z.coerce.number().positive("Target 2 must be positive"),
   target3: z.coerce.number().positive("Target 3 must be positive"),
+  target1Reasoning: z.string().min(1, "Reasoning for Target 1 is required"),
+  target2Reasoning: z.string().min(1, "Reasoning for Target 2 is required"),
+  target3Reasoning: z.string().min(1, "Reasoning for Target 3 is required"),
   status: z.string().default("active"),
-  narrative: z.string().optional(),
+  narrative: z.string().min(10, "Narrative is required and should provide context"),
   technicalReasons: z.array(z.string()),
+  priceConfluences: z.array(z.string()),
+  volumeConfluences: z.array(z.string()),
+  momentumConfluences: z.array(z.string()),
+  chartConfluences: z.array(z.string()),
+  sentimentConfluences: z.array(z.string()),
+  riskFactors: z.array(z.string()),
+  currentPrice: z.coerce.number().positive("Current price must be positive").optional(),
   sector: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -134,21 +224,40 @@ export default function CreateAlert() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // State management for selections
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedPriceConfluences, setSelectedPriceConfluences] = useState<string[]>([]);
+  const [selectedVolumeConfluences, setSelectedVolumeConfluences] = useState<string[]>([]);
+  const [selectedMomentumConfluences, setSelectedMomentumConfluences] = useState<string[]>([]);
+  const [selectedChartConfluences, setSelectedChartConfluences] = useState<string[]>([]);
+  const [selectedSentimentConfluences, setSelectedSentimentConfluences] = useState<string[]>([]);
+  const [selectedRiskFactors, setSelectedRiskFactors] = useState<string[]>([]);
+
   // Form setup
   const form = useForm<StockAlertFormValues>({
     resolver: zodResolver(stockAlertFormSchema),
     defaultValues: {
       symbol: '',
       companyName: '',
-      currentPrice: undefined,
+      tags: [],
       buyZoneMin: undefined,
       buyZoneMax: undefined,
       target1: undefined,
       target2: undefined,
       target3: undefined,
+      target1Reasoning: '',
+      target2Reasoning: '',
+      target3Reasoning: '',
       status: 'active',
       narrative: '',
       technicalReasons: [],
+      priceConfluences: [],
+      volumeConfluences: [],
+      momentumConfluences: [],
+      chartConfluences: [],
+      sentimentConfluences: [],
+      riskFactors: [],
+      currentPrice: undefined,
       sector: '',
       notes: '',
     },
@@ -187,7 +296,16 @@ export default function CreateAlert() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/stock-alerts'] });
       form.reset();
+      
+      // Reset all selections
       setSelectedReasons([]);
+      setSelectedTags([]);
+      setSelectedPriceConfluences([]);
+      setSelectedVolumeConfluences([]);
+      setSelectedMomentumConfluences([]);
+      setSelectedChartConfluences([]);
+      setSelectedSentimentConfluences([]);
+      setSelectedRiskFactors([]);
       
       // If in demo mode, provide additional context
       if (isDemoMode) {
@@ -230,11 +348,85 @@ export default function CreateAlert() {
     form.setValue('technicalReasons', newSelection);
   };
 
+  // Helper functions for tag and confluence selections
+  const toggleTagSelection = (tag: string) => {
+    const newSelection = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    
+    // Enforce max 3 tags limit
+    if (newSelection.length <= 3) {
+      setSelectedTags(newSelection);
+      form.setValue('tags', newSelection);
+    } else {
+      toast({
+        title: "Tag Limit Reached",
+        description: "You can select a maximum of 3 tags",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const togglePriceConfluence = (item: string) => {
+    const newSelection = selectedPriceConfluences.includes(item)
+      ? selectedPriceConfluences.filter(i => i !== item)
+      : [...selectedPriceConfluences, item];
+    setSelectedPriceConfluences(newSelection);
+    form.setValue('priceConfluences', newSelection);
+  };
+
+  const toggleVolumeConfluence = (item: string) => {
+    const newSelection = selectedVolumeConfluences.includes(item)
+      ? selectedVolumeConfluences.filter(i => i !== item)
+      : [...selectedVolumeConfluences, item];
+    setSelectedVolumeConfluences(newSelection);
+    form.setValue('volumeConfluences', newSelection);
+  };
+
+  const toggleMomentumConfluence = (item: string) => {
+    const newSelection = selectedMomentumConfluences.includes(item)
+      ? selectedMomentumConfluences.filter(i => i !== item)
+      : [...selectedMomentumConfluences, item];
+    setSelectedMomentumConfluences(newSelection);
+    form.setValue('momentumConfluences', newSelection);
+  };
+
+  const toggleChartConfluence = (item: string) => {
+    const newSelection = selectedChartConfluences.includes(item)
+      ? selectedChartConfluences.filter(i => i !== item)
+      : [...selectedChartConfluences, item];
+    setSelectedChartConfluences(newSelection);
+    form.setValue('chartConfluences', newSelection);
+  };
+
+  const toggleSentimentConfluence = (item: string) => {
+    const newSelection = selectedSentimentConfluences.includes(item)
+      ? selectedSentimentConfluences.filter(i => i !== item)
+      : [...selectedSentimentConfluences, item];
+    setSelectedSentimentConfluences(newSelection);
+    form.setValue('sentimentConfluences', newSelection);
+  };
+
+  const toggleRiskFactor = (item: string) => {
+    const newSelection = selectedRiskFactors.includes(item)
+      ? selectedRiskFactors.filter(i => i !== item)
+      : [...selectedRiskFactors, item];
+    setSelectedRiskFactors(newSelection);
+    form.setValue('riskFactors', newSelection);
+  };
+
   function onSubmit(data: StockAlertFormValues) {
-    // Make sure technical reasons are properly set
+    // Make sure all selected data is properly set
     const formData = {
       ...data,
-      technicalReasons: selectedReasons
+      technicalReasons: selectedReasons,
+      tags: selectedTags,
+      priceConfluences: selectedPriceConfluences,
+      volumeConfluences: selectedVolumeConfluences,
+      momentumConfluences: selectedMomentumConfluences,
+      chartConfluences: selectedChartConfluences,
+      sentimentConfluences: selectedSentimentConfluences,
+      riskFactors: selectedRiskFactors
     };
     createStockAlert.mutate(formData);
   }
@@ -428,6 +620,61 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
+                
+                {/* Tags Section */}
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>
+                          Tags <span className="text-muted-foreground text-sm">(Select up to 3)</span>
+                        </FormLabel>
+                        <div className="border p-4 rounded-md">
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            {STOCK_TAGS.map((tag) => (
+                              <div key={tag} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`tag-${tag}`} 
+                                  checked={selectedTags.includes(tag)}
+                                  onCheckedChange={() => toggleTagSelection(tag)}
+                                />
+                                <label 
+                                  htmlFor={`tag-${tag}`}
+                                  className="text-sm cursor-pointer"
+                                >
+                                  {tag}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <FormDescription>
+                          Select tags that describe this stock alert
+                        </FormDescription>
+                        <FormMessage />
+                        
+                        {selectedTags.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm mb-1">Selected Tags:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedTags.map(tag => (
+                                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                                  {tag}
+                                  <X 
+                                    className="h-3 w-3 cursor-pointer" 
+                                    onClick={() => toggleTagSelection(tag)}
+                                  />
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               {/* Price Zones Section */}
@@ -537,6 +784,260 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
+                
+                {/* Target Reasoning Fields */}
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="target1Reasoning"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target 1 Reasoning</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Explain why you expect the stock to reach Target 1"
+                            className="min-h-[80px]" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="target2Reasoning"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target 2 Reasoning</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Explain why you expect the stock to reach Target 2"
+                            className="min-h-[80px]" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="target3Reasoning"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target 3 Reasoning</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Explain why you expect the stock to reach Target 3"
+                            className="min-h-[80px]" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Confluences Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Confluences Supporting the Buy</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Select all the technical confluences that support this trade</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <Accordion type="multiple" defaultValue={["price", "volume", "momentum", "chart", "sentiment"]}>
+                  {/* Price-Based Confluences */}
+                  <AccordionItem value="price">
+                    <AccordionTrigger className="text-base">Price-Based Confluences</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 gap-2 mt-2">
+                        {PRICE_CONFLUENCES.map((item) => (
+                          <div key={item} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`price-${item}`}
+                              checked={selectedPriceConfluences.includes(item)}
+                              onCheckedChange={() => togglePriceConfluence(item)}
+                            />
+                            <label
+                              htmlFor={`price-${item}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {item}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Volume-Based Confluences */}
+                  <AccordionItem value="volume">
+                    <AccordionTrigger className="text-base">Volume-Based Confluences</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 gap-2 mt-2">
+                        {VOLUME_CONFLUENCES.map((item) => (
+                          <div key={item} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`volume-${item}`}
+                              checked={selectedVolumeConfluences.includes(item)}
+                              onCheckedChange={() => toggleVolumeConfluence(item)}
+                            />
+                            <label
+                              htmlFor={`volume-${item}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {item}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Momentum Indicators */}
+                  <AccordionItem value="momentum">
+                    <AccordionTrigger className="text-base">Momentum Indicators</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        {MOMENTUM_CONFLUENCES.map((item) => (
+                          <div key={item} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`momentum-${item}`}
+                              checked={selectedMomentumConfluences.includes(item)}
+                              onCheckedChange={() => toggleMomentumConfluence(item)}
+                            />
+                            <label
+                              htmlFor={`momentum-${item}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {item}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Chart Patterns */}
+                  <AccordionItem value="chart">
+                    <AccordionTrigger className="text-base">Chart Patterns</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 gap-2 mt-2">
+                        {CHART_CONFLUENCES.map((item) => (
+                          <div key={item} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`chart-${item}`}
+                              checked={selectedChartConfluences.includes(item)}
+                              onCheckedChange={() => toggleChartConfluence(item)}
+                            />
+                            <label
+                              htmlFor={`chart-${item}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {item}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Sentiment & Insider Activity */}
+                  <AccordionItem value="sentiment">
+                    <AccordionTrigger className="text-base">Sentiment & Insider Activity</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 gap-2 mt-2">
+                        {SENTIMENT_CONFLUENCES.map((item) => (
+                          <div key={item} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`sentiment-${item}`}
+                              checked={selectedSentimentConfluences.includes(item)}
+                              onCheckedChange={() => toggleSentimentConfluence(item)}
+                            />
+                            <label
+                              htmlFor={`sentiment-${item}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {item}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+              
+              {/* Risk Factors Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Risks to Watch For</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Select risk factors that investors should monitor</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
+                <div className="border p-4 rounded-md">
+                  <div className="grid grid-cols-2 gap-2">
+                    {RISK_FACTORS.map((item) => (
+                      <div key={item} className="flex items-start space-x-2">
+                        <Checkbox
+                          id={`risk-${item}`}
+                          checked={selectedRiskFactors.includes(item)}
+                          onCheckedChange={() => toggleRiskFactor(item)}
+                        />
+                        <label
+                          htmlFor={`risk-${item}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {item}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {selectedRiskFactors.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm mb-1">Selected Risk Factors:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedRiskFactors.map(item => (
+                        <Badge key={item} variant="destructive" className="flex items-center gap-1">
+                          {item}
+                          <X 
+                            className="h-3 w-3 cursor-pointer" 
+                            onClick={() => toggleRiskFactor(item)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Technical Analysis Section */}
