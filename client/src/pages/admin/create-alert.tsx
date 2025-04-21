@@ -120,7 +120,7 @@ const stockAlertFormSchema = z.object({
   chartConfluences: z.array(z.string()),
   sentimentConfluences: z.array(z.string()),
   riskFactors: z.array(z.string()),
-  currentPrice: z.coerce.number().positive("Current price must be positive").optional(),
+
   notes: z.string().optional(),
 });
 
@@ -211,7 +211,7 @@ export default function CreateAlert() {
       chartConfluences: [],
       sentimentConfluences: [],
       riskFactors: [],
-      currentPrice: undefined,
+
       notes: '',
     },
   });
@@ -366,7 +366,7 @@ export default function CreateAlert() {
   // Validate that buy zone and targets make sense
   const priceValidationError = () => {
     const values = form.getValues();
-    const { currentPrice, buyZoneMin, buyZoneMax, target1, target2, target3 } = values;
+    const { buyZoneMin, buyZoneMax, target1, target2, target3 } = values;
     
     if (buyZoneMin && buyZoneMax && buyZoneMin > buyZoneMax) {
       return "Buy zone minimum cannot be greater than maximum";
@@ -502,27 +502,7 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="currentPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Price ($)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            min="0.01" 
-                            placeholder="100.00" 
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+
                 
                 {/* Tags Section */}
                 <div className="space-y-2">
@@ -1034,21 +1014,66 @@ export default function CreateAlert() {
                       <FormItem>
                         <FormLabel>Daily Chart Image</FormLabel>
                         <FormControl>
-                          <div className="space-y-4">
-                            <Input
-                              type="url"
-                              placeholder="Enter image URL for daily chart"
-                              {...field}
-                            />
-                            {field.value && (
-                              <div className="border rounded-md overflow-hidden">
-                                <img
-                                  src={field.value}
-                                  alt="Daily Chart Preview"
-                                  className="max-w-full h-auto object-contain"
+                          <div 
+                            className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                            onClick={() => document.getElementById('daily-chart-input')?.click()}
+                          >
+                            {field.value ? (
+                              <div className="space-y-2 w-full">
+                                <p className="text-sm text-muted-foreground text-center">Image selected</p>
+                                <img 
+                                  src={field.value} 
+                                  alt="Daily chart preview" 
+                                  className="max-h-48 mx-auto object-contain"
                                 />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    field.onChange("");
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove Image
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 text-center">
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                                <p className="text-sm font-medium">Drag and drop file here or click to browse</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Supports PNG, JPG, or GIF up to 5MB
+                                </p>
                               </div>
                             )}
+                            <input
+                              id="daily-chart-input"
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast({
+                                      title: "File too large",
+                                      description: "Image must be less than 5MB",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    field.onChange(event.target?.result);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
                           </div>
                         </FormControl>
                         <FormDescription>
@@ -1066,21 +1091,66 @@ export default function CreateAlert() {
                       <FormItem>
                         <FormLabel>Weekly Chart Image</FormLabel>
                         <FormControl>
-                          <div className="space-y-4">
-                            <Input
-                              type="url"
-                              placeholder="Enter image URL for weekly chart"
-                              {...field}
-                            />
-                            {field.value && (
-                              <div className="border rounded-md overflow-hidden">
-                                <img
-                                  src={field.value}
-                                  alt="Weekly Chart Preview"
-                                  className="max-w-full h-auto object-contain"
+                          <div 
+                            className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                            onClick={() => document.getElementById('weekly-chart-input')?.click()}
+                          >
+                            {field.value ? (
+                              <div className="space-y-2 w-full">
+                                <p className="text-sm text-muted-foreground text-center">Image selected</p>
+                                <img 
+                                  src={field.value} 
+                                  alt="Weekly chart preview" 
+                                  className="max-h-48 mx-auto object-contain"
                                 />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    field.onChange("");
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove Image
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 text-center">
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                                <p className="text-sm font-medium">Drag and drop file here or click to browse</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Supports PNG, JPG, or GIF up to 5MB
+                                </p>
                               </div>
                             )}
+                            <input
+                              id="weekly-chart-input"
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast({
+                                      title: "File too large",
+                                      description: "Image must be less than 5MB",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    field.onChange(event.target?.result);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
                           </div>
                         </FormControl>
                         <FormDescription>
