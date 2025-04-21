@@ -49,17 +49,18 @@ export default function CreateAlert() {
   // Check if user is admin or using demo mode
   useEffect(() => {
     async function checkAdminStatus() {
-      
-      if (isDemoMode) {
-        // In demo mode, automatically grant admin access
-        setIsAdmin(true);
+      // If we've already checked or are in demo mode, no need to check again
+      if (isAdmin !== null || isDemoMode) {
+        if (isDemoMode) {
+          // In demo mode, automatically grant admin access
+          setIsAdmin(true);
+        }
         return;
       }
       
       try {
-        // Use query parameter approach for demo mode simplicity
-        const endpoint = isDemoMode ? '/api/user/is-admin?demo=true' : '/api/user/is-admin';
-        const res = await apiRequest('GET', endpoint);
+        // Only make the API call once
+        const res = await apiRequest('GET', '/api/user/is-admin');
         const data = await res.json();
         setIsAdmin(data.isAdmin);
         
@@ -71,25 +72,26 @@ export default function CreateAlert() {
           });
         }
       } catch (error) {
-        setIsAdmin(false);
-        toast({
-          title: 'Access Denied',
-          description: 'Access restricted. Enable demo mode to try this feature.',
-          variant: 'destructive'
-        });
+        // Only show the toast on the first error
+        if (isAdmin === null) {
+          setIsAdmin(false);
+          toast({
+            title: 'Access Denied',
+            description: 'Access restricted. Enable demo mode to try this feature.',
+            variant: 'destructive'
+          });
+        }
       }
     }
     
     checkAdminStatus();
-  }, [toast]);
+  }, [toast, isAdmin, isDemoMode]);
 
   // Fetch technical reasons
   const { data: technicalReasons, isLoading: loadingReasons } = useQuery<{ id: number, name: string }[]>({
-    queryKey: ['/api/technical-reasons'],
+    queryKey: ['/api/technical-reasons', isDemoMode ? 'demo' : 'normal'],
     queryFn: async ({ queryKey }) => {
-      // Check for demo mode
-      const isDemoMode = localStorage.getItem('demoMode') === 'true';
-      
+      // Directly use saved demo mode state from component
       if (isDemoMode) {
         // Return mock data for demo mode
         console.log('Demo mode: Using mock technical reasons');
@@ -114,7 +116,7 @@ export default function CreateAlert() {
       
       // Normal behavior without demo mode
       const baseEndpoint = queryKey[0] as string;
-      // Use query parameter approach for demo mode 
+      // Use query parameter approach for demo mode
       const endpoint = isDemoMode ? `${baseEndpoint}?demo=true` : baseEndpoint;
       
       const res = await fetch(endpoint, {
@@ -126,6 +128,10 @@ export default function CreateAlert() {
       }
       return res.json();
     },
+    // Reduce refetch frequency
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Form setup
@@ -151,9 +157,7 @@ export default function CreateAlert() {
   // Add stock alert mutation
   const createStockAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
-      // Check if in demo mode
-      const isDemoMode = localStorage.getItem('demoMode') === 'true';
-      
+      // Use the same isDemoMode flag from component state
       if (isDemoMode) {
         // In demo mode, mock a successful response
         console.log('Demo mode: Would create stock alert with data:', data);
@@ -186,7 +190,7 @@ export default function CreateAlert() {
       setSelectedReasons([]);
       
       // If in demo mode, provide additional context
-      if (localStorage.getItem('demoMode') === 'true') {
+      if (isDemoMode) {
         toast({
           title: 'Demo Mode',
           description: 'This alert was created in demo mode and won\'t persist.',
