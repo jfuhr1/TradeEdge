@@ -758,11 +758,15 @@ export default function StockDetail() {
               <Label htmlFor="quantity">Quantity Bought</Label>
               <Input
                 id="quantity"
-                type="number"
-                min="0.01"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
                 value={quantity}
-                onChange={e => setQuantity(parseFloat(e.target.value) || 0)}
+                onChange={e => {
+                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                  setQuantity(parseFloat(value) || 0);
+                }}
+                className="appearance-none"
               />
             </div>
             
@@ -771,6 +775,7 @@ export default function StockDetail() {
               <Input
                 id="purchaseDate"
                 type="date"
+                max={new Date().toISOString().split('T')[0]} // Prevents future dates
                 value={purchaseDate}
                 onChange={e => setPurchaseDate(e.target.value)}
               />
@@ -780,11 +785,15 @@ export default function StockDetail() {
               <Label htmlFor="boughtPrice">Stock Price Paid</Label>
               <Input
                 id="boughtPrice"
-                type="number"
-                min="0.01" 
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
                 value={boughtPrice}
-                onChange={e => setBoughtPrice(parseFloat(e.target.value) || 0)}
+                onChange={e => {
+                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                  setBoughtPrice(parseFloat(value) || 0);
+                }}
+                className="appearance-none"
               />
             </div>
             
