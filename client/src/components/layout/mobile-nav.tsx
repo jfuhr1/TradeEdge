@@ -5,7 +5,7 @@ export default function MobileNav() {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
+    { href: "/dashboard", icon: <Home className="w-5 h-5" />, label: "Home" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Alerts" },
     { href: "/portfolio", icon: <Briefcase className="w-5 h-5" />, label: "Portfolio" },
     { href: "/education", icon: <GraduationCap className="w-5 h-5" />, label: "Learn" },
