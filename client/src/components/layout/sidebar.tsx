@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Bell, Briefcase, GraduationCap, Calendar, Settings, ChartLine, Trophy, ChevronLeft, ChevronRight, BellRing } from "lucide-react";
+import { Home, Bell, Briefcase, GraduationCap, Calendar, Settings, ChartLine, Trophy, ChevronLeft, ChevronRight, BellRing, CreditCard, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +20,7 @@ export default function Sidebar() {
     { href: "/notification-settings", icon: <BellRing className="w-5 h-5" />, label: "Notification Settings" },
     { href: "/education", icon: <GraduationCap className="w-5 h-5" />, label: "Education" },
     { href: "/coaching", icon: <Calendar className="w-5 h-5" />, label: "Book Coaching" },
+    { href: "/account-settings", icon: <CreditCard className="w-5 h-5" />, label: "Membership" },
     { href: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
 
@@ -98,9 +99,11 @@ export default function Sidebar() {
           <div className="mt-4 mx-4 p-4 bg-blue-50 rounded-lg">
             <p className="font-medium text-sm">Your free trial ends in</p>
             <p className="text-primary font-bold font-mono">14 days</p>
-            <button className="mt-2 w-full py-2 bg-primary text-white rounded-md text-sm">
-              Upgrade Now
-            </button>
+            <Link href="/account-settings">
+              <button className="mt-2 w-full py-2 bg-primary text-white rounded-md text-sm">
+                Upgrade Now
+              </button>
+            </Link>
           </div>
         )}
       </nav>
