@@ -24,8 +24,19 @@ const TIERS = [
     description: "Basic plan for beginner traders",
     price: "$0",
     period: "forever",
-    features: ["One free trade idea per month", "Basic education content", "Community forum access"],
-    limitations: ["Limited alerts", "No portfolio tracking", "No notifications", "No weekly Q&A sessions"]
+    features: [
+      "One free trade idea per month", 
+      "Basic education content", 
+      "Weekly market summaries",
+      "Weekly Intro to TradeEdge coaching",
+      "Ability to book coaching calls at full price"
+    ],
+    limitations: [
+      "Limited alerts", 
+      "No portfolio tracking", 
+      "No custom notifications", 
+      "No weekly Q&A sessions"
+    ]
   },
   {
     id: "paid",
@@ -36,29 +47,53 @@ const TIERS = [
     features: [
       "All stock alerts",
       "Portfolio tracking",
-      "All notifications",
+      "Custom notification settings",
       "Full education library",
-      "Community forum access"
+      "Weekly 'New Alerts' coaching sessions",
+      "All educational coaching sessions",
+      "Ability to book coaching calls at full price"
     ],
-    limitations: ["No weekly Q&A sessions", "Coaching calls at full price"]
+    limitations: [
+      "No weekly Q&A sessions",
+      "No discounts on coaching calls"
+    ]
   },
   {
     id: "premium",
     name: "Premium",
     description: "For professional traders who want it all",
-    price: "$99.99",
-    period: "per month",
+    price: "$999",
+    period: "per year",
     features: [
       "All stock alerts",
       "Priority notifications",
       "Portfolio tracking",
+      "Custom notification settings",
       "Full education library",
-      "Weekly premium Q&A sessions",
-      "Annual portfolio review included",
-      "Annual 1-hour consultation included",
-      "Community forum access with premium badge"
+      "Weekly Premium Member New Alerts and Q&A sessions (See below)",
+      "Annual portfolio review included (See below)",
+      "Annual 1-hour consultation included (See below)",
+      "Ability to book additional coaching calls at 25% off"
     ],
-    limitations: ["Additional coaching calls at full price"]
+    limitations: []
+  },
+  {
+    id: "mentorship",
+    name: "Mentorship",
+    description: "For those seeking intensive coaching and guidance",
+    price: "$5,000",
+    period: "one-time fee",
+    features: [
+      "All Premium tier benefits",
+      "20 weekly coaching sessions structured as:",
+      "• 8 weekly sessions (First 2 months)",
+      "• 4 bi-weekly sessions (Next 2 months)",
+      "• 8 monthly sessions (Next 8 months)",
+      "Personalized trading strategy development",
+      "Ongoing performance evaluation",
+      "Priority support"
+    ],
+    limitations: []
   }
 ];
 
@@ -200,7 +235,8 @@ export default function AccountSettingsPage() {
                   <th className="py-4 px-4 text-left">Feature</th>
                   <th className="py-4 px-4 text-center">Free</th>
                   <th className="py-4 px-4 text-center">Paid ($29.99/mo)</th>
-                  <th className="py-4 px-4 text-center">Premium ($99.99/mo)</th>
+                  <th className="py-4 px-4 text-center">Premium ($999/yr)</th>
+                  <th className="py-4 px-4 text-center">Mentorship ($5,000)</th>
                 </tr>
               </thead>
               <tbody>
@@ -209,16 +245,19 @@ export default function AccountSettingsPage() {
                   <td className="py-4 px-4 text-center">1 per month</td>
                   <td className="py-4 px-4 text-center">Unlimited</td>
                   <td className="py-4 px-4 text-center">Unlimited (Priority)</td>
+                  <td className="py-4 px-4 text-center">Unlimited (Priority)</td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-4 px-4 font-medium">Portfolio Tracking</td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
                 <tr className="border-b">
-                  <td className="py-4 px-4 font-medium">Notifications</td>
+                  <td className="py-4 px-4 font-medium">Custom Notifications</td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
@@ -227,33 +266,120 @@ export default function AccountSettingsPage() {
                   <td className="py-4 px-4 text-center">Basic</td>
                   <td className="py-4 px-4 text-center">Full Access</td>
                   <td className="py-4 px-4 text-center">Full Access</td>
+                  <td className="py-4 px-4 text-center">Full Access</td>
                 </tr>
                 <tr className="border-b">
-                  <td className="py-4 px-4 font-medium">Weekly Q&A Sessions</td>
+                  <td className="py-4 px-4 font-medium">Weekly Market Summaries</td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-4 px-4 font-medium">Weekly 'New Alerts' Coaching</td>
+                  <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-4 px-4 font-medium">Premium Q&A Sessions</td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /> <span className="text-xs text-primary">See below</span></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-4 px-4 font-medium">Annual Portfolio Review</td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /> <span className="text-xs text-primary">See below</span></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-4 px-4 font-medium">Annual Consultation</td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                   <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /> <span className="text-xs text-primary">See below</span></td>
                   <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
                 <tr className="border-b">
-                  <td className="py-4 px-4 font-medium">Coaching Calls</td>
+                  <td className="py-4 px-4 font-medium">Coaching Call Pricing</td>
                   <td className="py-4 px-4 text-center">Full Price</td>
                   <td className="py-4 px-4 text-center">Full Price</td>
-                  <td className="py-4 px-4 text-center">1 Each Included Annually</td>
+                  <td className="py-4 px-4 text-center">25% Discount</td>
+                  <td className="py-4 px-4 text-center">20 Sessions Included</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-4 px-4 font-medium">Personalized Trading Strategy</td>
+                  <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><XIcon className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                  <td className="py-4 px-4 text-center"><CheckIcon className="h-5 w-5 text-primary mx-auto" /></td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold mb-6">Premium Membership Benefits Explained</h2>
+            
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">Weekly "New Alerts" Coaching Sessions</h3>
+                <p className="text-gray-700">
+                  These sessions provide in-depth analysis of that week's new stock alerts over a 
+                  video call. You'll understand the trade rationale, technical analysis, and strategic 
+                  entry/exit points. Perfect for traders who want to understand the "why" behind each alert.
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">Premium Members Q&A Sessions</h3>
+                <p className="text-gray-700">
+                  Weekly exclusive sessions for Premium members featuring detailed trade analysis and 
+                  extended Q&A time. With a smaller group of premium-only members, these sessions allow 
+                  for more interaction and personalized attention to your specific questions.
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">Annual Portfolio Review</h3>
+                <p className="text-gray-700">
+                  Submit your top 10 holdings via a form one week prior to your scheduled review. 
+                  TradeEdge Pro will analyze each position and provide a detailed buy/sell/hold 
+                  recommendation during a one-hour call. This comprehensive review helps optimize your 
+                  portfolio for maximum performance.
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">Consultation Sessions</h3>
+                <p className="text-gray-700">
+                  Book time with TradeEdge Pro to discuss any trading or investing topic of your choice. 
+                  Whether you need help with technical analysis, position sizing, risk management, or 
+                  developing a trading plan, these personalized sessions provide targeted guidance for 
+                  your specific needs.
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-6 rounded-lg mt-8">
+              <h3 className="text-xl font-semibold mb-3">Mentorship Program Details</h3>
+              <p className="text-gray-700 mb-4">
+                Our intensive mentorship program is designed to take your trading to the next level 
+                through consistent coaching and feedback over a 12-month period:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                <li><span className="font-medium">First 2 months:</span> Weekly sessions (8 total) to rapidly develop your trading skills and knowledge</li>
+                <li><span className="font-medium">Months 3-4:</span> Bi-weekly sessions (4 total) to monitor your progress as you begin trading more independently</li>
+                <li><span className="font-medium">Months 5-12:</span> Monthly sessions (8 total) for long-term progress tracking and strategy refinement</li>
+              </ul>
+              <p className="text-gray-700 mt-4">
+                This structured approach ensures you develop a solid foundation, then gradually transition 
+                to independence with regular check-ins to address challenges and optimize performance.
+              </p>
+            </div>
           </div>
         </div>
       </div>
