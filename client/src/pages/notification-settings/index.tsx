@@ -170,11 +170,23 @@ export default function NotificationSettings() {
     }));
   };
 
+  // Fetch portfolio items (to simulate user's added stocks)
+  // In a real implementation, this would fetch from /api/portfolio
+  const portfolio = {
+    // Simulate which stocks have been added to portfolio (for demo only)
+    stockIds: [1, 3, 5, 7] // AAPL, MSFT, AMD, META
+  };
+
   // Generate dummy preferences
-  const alertsWithPreferences = generateDummyPreferences();
+  const allAlertsWithPreferences = generateDummyPreferences();
+  
+  // Filter to only show stocks in user's portfolio
+  const userPortfolioAlerts = allAlertsWithPreferences.filter(({ alert }) => 
+    portfolio.stockIds.includes(alert.id)
+  );
 
   // Filter based on search query
-  const filteredPreferences = alertsWithPreferences.filter(({ alert }) => 
+  const filteredPreferences = userPortfolioAlerts.filter(({ alert }) => 
     alert.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
     alert.companyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -262,7 +274,7 @@ export default function NotificationSettings() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs">${alert.target1.toFixed(2)}</span>
+                            <span className="text-xs">${Number(alert.target1).toFixed(2)}</span>
                             <div className="flex justify-center gap-1">
                               {renderNotificationStatus(preference.target1.web)}
                             </div>
@@ -270,7 +282,7 @@ export default function NotificationSettings() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs">${alert.target2.toFixed(2)}</span>
+                            <span className="text-xs">${Number(alert.target2).toFixed(2)}</span>
                             <div className="flex justify-center gap-1">
                               {renderNotificationStatus(preference.target2.web)}
                             </div>
@@ -278,7 +290,7 @@ export default function NotificationSettings() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs">${alert.target3.toFixed(2)}</span>
+                            <span className="text-xs">${Number(alert.target3).toFixed(2)}</span>
                             <div className="flex justify-center gap-1">
                               {renderNotificationStatus(preference.target3.web)}
                             </div>
@@ -298,7 +310,7 @@ export default function NotificationSettings() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs">${alert.buyZoneMin.toFixed(2)}</span>
+                            <span className="text-xs">${Number(alert.buyZoneMin).toFixed(2)}</span>
                             <div className="flex justify-center gap-1">
                               {renderNotificationStatus(preference.buyZoneLow.web)}
                             </div>
@@ -306,7 +318,7 @@ export default function NotificationSettings() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs">${alert.buyZoneMax.toFixed(2)}</span>
+                            <span className="text-xs">${Number(alert.buyZoneMax).toFixed(2)}</span>
                             <div className="flex justify-center gap-1">
                               {renderNotificationStatus(preference.buyZoneHigh.web)}
                             </div>
@@ -316,7 +328,7 @@ export default function NotificationSettings() {
                           <div className="flex flex-col items-center gap-1">
                             <span className="text-xs">
                               {preference.buyLimit.price ? 
-                                `$${preference.buyLimit.price.toFixed(2)}` : 
+                                `$${Number(preference.buyLimit.price).toFixed(2)}` : 
                                 '—'}
                             </span>
                             <div className="flex justify-center gap-1">
@@ -416,7 +428,7 @@ export default function NotificationSettings() {
                 <div className="space-y-4 mt-6">
                   <h3 className="text-lg font-medium">Notification Types</h3>
                   
-                  <Alert variant="warning" className="mb-4">
+                  <Alert className="mb-4">
                     <Clock className="h-4 w-4" />
                     <AlertTitle>Avoid Notification Fatigue</AlertTitle>
                     <AlertDescription>
@@ -439,18 +451,47 @@ export default function NotificationSettings() {
                       />
                     </div>
                     <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="new-stock-alerts">New Stock Alerts</Label>
-                        <p className="text-sm text-muted-foreground">
-                          When a new stock alert is added by our team
-                        </p>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="new-stock-alerts" className="text-base font-medium">New Stock Alerts</Label>
+                          <p className="text-sm text-muted-foreground">
+                            When a new stock alert is added by our team
+                          </p>
+                        </div>
                       </div>
-                      <Switch 
-                        id="new-stock-alerts" 
-                        checked={globalSettingsEnabled.systemAnnouncements} 
-                        onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, systemAnnouncements: checked})}
-                      />
+                      <div className="ml-4 space-y-2 bg-muted/30 p-3 rounded-md">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="new-stock-alerts-web">Web notifications</Label>
+                          </div>
+                          <Switch 
+                            id="new-stock-alerts-web" 
+                            checked={globalSettingsEnabled.systemAnnouncements} 
+                            onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, systemAnnouncements: checked})}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="new-stock-alerts-email">Email notifications</Label>
+                          </div>
+                          <Switch 
+                            id="new-stock-alerts-email" 
+                            checked={globalSettingsEnabled.web} 
+                            onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, web: checked})}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="new-stock-alerts-sms">SMS notifications</Label>
+                          </div>
+                          <Switch 
+                            id="new-stock-alerts-sms" 
+                            checked={globalSettingsEnabled.sms} 
+                            onCheckedChange={(checked) => setGlobalSettingsEnabled({...globalSettingsEnabled, sms: checked})}
+                          />
+                        </div>
+                      </div>
                     </div>
                     <Separator />
                     <div className="flex items-center justify-between">
