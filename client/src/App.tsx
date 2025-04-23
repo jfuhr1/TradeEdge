@@ -15,6 +15,9 @@ import StockNotificationSettings from "./pages/notification-settings/stock/[id]"
 import SuccessCenter from "./pages/success-center";
 import WebSocketTest from "./pages/websocket-test";
 import NotFound from "./pages/not-found";
+import LandingPage from "./pages/landing-page";
+import SignupPage from "./pages/signup";
+import WelcomePage from "./pages/welcome";
 import { AppLayout } from "./components/layout/app-layout";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -23,10 +26,16 @@ function App() {
     <AuthProvider>
       <AppLayout>
         <Switch>
+          {/* Public routes */}
+          <Route path="/" component={LandingPage} />
           <Route path="/auth" component={AuthPage} />
+          <Route path="/signup" component={SignupPage} />
+          <Route path="/welcome" component={WelcomePage} />
           <Route path="/ws-test" component={WebSocketTest} />
+          
+          {/* Protected routes - require login */}
+          <ProtectedRoute path="/dashboard" component={Dashboard} />
           <ProtectedRoute path="/success-center" component={SuccessCenter} />
-          <ProtectedRoute path="/" component={Dashboard} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
           <ProtectedRoute path="/stock-detail/:id" component={StockDetail} />
           <ProtectedRoute path="/portfolio" component={Portfolio} />
