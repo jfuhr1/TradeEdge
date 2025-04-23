@@ -138,6 +138,27 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
   
+  // Update user membership tier
+  app.post("/api/user/update-tier", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    const { tier } = req.body;
+    
+    if (!tier || !["free", "paid", "premium"].includes(tier)) {
+      return res.status(400).json({ message: "Invalid tier specified" });
+    }
+    
+    try {
+      const updatedUser = await storage.updateUserTier(req.user.id, tier);
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user tier:", error);
+      res.status(500).json({ message: "Failed to update membership tier" });
+    }
+  });
+  
   // Check if user is admin
   app.get("/api/user/is-admin", async (req, res) => {
     // Special handling for both authentication and admin checks in demo mode
