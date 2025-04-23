@@ -56,7 +56,7 @@ export function Navbar() {
   const isAdmin = user?.isAdmin === true;
 
   const navItems = [
-    { label: "Dashboard", href: "/", icon: <Home className="h-4 w-4 mr-2" /> },
+    { label: "Dashboard", href: "/dashboard", icon: <Home className="h-4 w-4 mr-2" /> },
     { label: "Stock Alerts", href: "/stock-alerts", icon: <BarChart2 className="h-4 w-4 mr-2" /> },
     { label: "Portfolio", href: "/portfolio", icon: <BarChart2 className="h-4 w-4 mr-2" /> },
     { label: "Education", href: "/education", icon: <BookOpen className="h-4 w-4 mr-2" /> },
@@ -211,7 +211,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
           {isMobile && mobileNav}
-          <Link href="/" className="flex items-center mr-6">
+          <Link href="/dashboard" className="flex items-center mr-6">
             <span className="font-bold text-xl">TradeEdge Pro</span>
           </Link>
           {!isMobile && desktopNav}
