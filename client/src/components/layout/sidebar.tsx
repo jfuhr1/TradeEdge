@@ -14,7 +14,7 @@ export default function Sidebar() {
   };
 
   const navItems = [
-    { href: "/", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
+    { href: "/dashboard", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Stock Alerts" },
     { href: "/portfolio", icon: <Briefcase className="w-5 h-5" />, label: "My Portfolio" },
     { href: "/notification-settings", icon: <BellRing className="w-5 h-5" />, label: "Notification Settings" },
