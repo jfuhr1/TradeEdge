@@ -799,8 +799,8 @@ export default function LandingPage() {
               <ul className="space-y-2">
                 <li><a href="#" className="text-gray-400 hover:text-white">Home</a></li>
                 <li><a href="#features" className="text-gray-400 hover:text-white">Features</a></li>
+                <li><a href="#success" className="text-gray-400 hover:text-white">Success Center</a></li>
                 <li><a href="#pricing" className="text-gray-400 hover:text-white">Pricing</a></li>
-                <li><a href="#testimonials" className="text-gray-400 hover:text-white">Testimonials</a></li>
                 <li><a href="#faq" className="text-gray-400 hover:text-white">FAQ</a></li>
               </ul>
             </div>
