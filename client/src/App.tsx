@@ -4,6 +4,7 @@ import AuthPage from "./pages/auth-page";
 import Dashboard from "./pages/dashboard";
 import StockAlerts from "./pages/stock-alerts";
 import StockDetail from "./pages/stock-detail";
+import SampleStockPick from "./pages/sample-stock-pick";
 import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/auth" component={AuthPage} />
           <Route path="/signup" component={SignupPage} />
           <Route path="/welcome" component={WelcomePage} />
+          <Route path="/sample-stock-pick" component={SampleStockPick} />
           <Route path="/ws-test" component={WebSocketTest} />
           
           {/* Protected routes - require login */}
