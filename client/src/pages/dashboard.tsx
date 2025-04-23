@@ -930,16 +930,16 @@ export default function Dashboard() {
             <Button variant="outline" size="sm">View All Resources</Button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Curriculum Outline with Progress */}
-          <Card className="overflow-hidden md:col-span-1">
+          <Card className="overflow-hidden">
             <CardHeader className="p-4 pb-2">
               <h3 className="text-lg font-semibold">Curriculum Outline</h3>
               <p className="text-sm text-muted-foreground">Track your learning progress</p>
             </CardHeader>
             <CardContent className="p-4 pt-2 max-h-96 overflow-y-auto">
               <div className="space-y-4">
-                {curriculumSections.map((section) => (
+                {curriculumSections.slice(0, 7).map((section) => (
                   <div key={section.id} className="space-y-1">
                     <div className="flex justify-between items-center">
                       <div className="flex items-start gap-2">
@@ -967,11 +967,19 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+              <div className="mt-4">
+                <Link href="/education">
+                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View All Courses
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
           
           {/* Recent Articles */}
-          <Card className="overflow-hidden md:col-span-1">
+          <Card className="overflow-hidden">
             <CardHeader className="p-4 pb-2">
               <h3 className="text-lg font-semibold">Recent Articles</h3>
               <p className="text-sm text-muted-foreground">Latest trading insights</p>
@@ -1008,38 +1016,13 @@ export default function Dashboard() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-4 text-center">
-                <Button variant="ghost" size="sm" className="w-full text-xs">
-                  View All Articles
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Trading Tips */}
-          <Card className="overflow-hidden md:col-span-1">
-            <CardHeader className="p-4 pb-2">
-              <h3 className="text-lg font-semibold">Today's Trading Tip</h3>
-              <p className="text-sm text-muted-foreground">Daily insights for better trading</p>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <blockquote className="italic text-sm border-l-2 border-primary pl-4 py-2">
-                "The most important rule of trading is to play great defense, not great offense."
-              </blockquote>
-              <p className="text-right text-sm mt-2">- Paul Tudor Jones</p>
-              
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
-                <h4 className="font-medium text-sm">Tip of the Day:</h4>
-                <p className="text-sm mt-1">Always set a stop loss for every trade to protect your capital from unexpected market moves.</p>
-              </div>
-              
               <div className="mt-4">
-                <p className="text-sm font-medium">Popular This Week:</p>
-                <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
-                  <li>Understanding PE Ratios</li>
-                  <li>Moving Average Crossover Strategies</li>
-                  <li>Using Volume to Confirm Breakouts</li>
-                </ul>
+                <Link href="/education/articles">
+                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View All Articles
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
