@@ -546,14 +546,6 @@ export default function NotificationSettings() {
                     Used for SMS notifications and authentication
                   </p>
                 </div>
-                
-                <Alert className="mt-4">
-                  <Clock className="h-4 w-4" />
-                  <AlertTitle>Notification Frequency</AlertTitle>
-                  <AlertDescription>
-                    To prevent notification fatigue, we limit SMS notifications to important alerts and consolidate others into a daily digest. You can manage these preferences in your account settings.
-                  </AlertDescription>
-                </Alert>
               </CardContent>
               <CardFooter>
                 <Button className="ml-auto">
