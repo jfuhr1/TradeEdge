@@ -84,29 +84,35 @@ export default function LandingPage() {
               Trusted by 1,000+ traders
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Trade Smarter, Not Harder with TradeEdge Pro
+              Expert Stock Picks with Clear Entry & Exit Points
             </h1>
             <p className="text-xl text-muted-foreground">
-              Curated stock picks, educational resources, and expert coaching to help you build a profitable trading strategy.
+              TradeEdge Pro delivers high-probability stock alerts with defined targets and stop losses. Get actionable trade ideas backed by technical analysis.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" onClick={handleGetStarted}>
                 Get Started <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
-                Log In
+              <Button size="lg" variant="outline" onClick={() => navigate("/sample-stock-pick")}>
+                View Sample Pick
               </Button>
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex -space-x-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-8 w-8 rounded-full bg-primary/80 flex items-center justify-center text-white text-xs ring-2 ring-background">
-                    {String.fromCharCode(65 + i)}
-                  </div>
-                ))}
+            <div className="flex flex-col space-y-2 text-sm">
+              <div className="flex items-center">
+                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
+                <span>Clear entry zones and multiple profit targets</span>
               </div>
-              <div className="text-muted-foreground">
-                Join hundreds of successful traders today
+              <div className="flex items-center">
+                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
+                <span>Risk management with defined stop loss levels</span>
+              </div>
+              <div className="flex items-center">
+                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
+                <span>Target 1 hit rate: 87% with avg. return of 14.3%</span>
+              </div>
+              <div className="flex items-center">
+                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
+                <span>Regular updates and position management guidance</span>
               </div>
             </div>
           </div>
@@ -124,8 +130,8 @@ export default function LandingPage() {
                   <TrendingUpIcon className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <div className="text-sm font-medium">AAPL Target Hit</div>
-                  <div className="text-xs text-green-600">+15.4% gain</div>
+                  <div className="text-sm font-medium">NVDA Target Hit</div>
+                  <div className="text-xs text-green-600">+26.8% gain</div>
                 </div>
               </div>
             </div>
@@ -319,182 +325,165 @@ export default function LandingPage() {
       {/* Success Center Section */}
       <section id="success" className="py-20 bg-gradient-to-b from-white to-blue-50">
         <div className="container">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge className="mb-4">Success Center</Badge>
-            <h2 className="text-3xl font-bold mb-4">Our Track Record of Results</h2>
+            <h2 className="text-3xl font-bold mb-4">Our Proven Track Record</h2>
             <p className="text-lg text-muted-foreground">
-              TradeEdge Pro has a proven history of delivering high-quality stock alerts with impressive results. Here's how our alerts have performed.
+              We believe in transparency and accountability. Our Success Center allows you to view our detailed performance metrics and track record.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
-              <div className="text-primary text-4xl font-bold mb-2">247</div>
-              <div className="text-lg font-medium mb-1">Total Alerts</div>
-              <p className="text-sm text-muted-foreground">
-                Carefully selected stock picks since launch
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
-              <div className="text-primary text-4xl font-bold mb-2">12-18</div>
-              <div className="text-lg font-medium mb-1">Monthly Alerts</div>
-              <p className="text-sm text-muted-foreground">
-                New opportunities sent each month
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
-              <div className="text-green-600 text-4xl font-bold mb-2">78%</div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
+            <div className="bg-white rounded-xl border shadow-sm p-6 text-center">
+              <div className="text-4xl font-bold text-green-600 mb-2">87%</div>
               <div className="text-lg font-medium mb-1">Target 1 Hit Rate</div>
-              <p className="text-sm text-muted-foreground">
-                Percentage of alerts reaching first target
-              </p>
+              <div className="text-sm text-muted-foreground">
+                +14.3% avg. return
+              </div>
             </div>
             
-            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
-              <div className="text-green-600 text-4xl font-bold mb-2">+14.3%</div>
-              <div className="text-lg font-medium mb-1">Avg. Target 1 Gain</div>
-              <p className="text-sm text-muted-foreground">
-                Average percentage gain at first target
-              </p>
+            <div className="bg-white rounded-xl border shadow-sm p-6 text-center">
+              <div className="text-4xl font-bold text-green-600 mb-2">73%</div>
+              <div className="text-lg font-medium mb-1">Target 2 Hit Rate</div>
+              <div className="text-sm text-muted-foreground">
+                +23.8% avg. return
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl border shadow-sm p-6 text-center">
+              <div className="text-4xl font-bold text-green-600 mb-2">58%</div>
+              <div className="text-lg font-medium mb-1">Target 3 Hit Rate</div>
+              <div className="text-sm text-muted-foreground">
+                +34.2% avg. return
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border shadow-sm p-6 text-center">
+              <div className="text-4xl font-bold text-primary mb-2">5.2</div>
+              <div className="text-lg font-medium mb-1">Risk/Reward Ratio</div>
+              <div className="text-sm text-muted-foreground">
+                Average across alerts
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl border shadow-sm p-6 text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">6.3%</div>
+              <div className="text-lg font-medium mb-1">Stop Loss Rate</div>
+              <div className="text-sm text-muted-foreground">
+                Best-in-class protection
+              </div>
             </div>
           </div>
           
-          <div className="grid md:grid-cols-5 gap-8">
-            <div className="md:col-span-3 bg-white p-6 rounded-xl border shadow-md">
-              <h3 className="text-xl font-bold mb-4">Recent Success Stories</h3>
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-medium">MSFT</div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
+          <div>
+            <h3 className="text-2xl font-bold mb-8 text-center">Recent Success Stories</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="p-6 border rounded-lg bg-white shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="font-medium text-lg">NVDA</div>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Target 2 Hit</Badge>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Buy Zone</div>
+                    <div className="font-medium">$720-$750</div>
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Buy Zone</div>
-                      <div>$395-$415</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 1</div>
-                      <div className="text-green-600">$430 (+8.9%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 2</div>
-                      <div className="text-green-600">$450 (+13.9%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 3</div>
-                      <div className="text-green-600">$475 (+20.3%)</div>
-                    </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 1</div>
+                    <div className="font-medium text-green-600">$850 (+15.5%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 2</div>
+                    <div className="font-medium text-green-600">$920 (+26.8%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 3</div>
+                    <div className="font-medium">$990 (+37.2%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Days to Target 2</div>
+                    <div className="font-medium">38 days</div>
                   </div>
                 </div>
-                
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-medium">AMZN</div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Target 1 & 2 Hit</Badge>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Buy Zone</div>
-                      <div>$170-$180</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 1</div>
-                      <div className="text-green-600">$195 (+14.7%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 2</div>
-                      <div className="text-green-600">$210 (+23.5%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 3</div>
-                      <div>$225 (+32.4%)</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-medium">NFLX</div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Buy Zone</div>
-                      <div>$580-$610</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 1</div>
-                      <div className="text-green-600">$650 (+12.1%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 2</div>
-                      <div className="text-green-600">$680 (+17.2%)</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target 3</div>
-                      <div className="text-green-600">$700 (+20.7%)</div>
-                    </div>
-                  </div>
+                <div className="mt-4 text-center">
+                  <Button variant="outline" size="sm" onClick={() => navigate("/sample-stock-pick")}>
+                    View Details
+                  </Button>
                 </div>
               </div>
-              <div className="mt-4 text-center">
-                <Button variant="outline" onClick={() => navigate("/success-center")}>
-                  View Detailed Performance
-                </Button>
+              
+              <div className="p-6 border rounded-lg bg-white shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="font-medium text-lg">MSFT</div>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Buy Zone</div>
+                    <div className="font-medium">$395-$415</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 1</div>
+                    <div className="font-medium text-green-600">$430 (+8.9%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 2</div>
+                    <div className="font-medium text-green-600">$450 (+13.9%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 3</div>
+                    <div className="font-medium text-green-600">$475 (+20.3%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Total Duration</div>
+                    <div className="font-medium">45 days</div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <Button variant="outline" size="sm" onClick={() => navigate("/stock-detail/3")}>
+                    View Details
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-6 border rounded-lg bg-white shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="font-medium text-lg">NFLX</div>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Buy Zone</div>
+                    <div className="font-medium">$580-$610</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 1</div>
+                    <div className="font-medium text-green-600">$650 (+12.1%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 2</div>
+                    <div className="font-medium text-green-600">$680 (+17.2%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Target 3</div>
+                    <div className="font-medium text-green-600">$700 (+20.7%)</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-muted-foreground">Total Duration</div>
+                    <div className="font-medium">52 days</div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <Button variant="outline" size="sm" onClick={() => navigate("/stock-detail/5")}>
+                    View Details
+                  </Button>
+                </div>
               </div>
             </div>
-            
-            <div className="md:col-span-2 bg-white p-6 rounded-xl border shadow-md">
-              <h3 className="text-xl font-bold mb-4">Member Achievements</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-3 border rounded-lg">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <TrendingUpIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">First Target Hit</div>
-                    <div className="text-sm text-muted-foreground">458 members achieved</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 p-3 border rounded-lg">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <CalendarClockIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">6-Month Consistency</div>
-                    <div className="text-sm text-muted-foreground">312 members achieved</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 p-3 border rounded-lg">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <ShieldCheckIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Risk Manager</div>
-                    <div className="text-sm text-muted-foreground">267 members achieved</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 p-3 border rounded-lg">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <LightbulbIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Education Master</div>
-                    <div className="text-sm text-muted-foreground">189 members achieved</div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 text-center">
-                <Button variant="outline" onClick={() => navigate("/badges")}>
-                  View All Achievements
-                </Button>
-              </div>
+            <div className="mt-8 text-center">
+              <Button variant="outline" onClick={() => navigate("/success-center")}>
+                View Full Performance History
+              </Button>
             </div>
           </div>
         </div>
