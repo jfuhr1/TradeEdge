@@ -1,262 +1,546 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import MainLayout from "@/components/layout/main-layout";
-import { CoachingSession } from "@shared/schema";
-import { Loader2, Calendar, Clock, Check, AlertCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardTitle, CardHeader, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { formatDistance, format, addDays, isAfter, isFuture } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import { format } from "date-fns";
+import { CheckCircle, Calendar as CalendarIcon, Clock, Video, DollarSign, AlertCircle, Users } from "lucide-react";
+import { GroupCoachingSession } from "@shared/schema";
 
-export default function Coaching() {
+export default function CoachingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedCoachingSlot, setSelectedCoachingSlot] = useState<{
+    date: Date;
+    available: boolean;
+  } | null>(null);
+  const [bookingType, setBookingType] = useState<"individual" | "group">("individual");
+  const [openDialog, setOpenDialog] = useState(false);
   
-  // Fetch user's coaching sessions
-  const { data: coachingSessions, isLoading } = useQuery<CoachingSession[]>({
-    queryKey: ["/api/coaching"],
+  // Calculate date range for availability (today + 2 weeks)
+  const startDate = new Date();
+  const endDate = addDays(startDate, 14);
+  
+  // Coach availability query
+  const { data: availabilityData, isLoading: availabilityLoading } = useQuery({
+    queryKey: ["/api/coaching/availability", selectedDate?.toISOString().split('T')[0]],
+    enabled: !!selectedDate && !!user,
+    queryFn: async () => {
+      if (!selectedDate) return [];
+      const dateString = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(`/api/coaching/availability?date=${dateString}`);
+      if (!response.ok) throw new Error("Failed to fetch availability");
+      return response.json();
+    }
   });
-
-  // Book a coaching session
-  const bookSession = useMutation({
-    mutationFn: async () => {
-      if (!selectedDate || !selectedTime) {
-        throw new Error("Please select both a date and time");
+  
+  // Group coaching sessions query
+  const { data: groupSessions, isLoading: groupSessionsLoading } = useQuery({
+    queryKey: ["/api/coaching/group-sessions"],
+    enabled: !!user,
+    queryFn: async () => {
+      const response = await fetch("/api/coaching/group-sessions");
+      if (!response.ok) throw new Error("Failed to fetch group sessions");
+      return response.json();
+    }
+  });
+  
+  // User's booked sessions query
+  const { data: userSessions, isLoading: userSessionsLoading } = useQuery({
+    queryKey: ["/api/coaching/my-sessions"],
+    enabled: !!user,
+    queryFn: async () => {
+      const response = await fetch("/api/coaching/my-sessions");
+      if (!response.ok) throw new Error("Failed to fetch user sessions");
+      return response.json();
+    }
+  });
+  
+  // Handle booking slot
+  const handleBookSlot = (slot: { date: Date; available: boolean }) => {
+    if (!slot.available) {
+      toast({
+        title: "Slot Unavailable",
+        description: "This time slot is already booked. Please select another time.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSelectedCoachingSlot(slot);
+    setOpenDialog(true);
+  };
+  
+  // Handle booking confirmation
+  const handleConfirmBooking = async () => {
+    if (!selectedCoachingSlot) return;
+    
+    try {
+      const response = await fetch("/api/coaching/book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          date: selectedCoachingSlot.date,
+          duration: 30, // Default to 30 minute session
+          topic: "Portfolio Review" // Default topic
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to book session");
       }
       
-      // Combine date and time for the API
-      const dateTime = new Date(`${selectedDate}T${selectedTime}`);
-      
-      const res = await apiRequest("POST", "/api/coaching", {
-        date: dateTime.toISOString(),
-      });
-      return await res.json();
-    },
-    onSuccess: () => {
       toast({
-        title: "Coaching session booked!",
-        description: "Your session has been scheduled successfully.",
+        title: "Booking Successful",
+        description: `Your coaching session has been scheduled for ${format(selectedCoachingSlot.date, "MMMM dd, yyyy 'at' h:mm a")}`,
+        variant: "default"
       });
       
-      // Reset form and invalidate coaching sessions query
-      setSelectedDate("");
-      setSelectedTime("");
-      queryClient.invalidateQueries({ queryKey: ["/api/coaching"] });
-    },
-    onError: (error: Error) => {
+      setOpenDialog(false);
+      setSelectedCoachingSlot(null);
+    } catch (error) {
       toast({
-        title: "Booking failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Booking Failed",
+        description: "There was an error booking your session. Please try again.",
+        variant: "destructive"
       });
-    },
-  });
-
-  // Time slots
-  const timeSlots = ["09:00", "11:00", "13:00", "15:00", "17:00", "19:00"];
+    }
+  };
   
-  // Pricing based on user tier
-  const regularFee = 149;
-  const discount = user?.tier === "premium" ? 50 : 0;
-  const finalPrice = regularFee - discount;
+  // Handle group session registration
+  const handleRegisterGroupSession = async (sessionId: number) => {
+    try {
+      const response = await fetch("/api/coaching/register-group", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ sessionId })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to register for group session");
+      }
+      
+      toast({
+        title: "Registration Successful",
+        description: "You have been registered for the group coaching session",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Registration Failed",
+        description: "There was an error registering for the session. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
-  // Filter sessions by status
-  const upcomingSessions = coachingSessions?.filter(
-    session => session.status === "scheduled" && new Date(session.date) > new Date()
-  ) || [];
+  // Format time display from Date object
+  const formatTimeSlot = (date: Date) => {
+    return format(date, "h:mm a");
+  };
   
-  const pastSessions = coachingSessions?.filter(
-    session => session.status === "completed" || new Date(session.date) < new Date()
-  ) || [];
-
-  if (isLoading) {
-    return (
-      <MainLayout title="1-on-1 Coaching">
-        <div className="flex justify-center p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
+  // Check if user is already registered for a group session
+  const isRegisteredForSession = (sessionId: number): boolean => {
+    if (!userSessions?.groupSessions) return false;
+    return userSessions.groupSessions.some(
+      (session: any) => session.registration.sessionId === sessionId
     );
-  }
-
+  };
+  
   return (
-    <MainLayout 
-      title="1-on-1 Coaching" 
-      description="Get personalized guidance and mentoring from our expert trading coaches"
-    >
-      {/* Booking card */}
-      <Card className="mb-10">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-bold text-lg mb-3">Book a Session</h3>
-              <p className="text-neutral-600 mb-4">
-                Get personalized guidance from our expert trading coaches. Sessions are 45 minutes and focused on your specific trading goals.
-              </p>
-
-              <div className="mb-4">
-                <p className="font-medium mb-2">Benefits:</p>
-                <ul className="text-sm text-neutral-600 space-y-2">
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-profit mr-2 shrink-0" />
-                    <span>Portfolio review and optimization</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-profit mr-2 shrink-0" />
-                    <span>Custom trade strategies for your risk tolerance</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-profit mr-2 shrink-0" />
-                    <span>Personalized education roadmap</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="py-3 px-4 bg-blue-50 rounded-lg mb-4">
-                <div className="flex justify-between">
-                  <span className="font-medium">Session Fee:</span>
-                  <span className="font-bold font-mono">${regularFee.toFixed(2)}</span>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-2">Coaching Sessions</h1>
+      <p className="text-gray-500 mb-6">
+        Book one-on-one coaching or join group sessions with our expert traders
+      </p>
+      
+      <Tabs defaultValue="individual" onValueChange={(value) => setBookingType(value as "individual" | "group")}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="individual" className="flex gap-2 items-center">
+            <CalendarIcon size={16} />
+            Individual Coaching
+          </TabsTrigger>
+          <TabsTrigger value="group" className="flex gap-2 items-center">
+            <Users size={16} />
+            Group Sessions
+          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="flex gap-2 items-center">
+            <Clock size={16} />
+            Your Sessions
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="individual" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Select Date</CardTitle>
+                <CardDescription>
+                  Choose a date for your coaching session
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  disabled={(date) => 
+                    date < new Date() || // Past dates
+                    date > addDays(new Date(), 14) || // More than 2 weeks ahead
+                    date.getDay() === 0 || // Sunday
+                    date.getDay() === 6 // Saturday
+                  }
+                  className="rounded-md border"
+                />
+              </CardContent>
+            </Card>
+            
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Available Time Slots</CardTitle>
+                  <CardDescription>
+                    {selectedDate
+                      ? `Select a time on ${format(selectedDate, "MMMM dd, yyyy")}`
+                      : "Please select a date to see available times"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {availabilityLoading ? (
+                    <div className="h-40 flex items-center justify-center">
+                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                    </div>
+                  ) : availabilityData?.length === 0 ? (
+                    <div className="h-40 flex flex-col items-center justify-center text-center">
+                      <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p>No available slots for the selected date. Please choose another date.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {availabilityData?.map((slot: {date: string, available: boolean}, index: number) => {
+                        const slotDate = new Date(slot.date);
+                        return (
+                          <Button
+                            key={index}
+                            variant={slot.available ? "outline" : "ghost"}
+                            className={`h-12 ${
+                              slot.available 
+                                ? "hover:border-primary" 
+                                : "opacity-50 cursor-not-allowed"
+                            }`}
+                            disabled={!slot.available}
+                            onClick={() => handleBookSlot({
+                              date: slotDate,
+                              available: slot.available
+                            })}
+                          >
+                            {formatTimeSlot(slotDate)}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter className="flex flex-col items-start gap-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline" className="bg-primary/10">Premium Feature</Badge>
+                    <span>Available for Executive tier and above</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>Sessions are 30 minutes by default</span>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+          
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Booking</DialogTitle>
+              </DialogHeader>
+              
+              {selectedCoachingSlot && (
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5 text-primary" />
+                      <span>
+                        {format(selectedCoachingSlot.date, "MMMM dd, yyyy")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <span>{formatTimeSlot(selectedCoachingSlot.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Video className="h-5 w-5 text-primary" />
+                      <span>30 Minute Session via Zoom</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                      <span>$99.00 USD</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenDialog(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleConfirmBooking}>
+                      Confirm Booking
+                    </Button>
+                  </div>
                 </div>
-                {discount > 0 && (
-                  <div className="flex justify-between mt-1">
-                    <span className="font-medium">Premium Discount:</span>
-                    <span className="font-bold font-mono text-profit">-${discount.toFixed(2)}</span>
+              )}
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+        
+        <TabsContent value="group" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            {groupSessionsLoading ? (
+              <div className="h-40 flex items-center justify-center">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : groupSessions?.length === 0 ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Upcoming Group Sessions</h3>
+                    <p className="text-muted-foreground">
+                      Check back soon for new group coaching opportunities
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              groupSessions?.map((session: GroupCoachingSession) => (
+                <Card key={session.id} className={`${isFuture(new Date(session.date)) ? "" : "opacity-60"}`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-xl">{session.title}</CardTitle>
+                        <CardDescription className="mt-1">
+                          With {session.coach} • {session.participants}/{session.maxParticipants} registered
+                        </CardDescription>
+                      </div>
+                      <Badge variant={isFuture(new Date(session.date)) ? "default" : "secondary"}>
+                        {isFuture(new Date(session.date)) ? "Upcoming" : "Past Session"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-primary" />
+                        <span>{format(new Date(session.date), "MMMM dd, yyyy")}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span>{session.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-primary" />
+                        <span>${session.price.toFixed(2)} USD</span>
+                      </div>
+                      
+                      <Separator className="my-3" />
+                      
+                      <p className="text-sm">
+                        {session.description || "Join this group coaching session to learn trading strategies and get your questions answered in a collaborative environment."}
+                      </p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pt-1">
+                    {isRegisteredForSession(session.id) ? (
+                      <Button disabled variant="outline" className="w-full">
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Registered
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => handleRegisterGroupSession(session.id)}
+                        disabled={!isFuture(new Date(session.date)) || session.participants >= session.maxParticipants}
+                        className="w-full"
+                      >
+                        {session.participants >= session.maxParticipants 
+                          ? "Session Full" 
+                          : "Register Now"}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="upcoming" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            {userSessionsLoading ? (
+              <div className="h-40 flex items-center justify-center">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : (!userSessions?.individual?.length && !userSessions?.groupSessions?.length) ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Upcoming Sessions</h3>
+                    <p className="text-muted-foreground">
+                      You don't have any coaching sessions booked. 
+                      Book individual coaching or join a group session to get started.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {userSessions?.individual?.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5" />
+                      Individual Sessions
+                    </h3>
+                    
+                    {userSessions.individual.map((session: any) => (
+                      <Card key={session.id}>
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-center">
+                            <CardTitle>
+                              {session.topic || "Portfolio Review"}
+                            </CardTitle>
+                            <Badge variant={session.status === "scheduled" ? "outline" : "secondary"}>
+                              {session.status === "scheduled" ? "Upcoming" : session.status}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4 text-primary" />
+                              <span>
+                                {format(new Date(session.date), "MMMM dd, yyyy")} at {format(new Date(session.date), "h:mm a")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span>{session.duration} minutes</span>
+                            </div>
+                            {session.zoomLink && (
+                              <div className="flex items-center gap-2">
+                                <Video className="h-4 w-4 text-primary" />
+                                <a 
+                                  href={session.zoomLink} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  Join Zoom Meeting
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <div className="w-full text-right text-sm text-muted-foreground">
+                            {isAfter(new Date(session.date), new Date()) && (
+                              <span>
+                                Starting in {formatDistance(new Date(session.date), new Date(), { addSuffix: true })}
+                              </span>
+                            )}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    ))}
                   </div>
                 )}
-                <div className="border-t border-blue-200 mt-2 pt-2 flex justify-between">
-                  <span className="font-medium">Your Price:</span>
-                  <span className="font-bold font-mono">${finalPrice.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-lg mb-3">Select a Time</h3>
-              <div className="mb-4">
-                <Label htmlFor="date">Date</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full mt-1"
-                />
-              </div>
-
-              <div className="mb-4">
-                <Label>Available Times</Label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {timeSlots.map((time) => (
-                    <Button
-                      key={time}
-                      type="button"
-                      variant={selectedTime === time ? "default" : "outline"}
-                      onClick={() => setSelectedTime(time)}
-                      className={selectedTime === time ? "border-primary bg-primary text-white" : ""}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                className="w-full py-6"
-                onClick={() => bookSession.mutate()}
-                disabled={!selectedDate || !selectedTime || bookSession.isPending}
-              >
-                {bookSession.isPending ? "Booking..." : "Book Session"}
-              </Button>
-              <p className="text-xs text-neutral-500 text-center mt-2">
-                Cancellations must be made 24 hours in advance
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Upcoming sessions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Upcoming Sessions</h2>
-        
-        {upcomingSessions.length === 0 ? (
-          <div className="bg-white p-6 rounded-lg shadow text-center">
-            <p className="text-neutral-600">You don't have any upcoming coaching sessions.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {upcomingSessions.map(session => (
-              <Card key={session.id} className="border-l-4 border-primary">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <Calendar className="w-5 h-5 text-neutral-600 mr-2" />
-                      <span className="font-medium">
-                        {format(new Date(session.date), "MMMM d, yyyy")}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-5 h-5 text-neutral-600 mr-2" />
-                      <span className="font-medium font-mono">
-                        {format(new Date(session.date), "h:mm a")}
-                      </span>
-                    </div>
+                
+                {userSessions?.groupSessions?.length > 0 && (
+                  <div className="space-y-3 mt-6">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Group Sessions
+                    </h3>
+                    
+                    {userSessions.groupSessions.map((item: any) => (
+                      <Card key={item.registration.id}>
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-center">
+                            <CardTitle>
+                              {item.session.title}
+                            </CardTitle>
+                            <Badge variant={item.session.status === "scheduled" ? "outline" : "secondary"}>
+                              {item.session.status === "scheduled" ? "Upcoming" : item.session.status}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4 text-primary" />
+                              <span>
+                                {format(new Date(item.session.date), "MMMM dd, yyyy")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span>{item.session.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-primary" />
+                              <span>With {item.session.coach} ({item.session.participants} participants)</span>
+                            </div>
+                            {item.session.zoomLink && (
+                              <div className="flex items-center gap-2">
+                                <Video className="h-4 w-4 text-primary" />
+                                <a 
+                                  href={item.session.zoomLink} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  Join Zoom Meeting
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <div className="w-full text-right text-sm text-muted-foreground">
+                            {isAfter(new Date(item.session.date), new Date()) && (
+                              <span>
+                                Starting in {formatDistance(new Date(item.session.date), new Date(), { addSuffix: true })}
+                              </span>
+                            )}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    ))}
                   </div>
-                  <div className="mt-3 flex justify-between items-center">
-                    <span className="text-sm text-neutral-600">45 minute session</span>
-                    <Button variant="outline" size="sm">
-                      Reschedule
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                )}
+              </>
+            )}
           </div>
-        )}
-      </div>
-      
-      {/* Past sessions */}
-      {pastSessions.length > 0 && (
-        <div>
-          <h2 className="text-xl font-bold mb-4">Past Sessions</h2>
-          <div className="space-y-4">
-            {pastSessions.map(session => (
-              <Card key={session.id} className="border-l-4 border-neutral-300">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <Calendar className="w-5 h-5 text-neutral-600 mr-2" />
-                      <span className="font-medium">
-                        {format(new Date(session.date), "MMMM d, yyyy")}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-5 h-5 text-neutral-600 mr-2" />
-                      <span className="font-medium font-mono">
-                        {format(new Date(session.date), "h:mm a")}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex justify-between items-center">
-                    <span className="text-sm text-neutral-500">Completed</span>
-                    <Button variant="outline" size="sm">
-                      View Notes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </MainLayout>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

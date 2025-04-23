@@ -4,6 +4,8 @@ import {
   portfolioItems, PortfolioItem, InsertPortfolioItem,
   educationContent, EducationContent, InsertEducationContent,
   coachingSessions, CoachingSession, InsertCoachingSession,
+  groupCoachingSessions, GroupCoachingSession, InsertGroupCoachingSession,
+  groupSessionRegistrations, GroupSessionRegistration,
   technicalReasons, TechnicalReason, InsertTechnicalReason,
   educationProgress, EducationProgress, InsertEducationProgress,
   userAchievements, UserAchievement, InsertUserAchievement,
@@ -140,6 +142,8 @@ export class MemStorage implements IStorage {
   private portfolioItemId: number;
   private educationContentId: number;
   private coachingSessionId: number;
+  private groupCoachingSessionId: number;
+  private groupSessionRegistrationId: number;
   private technicalReasonId: number;
   private educationProgressId: number;
   private userAchievementId: number;
@@ -154,6 +158,8 @@ export class MemStorage implements IStorage {
     this.portfolioItems = new Map();
     this.educationContents = new Map();
     this.coachingSessions = new Map();
+    this.groupCoachingSessions = new Map();
+    this.groupSessionRegistrations = new Map();
     this.technicalReasonsList = new Map();
     this.educationProgressList = new Map();
     this.userAchievementsList = new Map();
@@ -167,6 +173,8 @@ export class MemStorage implements IStorage {
     this.portfolioItemId = 1;
     this.educationContentId = 1;
     this.coachingSessionId = 1;
+    this.groupCoachingSessionId = 1;
+    this.groupSessionRegistrationId = 1;
     this.technicalReasonId = 1;
     this.educationProgressId = 1;
     this.userAchievementId = 1;
@@ -597,6 +605,80 @@ export class MemStorage implements IStorage {
     }
     
     return timeSlots;
+  }
+  
+  // Group coaching operations
+  async getGroupCoachingSessions(): Promise<GroupCoachingSession[]> {
+    return Array.from(this.groupCoachingSessions.values())
+      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date, earliest first
+  }
+  
+  async getUpcomingGroupSessions(): Promise<GroupCoachingSession[]> {
+    const now = new Date();
+    return Array.from(this.groupCoachingSessions.values())
+      .filter(session => session.date > now && session.status === 'scheduled')
+      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date, earliest first
+  }
+  
+  async registerForGroupSession(userId: number, sessionId: number): Promise<GroupSessionRegistration> {
+    // Check if the session exists
+    const session = this.groupCoachingSessions.get(sessionId);
+    if (!session) {
+      throw new Error("Group coaching session not found");
+    }
+    
+    // Check if user has already registered
+    const existingRegistration = Array.from(this.groupSessionRegistrations.values())
+      .find(reg => reg.userId === userId && reg.sessionId === sessionId);
+    
+    if (existingRegistration) {
+      return existingRegistration; // User is already registered
+    }
+    
+    // Check if session is full
+    if (session.participants >= session.maxParticipants) {
+      throw new Error("Session is already full");
+    }
+    
+    // Create new registration
+    const id = this.groupSessionRegistrationId++;
+    const now = new Date();
+    
+    const registration: GroupSessionRegistration = {
+      id,
+      userId,
+      sessionId,
+      paymentStatus: 'pending',
+      paymentIntentId: null,
+      createdAt: now
+    };
+    
+    this.groupSessionRegistrations.set(id, registration);
+    
+    // Increment the participant count
+    const updatedSession = {
+      ...session,
+      participants: session.participants + 1
+    };
+    this.groupCoachingSessions.set(sessionId, updatedSession);
+    
+    return registration;
+  }
+  
+  async getUserGroupSessionRegistrations(userId: number): Promise<{session: GroupCoachingSession, registration: GroupSessionRegistration}[]> {
+    // Find all registrations for this user
+    const registrations = Array.from(this.groupSessionRegistrations.values())
+      .filter(reg => reg.userId === userId);
+    
+    // Map each registration to include the session data
+    return registrations.map(registration => {
+      const session = this.groupCoachingSessions.get(registration.sessionId);
+      if (!session) {
+        throw new Error(`Session with ID ${registration.sessionId} not found`);
+      }
+      
+      return { session, registration };
+    }).sort((a, b) => a.session.date.getTime() - b.session.date.getTime()); // Sort by date
   }
   
   // Education progress operations
