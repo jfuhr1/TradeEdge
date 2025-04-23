@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { formatDistance, format, addDays, isAfter, isFuture } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { CheckCircle, Calendar as CalendarIcon, Clock, Video, DollarSign, AlertCircle, Users } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GroupCoachingSession } from "@shared/schema";
 
 export default function CoachingPage() {
@@ -78,11 +81,42 @@ export default function CoachingPage() {
     setOpenDialog(true);
   };
   
+  // State for coaching type and form data
+  const [coachingType, setCoachingType] = useState<string>("portfolio-review");
+  const [portfolioHoldings, setPortfolioHoldings] = useState<string>("");
+  const [coachingTopic, setCoachingTopic] = useState<string>("");
+  
   // Handle booking confirmation
   const handleConfirmBooking = async () => {
     if (!selectedCoachingSlot) return;
     
     try {
+      // Determine the coaching package details based on selected type
+      let duration = 60; // All options are 1 hour
+      let topic = "";
+      let price = 0;
+      let additionalData = {};
+      
+      switch (coachingType) {
+        case "portfolio-consult":
+          topic = "Portfolio Consultation + Pre-Call Review";
+          price = 250;
+          additionalData = { portfolioHoldings };
+          break;
+        case "portfolio-review":
+          topic = "Portfolio Review";
+          price = 100;
+          break;
+        case "coaching-session":
+          topic = `Coaching Session: ${coachingTopic}`;
+          price = 100;
+          additionalData = { customTopic: coachingTopic };
+          break;
+        default:
+          topic = "Portfolio Review";
+          price = 100;
+      }
+      
       const response = await fetch("/api/coaching/book", {
         method: "POST",
         headers: {
@@ -90,8 +124,10 @@ export default function CoachingPage() {
         },
         body: JSON.stringify({
           date: selectedCoachingSlot.date,
-          duration: 30, // Default to 30 minute session
-          topic: "Portfolio Review" // Default topic
+          duration,
+          topic,
+          price,
+          ...additionalData
         })
       });
       
@@ -105,8 +141,11 @@ export default function CoachingPage() {
         variant: "default"
       });
       
+      // Reset state
       setOpenDialog(false);
       setSelectedCoachingSlot(null);
+      setPortfolioHoldings("");
+      setCoachingTopic("");
     } catch (error) {
       toast({
         title: "Booking Failed",
@@ -274,12 +313,10 @@ export default function CoachingPage() {
               
               {selectedCoachingSlot && (
                 <div className="space-y-4">
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 mb-4">
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="h-5 w-5 text-primary" />
-                      <span>
-                        {format(selectedCoachingSlot.date, "MMMM dd, yyyy")}
-                      </span>
+                      <span>{format(selectedCoachingSlot.date, "MMMM dd, yyyy")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-5 w-5 text-primary" />
@@ -287,12 +324,101 @@ export default function CoachingPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Video className="h-5 w-5 text-primary" />
-                      <span>30 Minute Session via Zoom</span>
+                      <span>1 Hour Session via Zoom</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      <span>$99.00 USD</span>
-                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-base">Choose Coaching Type:</h3>
+                    
+                    <RadioGroup 
+                      value={coachingType} 
+                      onValueChange={setCoachingType}
+                      className="grid grid-cols-1 gap-3"
+                    >
+                      <div>
+                        <RadioGroupItem 
+                          value="portfolio-consult" 
+                          id="portfolio-consult"
+                          className="peer sr-only"
+                        />
+                        <Label 
+                          htmlFor="portfolio-consult" 
+                          className="flex flex-col space-y-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium leading-none">Portfolio Consultation + Pre-Call Review</span>
+                            <span className="text-sm font-medium">$250</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">Our expert will review your holdings before the call and provide detailed recommendations.</span>
+                        </Label>
+                      </div>
+                      
+                      <div>
+                        <RadioGroupItem 
+                          value="portfolio-review" 
+                          id="portfolio-review"
+                          className="peer sr-only"
+                        />
+                        <Label 
+                          htmlFor="portfolio-review" 
+                          className="flex flex-col space-y-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium leading-none">1 Hour Portfolio Review</span>
+                            <span className="text-sm font-medium">$100</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">Review as many holdings as possible during a 1-hour live call.</span>
+                        </Label>
+                      </div>
+                      
+                      <div>
+                        <RadioGroupItem 
+                          value="coaching-session" 
+                          id="coaching-session"
+                          className="peer sr-only"
+                        />
+                        <Label 
+                          htmlFor="coaching-session" 
+                          className="flex flex-col space-y-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium leading-none">1 Hour Coaching Session</span>
+                            <span className="text-sm font-medium">$100</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">Custom coaching on a trading topic of your choice.</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    
+                    {coachingType === "portfolio-consult" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="portfolio-holdings">Your Current Portfolio Holdings</Label>
+                        <Textarea 
+                          id="portfolio-holdings"
+                          placeholder="List your top 10 holdings with ticker symbols and approximate position sizes..."
+                          rows={5}
+                          value={portfolioHoldings}
+                          onChange={(e) => setPortfolioHoldings(e.target.value)}
+                          className="resize-none"
+                        />
+                        <p className="text-xs text-muted-foreground">This information will help our coach prepare a thorough analysis before your call.</p>
+                      </div>
+                    )}
+                    
+                    {coachingType === "coaching-session" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="coaching-topic">What would you like to discuss?</Label>
+                        <Textarea 
+                          id="coaching-topic"
+                          placeholder="Describe the topic you'd like to cover in your coaching session..."
+                          rows={4}
+                          value={coachingTopic}
+                          onChange={(e) => setCoachingTopic(e.target.value)}
+                          className="resize-none"
+                        />
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex justify-end gap-3 pt-4">
@@ -302,7 +428,11 @@ export default function CoachingPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleConfirmBooking}>
+                    <Button 
+                      onClick={handleConfirmBooking}
+                      disabled={(coachingType === "portfolio-consult" && !portfolioHoldings) || 
+                               (coachingType === "coaching-session" && !coachingTopic)}
+                    >
                       Confirm Booking
                     </Button>
                   </div>

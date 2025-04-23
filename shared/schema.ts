@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   phone: text("phone"),
-  tier: text("tier").notNull().default("free"), // 'free', 'standard', 'executive', 'vip', 'all-in'
+  tier: text("tier").notNull().default("free"), // 'free', 'paid', 'premium'
   profilePicture: text("profile_picture"),
   completedLessons: json("completed_lessons").default([]),
   stripeCustomerId: text("stripe_customer_id"),
@@ -93,7 +93,7 @@ export const educationContent = pgTable("education_content", {
   type: text("type").notNull(), // 'course', 'article', 'video'
   contentUrl: text("content_url").notNull(),
   imageUrl: text("image_url").notNull(),
-  tier: text("tier").notNull(), // 'free', 'standard', 'executive', 'vip', 'all-in'
+  tier: text("tier").notNull(), // 'free', 'paid', 'premium'
   level: text("level").notNull(), // 'beginner', 'intermediate', 'advanced'
   category: text("category").notNull(), // e.g., 'technical-analysis', 'fundamentals', 'risk-management'
   duration: integer("duration"), // in minutes for video content
