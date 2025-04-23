@@ -561,11 +561,17 @@ export class MemStorage implements IStorage {
   }
   
   async getCoachAvailability(startDate: Date, endDate: Date): Promise<{ date: Date, available: boolean }[]> {
-    // Define coach availability
+    // Define coach availability optimized for stock market trading hours
+    // Morning slots (pre-market analysis): 8:00 AM - 10:30 AM
+    // Afternoon slots (post-market analysis): 4:00 PM - 6:30 PM
+    
     const coachHours = {
-      start: 9, // 9 AM
-      end: 17,  // 5 PM
+      morningStart: 8, // 8 AM
+      morningEnd: 11,  // 11 AM
+      afternoonStart: 16, // 4 PM
+      afternoonEnd: 19, // 7 PM
       excludeDays: [0, 6], // Sunday (0) and Saturday (6)
+      interval: 30 // 30-minute slots
     };
     
     // Get existing coach sessions
@@ -583,22 +589,56 @@ export class MemStorage implements IStorage {
     while (currentDate <= endDate) {
       // Skip weekends and non-working days
       if (!coachHours.excludeDays.includes(currentDate.getDay())) {
-        // Loop through each hour of the working day
-        for (let hour = coachHours.start; hour < coachHours.end; hour++) {
-          // Create a date for this slot
-          const slotDate = new Date(currentDate);
-          slotDate.setHours(hour, 0, 0, 0);
-          
-          // Check if slot is already booked
-          const isBooked = existingSessions.some(session => {
-            const sessionDate = new Date(session.date);
-            return sessionDate.getTime() === slotDate.getTime();
-          });
-          
-          timeSlots.push({
-            date: slotDate,
-            available: !isBooked
-          });
+        // Morning slots (pre-market analysis)
+        for (let hour = coachHours.morningStart; hour < coachHours.morningEnd; hour++) {
+          for (let minute = 0; minute < 60; minute += coachHours.interval) {
+            // Create a date for this slot
+            const slotDate = new Date(currentDate);
+            slotDate.setHours(hour, minute, 0, 0);
+            
+            // Check if slot is already booked
+            const isBooked = existingSessions.some(session => {
+              const sessionStart = new Date(session.date);
+              const sessionEnd = new Date(sessionStart);
+              sessionEnd.setMinutes(sessionEnd.getMinutes() + session.duration);
+              
+              return slotDate >= sessionStart && slotDate < sessionEnd;
+            });
+            
+            // Morning slots are more available for pre-market analysis
+            const randomAvailability = hour < 10 ? 0.9 : 0.75; // 90% available before 10 AM, 75% after
+            
+            timeSlots.push({
+              date: slotDate,
+              available: !isBooked && Math.random() < randomAvailability
+            });
+          }
+        }
+        
+        // Afternoon slots (post-market analysis)
+        for (let hour = coachHours.afternoonStart; hour < coachHours.afternoonEnd; hour++) {
+          for (let minute = 0; minute < 60; minute += coachHours.interval) {
+            // Create a date for this slot
+            const slotDate = new Date(currentDate);
+            slotDate.setHours(hour, minute, 0, 0);
+            
+            // Check if slot is already booked
+            const isBooked = existingSessions.some(session => {
+              const sessionStart = new Date(session.date);
+              const sessionEnd = new Date(sessionStart);
+              sessionEnd.setMinutes(sessionEnd.getMinutes() + session.duration);
+              
+              return slotDate >= sessionStart && slotDate < sessionEnd;
+            });
+            
+            // Afternoon slots (market close analysis) are slightly less available
+            const randomAvailability = 0.8; // 80% available
+            
+            timeSlots.push({
+              date: slotDate,
+              available: !isBooked && Math.random() < randomAvailability
+            });
+          }
         }
       }
       
