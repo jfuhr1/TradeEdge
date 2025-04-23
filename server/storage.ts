@@ -90,6 +90,12 @@ export interface IStorage {
   updateCoachingSession(id: number, updates: Partial<CoachingSession>): Promise<CoachingSession | undefined>;
   getCoachAvailability(startDate: Date, endDate: Date): Promise<{date: Date, available: boolean}[]>;
   
+  // Group coaching operations
+  getGroupCoachingSessions(): Promise<GroupCoachingSession[]>;
+  getUpcomingGroupSessions(): Promise<GroupCoachingSession[]>;
+  registerForGroupSession(userId: number, sessionId: number): Promise<GroupSessionRegistration>;
+  getUserGroupSessionRegistrations(userId: number): Promise<{session: GroupCoachingSession, registration: GroupSessionRegistration}[]>;
+  
   // Technical reasons
   getTechnicalReasons(): Promise<TechnicalReason[]>;
   createTechnicalReason(reason: InsertTechnicalReason): Promise<TechnicalReason>;
@@ -117,6 +123,8 @@ export class MemStorage implements IStorage {
   private portfolioItems: Map<number, PortfolioItem>;
   private educationContents: Map<number, EducationContent>;
   private coachingSessions: Map<number, CoachingSession>;
+  private groupCoachingSessions: Map<number, GroupCoachingSession>;
+  private groupSessionRegistrations: Map<number, GroupSessionRegistration>;
   private technicalReasonsList: Map<number, TechnicalReason>;
   private educationProgressList: Map<number, EducationProgress>;
   private userAchievementsList: Map<number, UserAchievement>;

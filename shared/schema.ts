@@ -130,6 +130,37 @@ export const insertCoachingSessionSchema = createInsertSchema(coachingSessions).
   createdAt: true,
 });
 
+// Group coaching sessions
+export const groupCoachingSessions = pgTable("group_coaching_sessions", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  coach: text("coach").notNull(),
+  date: timestamp("date").notNull(),
+  time: text("time").notNull(), // e.g., "7:00 PM - 8:30 PM ET"
+  participants: integer("participants").notNull().default(0),
+  maxParticipants: integer("max_participants").notNull(),
+  price: doublePrecision("price").notNull(),
+  description: text("description"),
+  zoomLink: text("zoom_link"),
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'completed', 'cancelled'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGroupCoachingSessionSchema = createInsertSchema(groupCoachingSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Group session registrations
+export const groupSessionRegistrations = pgTable("group_session_registrations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionId: integer("session_id").notNull(),
+  paymentStatus: text("payment_status").notNull().default("pending"), // 'pending', 'paid', 'refunded'
+  paymentIntentId: text("payment_intent_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Technical Reason Options
 export const technicalReasons = pgTable("technical_reasons", {
   id: serial("id").primaryKey(),
@@ -187,6 +218,11 @@ export type InsertEducationContent = z.infer<typeof insertEducationContentSchema
 
 export type CoachingSession = typeof coachingSessions.$inferSelect;
 export type InsertCoachingSession = z.infer<typeof insertCoachingSessionSchema>;
+
+export type GroupCoachingSession = typeof groupCoachingSessions.$inferSelect;
+export type InsertGroupCoachingSession = z.infer<typeof insertGroupCoachingSessionSchema>;
+
+export type GroupSessionRegistration = typeof groupSessionRegistrations.$inferSelect;
 
 export type TechnicalReason = typeof technicalReasons.$inferSelect;
 export type InsertTechnicalReason = z.infer<typeof insertTechnicalReasonSchema>;
