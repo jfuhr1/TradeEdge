@@ -136,15 +136,15 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="py-20 bg-white">
         <div className="container">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge className="mb-4">Features</Badge>
             <h2 className="text-3xl font-bold mb-4">Everything You Need to Trade Successfully</h2>
             <p className="text-lg text-muted-foreground">
-              TradeEdge Pro combines expert stock alerts, educational resources, and personalized coaching to help traders of all levels succeed.
+              TradeEdge Pro combines expert stock alerts, educational resources, and personalized coaching to help traders of all levels succeed. Our comprehensive platform provides everything you need in one place.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid gap-12 mb-16">
             <Card>
               <CardHeader>
                 <BarChart4Icon className="h-10 w-10 text-primary mb-2" />
