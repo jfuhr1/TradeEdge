@@ -197,6 +197,8 @@ export class MemStorage implements IStorage {
     this.seedAchievementBadges();
     // Initialize with some success cards and achievement progress
     this.seedSuccessCardsAndAchievements();
+    // Initialize with some group coaching sessions
+    this.seedGroupCoachingSessions();
   }
 
   // User operations
@@ -679,6 +681,139 @@ export class MemStorage implements IStorage {
       
       return { session, registration };
     }).sort((a, b) => a.session.date.getTime() - b.session.date.getTime()); // Sort by date
+  }
+  
+  // Seed group coaching sessions
+  private seedGroupCoachingSessions() {
+    // Create upcoming sessions
+    const createGroupSession = (
+      title: string, 
+      coach: string, 
+      daysFromNow: number, 
+      time: string, 
+      maxParticipants: number, 
+      price: number,
+      description: string
+    ) => {
+      const date = new Date();
+      date.setDate(date.getDate() + daysFromNow);
+      date.setHours(18, 0, 0, 0); // Set to 6:00 PM
+      
+      const id = this.groupCoachingSessionId++;
+      
+      const session: GroupCoachingSession = {
+        id,
+        title,
+        coach,
+        date,
+        time,
+        participants: 0,
+        maxParticipants,
+        price,
+        description,
+        zoomLink: null,
+        status: 'scheduled',
+        createdAt: new Date()
+      };
+      
+      this.groupCoachingSessions.set(id, session);
+    };
+    
+    // Create a past session for demonstration
+    const createPastSession = (
+      title: string, 
+      coach: string, 
+      daysAgo: number, 
+      time: string, 
+      participants: number,
+      maxParticipants: number, 
+      price: number
+    ) => {
+      const date = new Date();
+      date.setDate(date.getDate() - daysAgo);
+      date.setHours(18, 0, 0, 0); // Set to 6:00 PM
+      
+      const id = this.groupCoachingSessionId++;
+      
+      const session: GroupCoachingSession = {
+        id,
+        title,
+        coach,
+        date,
+        time,
+        participants,
+        maxParticipants,
+        price,
+        description: "A past group coaching session for your reference.",
+        zoomLink: null,
+        status: 'completed',
+        createdAt: new Date()
+      };
+      
+      this.groupCoachingSessions.set(id, session);
+    };
+    
+    // Create some sample group sessions
+    createGroupSession(
+      "Mastering Market Patterns", 
+      "Michael Chen", 
+      2, 
+      "7:00 PM - 8:30 PM ET", 
+      20, 
+      49.99,
+      "Learn to identify and trade key market patterns with our expert trader. This session will cover bull flags, double bottoms, head and shoulders, and other powerful patterns that signal profitable trading opportunities."
+    );
+    
+    createGroupSession(
+      "Swing Trading Workshop", 
+      "Sarah Johnson", 
+      5, 
+      "6:30 PM - 8:00 PM ET", 
+      15, 
+      39.99,
+      "Perfect your swing trading strategy with this comprehensive workshop. We'll analyze current market conditions and set up trades together with entry points, target prices, and stop losses."
+    );
+    
+    createGroupSession(
+      "Risk Management Masterclass", 
+      "David Wilson", 
+      7, 
+      "7:00 PM - 8:00 PM ET", 
+      25, 
+      29.99,
+      "Protect your capital with advanced risk management techniques. Learn position sizing, portfolio allocation, and how to set appropriate stop-losses to minimize drawdowns while maximizing returns."
+    );
+    
+    createGroupSession(
+      "Options Trading Fundamentals", 
+      "Jennifer Lopez", 
+      10, 
+      "6:00 PM - 7:30 PM ET", 
+      18, 
+      59.99,
+      "Understand the basics of options trading in this beginner-friendly session. We'll cover calls, puts, strike prices, expiration dates, and simple strategies to generate income and hedge your portfolio."
+    );
+    
+    createGroupSession(
+      "Technical Analysis Deep Dive", 
+      "Robert Zhang", 
+      14, 
+      "7:30 PM - 9:00 PM ET", 
+      20, 
+      49.99,
+      "Take your technical analysis skills to the next level. This session explores advanced indicators, chart patterns, and timeframe analysis to identify high-probability trading setups."
+    );
+    
+    // Add a past session
+    createPastSession(
+      "Portfolio Review Workshop", 
+      "Michael Chen", 
+      5, 
+      "7:00 PM - 8:30 PM ET", 
+      12,
+      15, 
+      39.99
+    );
   }
   
   // Education progress operations

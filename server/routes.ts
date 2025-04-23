@@ -294,6 +294,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch coaching sessions" });
     }
   });
+  
+  // Coaching availability endpoint
+  app.get("/api/coaching/availability", async (req, res) => {
+    try {
+      // Allow unauthenticated viewing of availability for marketing purposes
+      // but will require auth for actual booking
+      const { date } = req.query;
+      let targetDate = date ? new Date(date as string) : new Date();
+      
+      // Default range is one day
+      const endDate = new Date(targetDate);
+      endDate.setDate(endDate.getDate() + 1);
+      
+      const availability = await storage.getCoachAvailability(targetDate, endDate);
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch coach availability" });
+    }
+  });
+  
+  // Book coaching session endpoint
+  app.post("/api/coaching/book", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user has required tier (Executive or higher)
+      if (req.user.tier !== 'executive' && req.user.tier !== 'vip' && req.user.tier !== 'all-in') {
+        return res.status(403).json({ 
+          message: "This feature requires Executive tier or higher. Please upgrade your membership." 
+        });
+      }
+      
+      // Validate the coaching session data
+      const { date, duration, topic } = req.body;
+      
+      if (!date) {
+        return res.status(400).json({ message: "Session date is required" });
+      }
+      
+      const sessionDate = new Date(date);
+      const now = new Date();
+      
+      if (sessionDate <= now) {
+        return res.status(400).json({ 
+          message: "Session date must be in the future" 
+        });
+      }
+      
+      const sessionData = {
+        userId: req.user.id,
+        date: sessionDate,
+        duration: duration || 30,
+        topic: topic || "Portfolio Review",
+        price: duration === 60 ? 149 : 99,
+        paymentStatus: "pending",
+        status: "scheduled"
+      };
+      
+      // Create the coaching session
+      const newSession = await storage.createCoachingSession(sessionData);
+      res.status(201).json(newSession);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to book coaching session" });
+    }
+  });
+  
+  // Group coaching sessions endpoint
+  app.get("/api/coaching/group-sessions", async (req, res) => {
+    try {
+      // Allow unauthenticated viewing of group sessions for marketing purposes
+      // but will require auth for registration
+      const upcomingSessions = await storage.getUpcomingGroupSessions();
+      res.json(upcomingSessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch group coaching sessions" });
+    }
+  });
+  
+  // Register for group session endpoint
+  app.post("/api/coaching/register-group", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user has required tier (Standard or higher)
+      if (req.user.tier === 'free') {
+        return res.status(403).json({ 
+          message: "This feature requires Standard tier or higher. Please upgrade your membership." 
+        });
+      }
+      
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ message: "Session ID is required" });
+      }
+      
+      // Register for the group session
+      const registration = await storage.registerForGroupSession(req.user.id, sessionId);
+      res.status(201).json(registration);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to register for group session";
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+  
+  // Get user's booked sessions (both individual and group)
+  app.get("/api/coaching/my-sessions", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        // Return empty arrays for unauthenticated users for easier frontend handling
+        return res.json({ individual: [], groupSessions: [] });
+      }
+      
+      // Get individual sessions
+      const individualSessions = await storage.getCoachingSessionsByUser(req.user.id);
+      
+      // Get group sessions
+      const groupSessions = await storage.getUserGroupSessionRegistrations(req.user.id);
+      
+      res.json({
+        individual: individualSessions,
+        groupSessions
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user's coaching sessions" });
+    }
+  });
 
   // Alert Preferences API
   app.get("/api/alert-preferences", async (req, res) => {
