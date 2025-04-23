@@ -41,8 +41,8 @@ export default function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm font-medium hover:underline underline-offset-4">Features</a>
+            <a href="#success" className="text-sm font-medium hover:underline underline-offset-4">Success Center</a>
             <a href="#pricing" className="text-sm font-medium hover:underline underline-offset-4">Pricing</a>
-            <a href="#testimonials" className="text-sm font-medium hover:underline underline-offset-4">Testimonials</a>
             <a href="#faq" className="text-sm font-medium hover:underline underline-offset-4">FAQ</a>
             <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
               Login
@@ -144,207 +144,356 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid gap-12 mb-16">
-            <Card>
-              <CardHeader>
-                <BarChart4Icon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Curated Stock Alerts</CardTitle>
-                <CardDescription>
-                  Receive carefully selected stock picks with detailed entry and exit targets
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Clear buy zones and multiple profit targets</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Technical analysis and reasons for each pick</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Focus on high-probability setups</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <BellIcon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Custom Notifications</CardTitle>
-                <CardDescription>
-                  Never miss a trading opportunity with personalized alerts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Email and SMS notifications</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Customizable alerts for buy zones and targets</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Adjust notification settings per stock</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <BookOpenIcon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Educational Resources</CardTitle>
-                <CardDescription>
-                  Comprehensive learning materials for traders of all levels
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Video tutorials and written guides</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Technical analysis training</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Risk management strategies</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <NotebookPenIcon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Portfolio Tracking</CardTitle>
-                <CardDescription>
-                  Monitor your trades and track performance over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Log and monitor all your trades</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Analyze performance metrics</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Identify patterns in your trading</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <UsersIcon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Group Coaching Sessions</CardTitle>
-                <CardDescription>
-                  Learn from experienced traders in live group settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Weekly 'New Alerts' analysis</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Q&A with professional traders</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Learn from other members' questions</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <HeartHandshakeIcon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>1-on-1 Coaching</CardTitle>
-                <CardDescription>
-                  Personalized guidance to accelerate your trading progress
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Portfolio reviews and strategy sessions</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Personalized trading plan development</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Targeted feedback on your trades</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-2 gap-16 mb-16">
+            {/* Left Column - Stock Alerts Feature */}
+            <div className="space-y-8">
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl font-bold mb-3 flex items-center justify-center md:justify-start">
+                  <BarChart4Icon className="h-8 w-8 text-primary mr-2" />
+                  Curated Stock Alerts
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Our expert traders identify high-probability setups with clear entry and exit points, helping you make informed trading decisions.
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-xl border shadow-md overflow-hidden">
+                <div className="p-4 border-b bg-gray-50">
+                  <h4 className="font-medium">Example Stock Alert: AAPL</h4>
+                </div>
+                <div className="p-4">
+                  <div className="flex justify-between mb-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Buy Zone</div>
+                      <div className="font-medium">$175 - $185</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Current Price</div>
+                      <div className="font-medium">$171.71</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-3">
+                    <div className="flex justify-between">
+                      <div className="text-sm">Target 1</div>
+                      <div className="text-sm font-medium text-green-600">$195 (+11.4%)</div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-sm">Target 2</div>
+                      <div className="text-sm font-medium text-green-600">$210 (+20.0%)</div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-sm">Target 3</div>
+                      <div className="text-sm font-medium text-green-600">$225 (+28.6%)</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <div className="text-sm text-muted-foreground mb-1">Technical Reasons</div>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge variant="outline" className="bg-blue-50">Support Level</Badge>
+                      <Badge variant="outline" className="bg-blue-50">Oversold RSI</Badge>
+                      <Badge variant="outline" className="bg-blue-50">Earnings Beat</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="font-medium mb-2">Clear Entry & Exit</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Every alert includes defined buy zones, profit targets, and technical analysis.
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="font-medium mb-2">Risk Management</h4>
+                    <p className="text-sm text-muted-foreground">
+                      We prioritize favorable risk-reward ratios to protect your capital.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+            
+            {/* Right Column - Education & Coaching */}
+            <div className="space-y-8">
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl font-bold mb-3 flex items-center justify-center md:justify-start">
+                  <BookOpenIcon className="h-8 w-8 text-primary mr-2" />
+                  Education & Coaching
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Build your trading skills with our comprehensive educational resources and personalized coaching options.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Video Tutorials</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Step-by-step guides on technical analysis, chart patterns, and trading psychology.
+                    </p>
+                    <Badge>20+ Hours</Badge>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Trading Guides</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Detailed written resources on market mechanics, strategies, and analysis.
+                    </p>
+                    <Badge>50+ Articles</Badge>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Group Sessions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Weekly live sessions to analyze new alerts and answer member questions.
+                    </p>
+                    <Badge>Weekly</Badge>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">1-on-1 Coaching</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Personalized guidance tailored to your trading goals and experience.
+                    </p>
+                    <Badge>60 Minutes</Badge>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="bg-white rounded-xl border shadow-md overflow-hidden">
+                <div className="p-4 border-b bg-gray-50">
+                  <h4 className="font-medium">Portfolio Tools & Tracking</h4>
+                </div>
+                <div className="p-4">
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-2">
+                      <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium">Performance Analytics</span>
+                        <p className="text-sm text-muted-foreground">Track your wins, losses, and overall portfolio performance</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium">Custom Alerts</span>
+                        <p className="text-sm text-muted-foreground">Set email and SMS notifications for price targets</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium">Trade Journal</span>
+                        <p className="text-sm text-muted-foreground">Document your trading decisions and track improvement</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 bg-gradient-to-b from-white to-blue-50">
+      {/* Success Center Section */}
+      <section id="success" className="py-20 bg-gradient-to-b from-white to-blue-50">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <Badge className="mb-4">How It Works</Badge>
-            <h2 className="text-3xl font-bold mb-4">Your Path to Trading Success</h2>
+            <Badge className="mb-4">Success Center</Badge>
+            <h2 className="text-3xl font-bold mb-4">Our Track Record of Results</h2>
             <p className="text-lg text-muted-foreground">
-              TradeEdge Pro makes it easy to get started and grow as a trader with our structured approach.
+              TradeEdge Pro has a proven history of delivering high-quality stock alerts with impressive results. Here's how our alerts have performed.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 bg-blue-200 -z-10 transform -translate-y-1/2"></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
+              <div className="text-primary text-4xl font-bold mb-2">247</div>
+              <div className="text-lg font-medium mb-1">Total Alerts</div>
+              <p className="text-sm text-muted-foreground">
+                Carefully selected stock picks since launch
+              </p>
+            </div>
             
-            <div className="bg-white p-6 rounded-xl border shadow-sm relative">
-              <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg absolute -top-5 left-1/2 transform -translate-x-1/2">1</div>
-              <div className="text-center pt-4">
-                <h3 className="text-xl font-bold mb-3">Join TradeEdge Pro</h3>
-                <p className="text-muted-foreground">
-                  Select your membership tier based on your trading goals and experience level.
-                </p>
+            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
+              <div className="text-primary text-4xl font-bold mb-2">12-18</div>
+              <div className="text-lg font-medium mb-1">Monthly Alerts</div>
+              <p className="text-sm text-muted-foreground">
+                New opportunities sent each month
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
+              <div className="text-green-600 text-4xl font-bold mb-2">78%</div>
+              <div className="text-lg font-medium mb-1">Target 1 Hit Rate</div>
+              <p className="text-sm text-muted-foreground">
+                Percentage of alerts reaching first target
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl border shadow-md text-center">
+              <div className="text-green-600 text-4xl font-bold mb-2">+14.3%</div>
+              <div className="text-lg font-medium mb-1">Avg. Target 1 Gain</div>
+              <p className="text-sm text-muted-foreground">
+                Average percentage gain at first target
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid md:grid-cols-5 gap-8">
+            <div className="md:col-span-3 bg-white p-6 rounded-xl border shadow-md">
+              <h3 className="text-xl font-bold mb-4">Recent Success Stories</h3>
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="font-medium">MSFT</div>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Buy Zone</div>
+                      <div>$395-$415</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 1</div>
+                      <div className="text-green-600">$430 (+8.9%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 2</div>
+                      <div className="text-green-600">$450 (+13.9%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 3</div>
+                      <div className="text-green-600">$475 (+20.3%)</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="font-medium">AMZN</div>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Target 1 & 2 Hit</Badge>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Buy Zone</div>
+                      <div>$170-$180</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 1</div>
+                      <div className="text-green-600">$195 (+14.7%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 2</div>
+                      <div className="text-green-600">$210 (+23.5%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 3</div>
+                      <div>$225 (+32.4%)</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="font-medium">NFLX</div>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">All Targets Hit</Badge>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Buy Zone</div>
+                      <div>$580-$610</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 1</div>
+                      <div className="text-green-600">$650 (+12.1%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 2</div>
+                      <div className="text-green-600">$680 (+17.2%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Target 3</div>
+                      <div className="text-green-600">$700 (+20.7%)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <Button variant="outline" onClick={() => navigate("/success-center")}>
+                  View Detailed Performance
+                </Button>
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-xl border shadow-sm relative">
-              <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg absolute -top-5 left-1/2 transform -translate-x-1/2">2</div>
-              <div className="text-center pt-4">
-                <h3 className="text-xl font-bold mb-3">Set Up Your Account</h3>
-                <p className="text-muted-foreground">
-                  Customize your notification preferences and explore our educational resources.
-                </p>
+            <div className="md:col-span-2 bg-white p-6 rounded-xl border shadow-md">
+              <h3 className="text-xl font-bold mb-4">Member Achievements</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <TrendingUpIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium">First Target Hit</div>
+                    <div className="text-sm text-muted-foreground">458 members achieved</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <CalendarClockIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium">6-Month Consistency</div>
+                    <div className="text-sm text-muted-foreground">312 members achieved</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <ShieldCheckIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Risk Manager</div>
+                    <div className="text-sm text-muted-foreground">267 members achieved</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <LightbulbIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Education Master</div>
+                    <div className="text-sm text-muted-foreground">189 members achieved</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl border shadow-sm relative">
-              <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg absolute -top-5 left-1/2 transform -translate-x-1/2">3</div>
-              <div className="text-center pt-4">
-                <h3 className="text-xl font-bold mb-3">Start Trading Smarter</h3>
-                <p className="text-muted-foreground">
-                  Use our stock alerts, track your portfolio, and continuously improve with our coaching.
-                </p>
+              <div className="mt-4 text-center">
+                <Button variant="outline" onClick={() => navigate("/badges")}>
+                  View All Achievements
+                </Button>
               </div>
             </div>
           </div>
@@ -529,92 +678,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-blue-50">
-        <div className="container">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <Badge className="mb-4">Testimonials</Badge>
-            <h2 className="text-3xl font-bold mb-4">What Our Members Say</h2>
-            <p className="text-lg text-muted-foreground">
-              Don't just take our word for it - hear from our community of successful traders.
-            </p>
-          </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center">
-                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                    <span className="text-xl font-semibold text-primary">JK</span>
-                  </div>
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="h-5 w-5 fill-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-center text-muted-foreground italic mb-4">
-                    "The stock alerts from TradeEdge Pro are incredibly accurate. I've seen consistent gains since joining the Premium tier, and the weekly Q&A sessions have transformed my trading strategy."
-                  </p>
-                  <div>
-                    <h4 className="font-semibold">James K.</h4>
-                    <p className="text-sm text-muted-foreground">Premium Member - 8 months</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center">
-                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                    <span className="text-xl font-semibold text-primary">ML</span>
-                  </div>
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="h-5 w-5 fill-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-center text-muted-foreground italic mb-4">
-                    "The mentorship program was exactly what I needed. Having structured coaching sessions helped me develop a consistent trading approach. Worth every penny of the investment."
-                  </p>
-                  <div>
-                    <h4 className="font-semibold">Maria L.</h4>
-                    <p className="text-sm text-muted-foreground">Mentorship Program Graduate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center">
-                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                    <span className="text-xl font-semibold text-primary">TR</span>
-                  </div>
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="h-5 w-5 fill-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-center text-muted-foreground italic mb-4">
-                    "I started with the free tier and quickly upgraded to Paid. The alerts are timely, and the educational content helped me understand the 'why' behind each trade recommendation."
-                  </p>
-                  <div>
-                    <h4 className="font-semibold">Thomas R.</h4>
-                    <p className="text-sm text-muted-foreground">Paid Member - 1 year</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Section */}
       <section id="faq" className="py-20 bg-white">
