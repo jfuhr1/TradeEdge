@@ -794,6 +794,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notifications API
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const notifications = await storage.getUserNotifications(req.user.id, limit);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const notifications = await storage.getUserUnreadNotifications(req.user.id);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch unread notifications" });
+    }
+  });
+
+  app.get("/api/notifications/category/:category", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const category = req.params.category;
+      if (!category) {
+        return res.status(400).json({ message: "Category is required" });
+      }
+      
+      const notifications = await storage.getUserNotificationsByCategory(req.user.id, category);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications by category" });
+    }
+  });
+
+  app.get("/api/notifications/stats", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const stats = await storage.getNotificationStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notification stats" });
+    }
+  });
+
+  app.post("/api/notifications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin for creating non-personal notifications
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin && req.body.userId !== req.user.id) {
+        return res.status(403).json({ message: "You can only create notifications for yourself" });
+      }
+      
+      // Validate request data
+      const validationResult = insertUserNotificationSchema.safeParse({
+        ...req.body,
+        userId: req.body.userId || req.user.id,
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid notification data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const newNotification = await storage.createNotification(validationResult.data);
+      res.status(201).json(newNotification);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create notification" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const updatedNotification = await storage.markNotificationAsRead(id);
+      
+      if (!updatedNotification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      res.json(updatedNotification);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put("/api/notifications/read/all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const success = await storage.markAllNotificationsAsRead(req.user.id);
+      
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const success = await storage.deleteNotification(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time stock price updates
