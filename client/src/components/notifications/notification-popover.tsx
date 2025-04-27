@@ -21,7 +21,12 @@ export function NotificationPopover() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
   
-  const { data: stats } = useQuery({
+  interface NotificationStats {
+    totalUnread: number;
+    categoryCounts: Record<string, number>;
+  }
+
+  const { data: stats } = useQuery<NotificationStats>({
     queryKey: ["/api/notifications/stats"],
     enabled: !!user,
     refetchInterval: 30000, // Refetch every 30 seconds

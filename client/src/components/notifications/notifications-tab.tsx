@@ -37,7 +37,12 @@ export function NotificationsTab() {
     enabled: !!user,
   });
 
-  const { data: stats } = useQuery({
+  interface NotificationStats {
+    totalUnread: number;
+    categoryCounts: Record<string, number>;
+  }
+
+  const { data: stats } = useQuery<NotificationStats>({
     queryKey: ["/api/notifications/stats"],
     enabled: !!user,
   });
@@ -142,7 +147,7 @@ export function NotificationsTab() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="all" className="relative">
             All
-            {stats?.totalUnread > 0 && filter !== "all" && (
+            {(stats?.totalUnread ?? 0) > 0 && filter !== "all" && (
               <span className="absolute top-1 right-1 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -151,9 +156,9 @@ export function NotificationsTab() {
           </TabsTrigger>
           <TabsTrigger value="unread" className="relative">
             Unread
-            {stats?.totalUnread > 0 && (
+            {(stats?.totalUnread ?? 0) > 0 && (
               <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                {stats.totalUnread}
+                {stats?.totalUnread ?? 0}
               </span>
             )}
           </TabsTrigger>

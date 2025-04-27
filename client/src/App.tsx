@@ -46,6 +46,7 @@ function App() {
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
           <ProtectedRoute path="/account-settings" component={AccountSettings} />
+          <ProtectedRoute path="/notifications" component={Notifications} />
           <ProtectedRoute path="/notification-settings" component={NotificationSettings} />
           <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
