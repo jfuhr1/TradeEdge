@@ -13,9 +13,84 @@ import {
   insertUserNotificationSchema
 } from "@shared/schema";
 
+// Function to create sample notifications for demo purposes
+async function createSampleNotifications() {
+  const demoUserId = 1; // Default user ID
+  
+  // Check if we already have notifications
+  const existingNotifications = await storage.getUserNotifications(demoUserId);
+  if (existingNotifications.length > 0) {
+    return; // Skip if we already have notifications
+  }
+  
+  // Create sample notifications
+  await storage.createNotification({
+    userId: demoUserId,
+    category: 'stock_alert',
+    title: 'New Stock Alert: NVDA',
+    message: 'A new alert for NVIDIA has been added with target price of $995.',
+    linkUrl: '/stock-detail/6',
+    read: false,
+    relatedId: 6,
+    icon: 'trending-up',
+    important: true
+  });
+  
+  await storage.createNotification({
+    userId: demoUserId,
+    category: 'target_approach',
+    title: 'MSFT approaching Target 1',
+    message: 'Microsoft is within 5% of reaching Target 1 ($430).',
+    linkUrl: '/stock-detail/3',
+    read: true,
+    relatedId: 3,
+    icon: 'target',
+    important: false
+  });
+  
+  await storage.createNotification({
+    userId: demoUserId,
+    category: 'education',
+    title: 'New Educational Content',
+    message: 'Check out our new video: "Understanding Price Action"',
+    linkUrl: '/education',
+    read: false,
+    relatedId: null,
+    icon: 'book-open',
+    important: false
+  });
+  
+  await storage.createNotification({
+    userId: demoUserId,
+    category: 'article',
+    title: 'Market Analysis',
+    message: 'Weekly market overview and sector analysis is now available.',
+    linkUrl: '/success-center',
+    read: false,
+    relatedId: null,
+    icon: 'newspaper',
+    important: false
+  });
+  
+  await storage.createNotification({
+    userId: demoUserId,
+    category: 'stock_alert',
+    title: 'META has reached Target 1',
+    message: 'Meta Platforms has hit Target 1 ($490). Consider adjusting stop loss.',
+    linkUrl: '/stock-detail/7',
+    read: true,
+    relatedId: 7,
+    icon: 'check-circle',
+    important: true
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Initialize sample notifications
+  await createSampleNotifications();
 
   // Stock Alerts API
   app.get("/api/stock-alerts", async (req, res) => {
