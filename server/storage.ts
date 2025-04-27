@@ -12,7 +12,8 @@ import {
   alertPreferences, AlertPreference, InsertAlertPreference,
   achievementBadges, AchievementBadge, InsertAchievementBadge,
   userAchievementProgress, UserAchievementProgress, InsertUserAchievementProgress,
-  successCards, SuccessCard, InsertSuccessCard
+  successCards, SuccessCard, InsertSuccessCard,
+  userNotifications, UserNotification, InsertUserNotification
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -115,6 +116,19 @@ export interface IStorage {
   updateSuccessCard(id: number, updates: Partial<SuccessCard>): Promise<SuccessCard | undefined>;
   generateSuccessCardForStock(userId: number, stockAlertId: number, targetHit: number): Promise<SuccessCard | undefined>;
   
+  // User Notifications operations
+  createNotification(notification: InsertUserNotification): Promise<UserNotification>;
+  getUserNotifications(userId: number, limit?: number): Promise<UserNotification[]>;
+  getUserUnreadNotifications(userId: number): Promise<UserNotification[]>;
+  getUserNotificationsByCategory(userId: number, category: string): Promise<UserNotification[]>;
+  markNotificationAsRead(id: number): Promise<UserNotification | undefined>;
+  markAllNotificationsAsRead(userId: number): Promise<boolean>;
+  deleteNotification(id: number): Promise<boolean>;
+  getNotificationStats(userId: number): Promise<{
+    totalUnread: number;
+    categoryCounts: Record<string, number>;
+  }>;
+  
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -134,6 +148,7 @@ export class MemStorage implements IStorage {
   successCards: Map<number, SuccessCard>; // Made public for access from routes
   private achievementBadgesList: Map<number, AchievementBadge>;
   private userAchievementProgressList: Map<number, UserAchievementProgress>;
+  private userNotifications: Map<number, UserNotification>; // Add notifications map
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -151,6 +166,7 @@ export class MemStorage implements IStorage {
   private successCardId: number;
   private achievementBadgeId: number;
   private userAchievementProgressId: number;
+  private notificationId: number;
 
   constructor() {
     this.users = new Map();
@@ -167,6 +183,7 @@ export class MemStorage implements IStorage {
     this.successCards = new Map();
     this.achievementBadgesList = new Map();
     this.userAchievementProgressList = new Map();
+    this.userNotifications = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -182,6 +199,7 @@ export class MemStorage implements IStorage {
     this.successCardId = 1;
     this.achievementBadgeId = 1;
     this.userAchievementProgressId = 1;
+    this.notificationId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -199,6 +217,8 @@ export class MemStorage implements IStorage {
     this.seedSuccessCardsAndAchievements();
     // Initialize with some group coaching sessions
     this.seedGroupCoachingSessions();
+    // Initialize with some notifications
+    this.seedNotifications();
   }
 
   // User operations
@@ -1656,6 +1676,161 @@ export class MemStorage implements IStorage {
     };
     
     return this.createSuccessCard(successCard);
+  }
+
+  // User Notifications API methods
+  async createNotification(notification: InsertUserNotification): Promise<UserNotification> {
+    const id = this.notificationId++;
+    const now = new Date();
+    const newNotification: UserNotification = {
+      ...notification,
+      id,
+      createdAt: now,
+      read: false
+    };
+    this.userNotifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: number, limit?: number): Promise<UserNotification[]> {
+    const notifications = Array.from(this.userNotifications.values())
+      .filter(notification => notification.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+    
+    if (limit) {
+      return notifications.slice(0, limit);
+    }
+    
+    return notifications;
+  }
+
+  async getUserUnreadNotifications(userId: number): Promise<UserNotification[]> {
+    return Array.from(this.userNotifications.values())
+      .filter(notification => notification.userId === userId && !notification.read)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+
+  async getUserNotificationsByCategory(userId: number, category: string): Promise<UserNotification[]> {
+    return Array.from(this.userNotifications.values())
+      .filter(notification => notification.userId === userId && notification.category === category)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+
+  async markNotificationAsRead(id: number): Promise<UserNotification | undefined> {
+    const notification = this.userNotifications.get(id);
+    if (!notification) return undefined;
+    
+    const updatedNotification = { ...notification, read: true };
+    this.userNotifications.set(id, updatedNotification);
+    return updatedNotification;
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    const userNotifications = await this.getUserNotifications(userId);
+    
+    for (const notification of userNotifications) {
+      await this.markNotificationAsRead(notification.id);
+    }
+    
+    return true;
+  }
+
+  async deleteNotification(id: number): Promise<boolean> {
+    return this.userNotifications.delete(id);
+  }
+
+  async getNotificationStats(userId: number): Promise<{
+    totalUnread: number;
+    categoryCounts: Record<string, number>;
+  }> {
+    const unreadNotifications = await this.getUserUnreadNotifications(userId);
+    const totalUnread = unreadNotifications.length;
+    
+    // Count by category
+    const categoryCounts: Record<string, number> = {};
+    unreadNotifications.forEach(notification => {
+      const { category } = notification;
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+    
+    return { totalUnread, categoryCounts };
+  }
+
+  // Seed example notifications
+  private seedNotifications() {
+    // Stock alert notifications
+    this.userNotifications.set(this.notificationId++, {
+      id: 1,
+      userId: 1,
+      category: 'stock_alert',
+      title: 'New Stock Alert: AAPL',
+      message: 'Apple Inc. (AAPL) has been added to our stock alerts.',
+      linkUrl: '/stock-alerts/1',
+      read: false,
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+      relatedId: 1,
+      icon: 'trending_up',
+      important: false
+    });
+
+    this.userNotifications.set(this.notificationId++, {
+      id: 2,
+      userId: 1,
+      category: 'target_approach',
+      title: 'MSFT Approaching Target 1',
+      message: 'Microsoft Corp (MSFT) is nearing its first target price of $430.',
+      linkUrl: '/stock-alerts/3',
+      read: true,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      relatedId: 3,
+      icon: 'track_changes',
+      important: true
+    });
+
+    this.userNotifications.set(this.notificationId++, {
+      id: 3,
+      userId: 1,
+      category: 'education',
+      title: 'New Course Available',
+      message: 'Check out our new course on Technical Analysis for Beginners.',
+      linkUrl: '/education/1',
+      read: false,
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      relatedId: 1,
+      icon: 'school',
+      important: false
+    });
+
+    this.userNotifications.set(this.notificationId++, {
+      id: 4,
+      userId: 1,
+      category: 'article',
+      title: 'New Market Analysis',
+      message: 'Read our latest market analysis on upcoming earnings season.',
+      linkUrl: '/articles/1',
+      read: false,
+      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+      relatedId: 1,
+      icon: 'article',
+      important: false
+    });
+
+    this.userNotifications.set(this.notificationId++, {
+      id: 5,
+      userId: 1,
+      category: 'stock_alert',
+      title: 'New Stock Alert: SHOP',
+      message: 'Shopify Inc. (SHOP) has been added to our stock alerts.',
+      linkUrl: '/stock-alerts/2',
+      read: false,
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      relatedId: 2,
+      icon: 'trending_up',
+      important: false
+    });
+
+    // Set next notification ID after seed data
+    this.notificationId = 6;
   }
 }
 

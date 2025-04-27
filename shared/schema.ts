@@ -355,3 +355,26 @@ export type InsertUserAchievementProgress = z.infer<typeof insertUserAchievement
 
 export type SuccessCard = typeof successCards.$inferSelect;
 export type InsertSuccessCard = z.infer<typeof insertSuccessCardSchema>;
+
+// User Notifications
+export const userNotifications = pgTable("user_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  category: text("category").notNull(), // 'stock_alert', 'target_approach', 'education', 'article'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  linkUrl: text("link_url").notNull(), // URL to navigate to when clicked
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  relatedId: integer("related_id"), // ID of the related item (stock_alert_id, education_id, etc.)
+  icon: text("icon"), // Icon name or URL
+  important: boolean("important").notNull().default(false),
+});
+
+export const insertUserNotificationSchema = createInsertSchema(userNotifications).omit({
+  id: true,
+  createdAt: true
+});
+
+export type UserNotification = typeof userNotifications.$inferSelect;
+export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
