@@ -20,6 +20,7 @@ import LandingPage from "./pages/landing-page";
 import SignupPage from "./pages/signup";
 import WelcomePage from "./pages/welcome";
 import Notifications from "./pages/notifications";
+import Settings from "./pages/settings";
 import { AppLayout } from "./components/layout/app-layout";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -46,6 +47,7 @@ function App() {
           <ProtectedRoute path="/coaching" component={Coaching} />
           <ProtectedRoute path="/alert-settings" component={AlertSettings} />
           <ProtectedRoute path="/account-settings" component={AccountSettings} />
+          <ProtectedRoute path="/settings" component={Settings} />
           <ProtectedRoute path="/notifications" component={Notifications} />
           <ProtectedRoute path="/notification-settings" component={NotificationSettings} />
           <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />

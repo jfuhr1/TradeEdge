@@ -97,6 +97,28 @@ export function Navbar() {
               </Button>
             ))}
             <Button
+              variant={location === "/settings" ? "default" : "ghost"}
+              className="w-full justify-start"
+              asChild
+              onClick={() => setIsOpen(false)}
+            >
+              <Link href="/settings">
+                <Settings className="h-4 w-4 mr-2" />
+                User Settings
+              </Link>
+            </Button>
+            <Button
+              variant={location === "/notification-settings" ? "default" : "ghost"}
+              className="w-full justify-start"
+              asChild
+              onClick={() => setIsOpen(false)}
+            >
+              <Link href="/notification-settings">
+                <Settings className="h-4 w-4 mr-2" />
+                Notification Settings
+              </Link>
+            </Button>
+            <Button
               variant={location === "/alert-settings" ? "default" : "ghost"}
               className="w-full justify-start"
               asChild
@@ -167,6 +189,12 @@ export function Navbar() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href="/settings">User Settings</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/notification-settings">Notification Settings</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/alert-settings">Alert Settings</Link>
           </DropdownMenuItem>
