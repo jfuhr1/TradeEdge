@@ -19,6 +19,7 @@ import NotFound from "./pages/not-found";
 import LandingPage from "./pages/landing-page";
 import SignupPage from "./pages/signup";
 import WelcomePage from "./pages/welcome";
+import Notifications from "./pages/notifications";
 import { AppLayout } from "./components/layout/app-layout";
 import { AuthProvider } from "./hooks/use-auth";
 
