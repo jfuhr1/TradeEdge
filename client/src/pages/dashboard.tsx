@@ -1,5 +1,6 @@
 import MainLayout from "@/components/layout/main-layout";
-import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter, CalendarDays, Clock, UserCircle, Users, Eye } from "lucide-react";
+import { ChartLine, TrendingUp, Target, AlertCircle, Award, Wifi, CheckCircle, Filter, CalendarDays, Clock, UserCircle, Users, Eye, Bell } from "lucide-react";
+import { DashboardNotifications } from "@/components/notifications/dashboard-notifications";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -419,6 +420,9 @@ export default function Dashboard() {
       title="Dashboard" 
       description={`Welcome back, ${userName}. Here's what's happening with your stocks.`}
     >
+      {/* Notifications Section */}
+      <DashboardNotifications />
+      
       {/* Portfolio Overview */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
