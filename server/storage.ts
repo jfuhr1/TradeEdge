@@ -53,6 +53,14 @@ export interface IStorage {
     closedProfit: number;
   }>;
   
+  getPortfolioMetrics(userId: number): Promise<{
+    totalAlertsBought: number;
+    buyZonePercentage: number;
+    highRiskPercentage: number;
+    aboveBuyZonePercentage: number;
+    monthlyPurchases: { month: string; count: number; }[];
+  }>;
+  
   // Alert preferences operations
   createAlertPreference(preference: InsertAlertPreference): Promise<AlertPreference>;
   getAlertPreferencesByUser(userId: number): Promise<AlertPreference[]>;
