@@ -9,7 +9,7 @@ import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 import CreateAlert from "./pages/admin/create-alert";
-import AlertSettings from "./pages/alert-settings";
+
 import AccountSettings from "./pages/account-settings";
 import NotificationSettings from "./pages/notification-settings";
 import StockNotificationSettings from "./pages/notification-settings/stock/[id]";
@@ -45,7 +45,7 @@ function App() {
           <ProtectedRoute path="/portfolio" component={Portfolio} />
           <ProtectedRoute path="/education" component={Education} />
           <ProtectedRoute path="/coaching" component={Coaching} />
-          <ProtectedRoute path="/alert-settings" component={AlertSettings} />
+
           <ProtectedRoute path="/account-settings" component={AccountSettings} />
           <ProtectedRoute path="/settings" component={Settings} />
           <ProtectedRoute path="/notifications" component={Notifications} />

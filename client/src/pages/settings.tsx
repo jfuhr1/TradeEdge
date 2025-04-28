@@ -231,21 +231,6 @@ export default function SettingsPage() {
                     </Button>
                   </Link>
                 </div>
-                
-                <Separator />
-                
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Custom Alert Settings</h3>
-                    <p className="text-sm text-muted-foreground">Configure your personalized stock alert preferences</p>
-                  </div>
-                  <Link href="/alert-settings">
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Bell className="h-4 w-4" />
-                      Configure
-                    </Button>
-                  </Link>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -316,9 +301,6 @@ export default function SettingsPage() {
                   </Button>
                 </div>
                 
-                <Separator />
-                
-
               </CardContent>
             </Card>
           </TabsContent>
