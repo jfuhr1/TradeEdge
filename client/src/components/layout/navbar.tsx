@@ -118,17 +118,7 @@ export function Navbar() {
                 Notification Settings
               </Link>
             </Button>
-            <Button
-              variant={location === "/alert-settings" ? "default" : "ghost"}
-              className="w-full justify-start"
-              asChild
-              onClick={() => setIsOpen(false)}
-            >
-              <Link href="/alert-settings">
-                <Settings className="h-4 w-4 mr-2" />
-                Alert Settings
-              </Link>
-            </Button>
+
             
             {isAdmin && (
               <Button
@@ -195,9 +185,7 @@ export function Navbar() {
           <DropdownMenuItem asChild>
             <Link href="/notification-settings">Notification Settings</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/alert-settings">Alert Settings</Link>
-          </DropdownMenuItem>
+
           {isAdmin && (
             <>
               <DropdownMenuSeparator />

@@ -212,8 +212,8 @@ export function AlertNotifications() {
             className="w-full"
             asChild
           >
-            <Link href="/alert-settings">
-              Manage Alert Settings
+            <Link href="/notification-settings">
+              Manage Notification Settings
             </Link>
           </Button>
         </div>
