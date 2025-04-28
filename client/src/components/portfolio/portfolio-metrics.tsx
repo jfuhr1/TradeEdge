@@ -7,6 +7,7 @@ interface PortfolioMetricsProps {
   buyZonePercentage: number;
   highRiskPercentage: number;
   aboveBuyZonePercentage: number;
+  monthlyPurchases?: { month: string; count: number; }[];
 }
 
 export default function PortfolioMetrics({
@@ -14,6 +15,7 @@ export default function PortfolioMetrics({
   buyZonePercentage,
   highRiskPercentage,
   aboveBuyZonePercentage,
+  monthlyPurchases = [],
 }: PortfolioMetricsProps) {
   // Data for the purchase distribution pie chart
   const purchaseDistribution = [
@@ -22,15 +24,17 @@ export default function PortfolioMetrics({
     { name: "Above Buy Zone", value: aboveBuyZonePercentage, color: "#FF3D00" },
   ];
 
-  // Sample data for monthly purchases chart
-  const monthlyPurchases = [
-    { month: "Jan", count: 2 },
-    { month: "Feb", count: 3 },
-    { month: "Mar", count: 1 },
-    { month: "Apr", count: 4 },
-    { month: "May", count: 2 },
-    { month: "Jun", count: 5 },
-  ];
+  // Use provided monthly purchases data or empty array
+  const monthlyPurchasesData = monthlyPurchases.length > 0 
+    ? monthlyPurchases 
+    : [
+        { month: "Jan", count: 0 },
+        { month: "Feb", count: 0 },
+        { month: "Mar", count: 0 },
+        { month: "Apr", count: 0 },
+        { month: "May", count: 0 },
+        { month: "Jun", count: 0 },
+      ];
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -87,7 +91,7 @@ export default function PortfolioMetrics({
           <div className="w-full h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={monthlyPurchases}
+                data={monthlyPurchasesData}
                 margin={{
                   top: 5,
                   right: 30,

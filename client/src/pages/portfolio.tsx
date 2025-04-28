@@ -23,6 +23,8 @@ export default function Portfolio() {
     queryKey: ["/api/portfolio/metrics"],
   });
 
+  const isLoading = loadingPortfolio || loadingMetrics;
+
   if (isLoading) {
     return (
       <MainLayout title="My Portfolio">
@@ -74,6 +76,17 @@ export default function Portfolio() {
       />
       
       {/* Portfolio Items Tabs */}
+      {/* Portfolio Metrics */}
+      {portfolioMetrics && (
+        <PortfolioMetrics
+          totalAlertsBought={portfolioMetrics.totalAlertsBought}
+          buyZonePercentage={portfolioMetrics.buyZonePercentage}
+          highRiskPercentage={portfolioMetrics.highRiskPercentage}
+          aboveBuyZonePercentage={portfolioMetrics.aboveBuyZonePercentage}
+          monthlyPurchases={portfolioMetrics.monthlyPurchases}
+        />
+      )}
+      
       <div className="mt-8">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-4">
