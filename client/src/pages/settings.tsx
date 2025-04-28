@@ -9,10 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   User, 
   CreditCard, 
-  Settings as SettingsIcon, 
   Layout, 
-  LineChart, 
-  Users, 
   Bell, 
   MoveUpRight,
   Key
@@ -47,17 +44,14 @@ export default function SettingsPage() {
   );
   const [defaultAlertCount, setDefaultAlertCount] = useState("6");
   const [defaultBuyZoneCount, setDefaultBuyZoneCount] = useState("all");
-  const [chartTimeframe, setChartTimeframe] = useState("1D");
+  const [showOnlyPortfolioTargets, setShowOnlyPortfolioTargets] = useState(false);
   
   // States for profile settings
   const [profileName, setProfileName] = useState(user?.name || "");
   const [profileEmail, setProfileEmail] = useState(user?.email || "");
   const [profilePhone, setProfilePhone] = useState(user?.phone || "");
   
-  // States for trading preferences
-  const [positionSize, setPositionSize] = useState("5");
-  const [riskTolerance, setRiskTolerance] = useState("medium");
-  const [defaultStopLoss, setDefaultStopLoss] = useState("5");
+
   
   // Save dashboard settings
   const saveDashboardSettings = async () => {
@@ -94,21 +88,7 @@ export default function SettingsPage() {
     }
   };
   
-  // Save trading preferences
-  const saveTradingPreferences = async () => {
-    try {
-      toast({
-        title: "Trading preferences saved",
-        description: "Your trading preferences have been updated successfully."
-      });
-    } catch (error) {
-      toast({
-        title: "Error saving preferences",
-        description: "There was a problem saving your preferences. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
+
   
   // Handle toggle change
   const handleToggleChange = (sectionId: string, checked: boolean) => {
@@ -208,8 +188,20 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
-
+                  </div>
+                  
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium mb-4">Recently Hit Targets Filter</h3>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="portfolio-targets-only" 
+                        checked={showOnlyPortfolioTargets} 
+                        onCheckedChange={setShowOnlyPortfolioTargets}
+                      />
+                      <Label htmlFor="portfolio-targets-only">
+                        Only show stocks owned in my portfolio in "Recently Hit Targets" section
+                      </Label>
+                    </div>
                   </div>
                 </div>
                 
@@ -445,103 +437,7 @@ export default function SettingsPage() {
           
 
           
-          {/* Appearance Tab */}
-          <TabsContent value="appearance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Visual Preferences</CardTitle>
-                <CardDescription>
-                  Customize the look and feel of your TradeEdge Pro experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Theme</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-2 border-primary cursor-pointer hover:bg-accent/50 transition">
-                      <CardContent className="p-4 flex flex-col items-center justify-center">
-                        <div className="w-full h-20 bg-background mb-4 rounded-md border"></div>
-                        <p className="text-sm font-medium">Light Mode</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="cursor-pointer hover:bg-accent/50 transition">
-                      <CardContent className="p-4 flex flex-col items-center justify-center">
-                        <div className="w-full h-20 bg-black mb-4 rounded-md border"></div>
-                        <p className="text-sm font-medium">Dark Mode</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="cursor-pointer hover:bg-accent/50 transition">
-                      <CardContent className="p-4 flex flex-col items-center justify-center">
-                        <div className="w-full h-20 bg-gradient-to-b from-background to-black mb-4 rounded-md border"></div>
-                        <p className="text-sm font-medium">System Default</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Chart Preferences</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="chart-color-scheme">Chart Color Scheme</Label>
-                      <Select defaultValue="default">
-                        <SelectTrigger id="chart-color-scheme">
-                          <SelectValue placeholder="Select color scheme" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Default (Green/Red)</SelectItem>
-                          <SelectItem value="monochrome">Monochrome</SelectItem>
-                          <SelectItem value="colorblind">Colorblind Friendly</SelectItem>
-                          <SelectItem value="trading">Trading View Style</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="chart-type">Default Chart Type</Label>
-                      <Select defaultValue="candle">
-                        <SelectTrigger id="chart-type">
-                          <SelectValue placeholder="Select chart type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="candle">Candlestick</SelectItem>
-                          <SelectItem value="line">Line</SelectItem>
-                          <SelectItem value="bar">Bar</SelectItem>
-                          <SelectItem value="area">Area</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Display Settings</h3>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch id="compact-view" />
-                    <Label htmlFor="compact-view">Use compact view (smaller padding and font sizes)</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch id="show-animations" defaultChecked />
-                    <Label htmlFor="show-animations">Show animations and transitions</Label>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button>Save Appearance Settings</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
         </Tabs>
       </div>
     </MainLayout>
