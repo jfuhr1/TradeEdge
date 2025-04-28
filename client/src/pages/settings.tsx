@@ -125,7 +125,7 @@ export default function SettingsPage() {
     >
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full mb-6">
+          <TabsList className="grid grid-cols-3 w-full mb-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Layout className="h-4 w-4" />
               <span>Dashboard</span>
@@ -137,14 +137,6 @@ export default function SettingsPage() {
             <TabsTrigger value="membership" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               <span>Membership</span>
-            </TabsTrigger>
-            <TabsTrigger value="trading" className="flex items-center gap-2">
-              <LineChart className="h-4 w-4" />
-              <span>Trading</span>
-            </TabsTrigger>
-            <TabsTrigger value="appearance" className="flex items-center gap-2">
-              <SettingsIcon className="h-4 w-4" />
-              <span>Appearance</span>
             </TabsTrigger>
           </TabsList>
           
@@ -217,24 +209,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="default-chart-timeframe">Default Chart Timeframe</Label>
-                      <Select 
-                        value={chartTimeframe} 
-                        onValueChange={setChartTimeframe}
-                      >
-                        <SelectTrigger id="default-chart-timeframe">
-                          <SelectValue placeholder="Select timeframe" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1D">1 Day</SelectItem>
-                          <SelectItem value="1W">1 Week</SelectItem>
-                          <SelectItem value="1M">1 Month</SelectItem>
-                          <SelectItem value="3M">3 Months</SelectItem>
-                          <SelectItem value="1Y">1 Year</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+
                   </div>
                 </div>
                 
@@ -351,16 +326,7 @@ export default function SettingsPage() {
                 
                 <Separator />
                 
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Two-Factor Authentication</h3>
-                    <p className="text-sm text-muted-foreground">Enhance your account security with 2FA</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Not Enabled</Badge>
-                    <Button variant="outline">Setup</Button>
-                  </div>
-                </div>
+
               </CardContent>
             </Card>
           </TabsContent>
@@ -477,94 +443,7 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
           
-          {/* Trading Preferences Tab */}
-          <TabsContent value="trading" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Trading Preferences</CardTitle>
-                <CardDescription>
-                  Configure your default trading settings and preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="position-size">Default Position Size (% of Portfolio)</Label>
-                    <Select 
-                      value={positionSize} 
-                      onValueChange={setPositionSize}
-                    >
-                      <SelectTrigger id="position-size">
-                        <SelectValue placeholder="Select position size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1%</SelectItem>
-                        <SelectItem value="2">2%</SelectItem>
-                        <SelectItem value="5">5%</SelectItem>
-                        <SelectItem value="10">10%</SelectItem>
-                        <SelectItem value="15">15%</SelectItem>
-                        <SelectItem value="20">20%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="risk-tolerance">Risk Tolerance</Label>
-                    <Select 
-                      value={riskTolerance} 
-                      onValueChange={setRiskTolerance}
-                    >
-                      <SelectTrigger id="risk-tolerance">
-                        <SelectValue placeholder="Select risk tolerance" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="default-stop-loss">Default Stop Loss (%)</Label>
-                    <Select 
-                      value={defaultStopLoss} 
-                      onValueChange={setDefaultStopLoss}
-                    >
-                      <SelectTrigger id="default-stop-loss">
-                        <SelectValue placeholder="Select stop loss" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3">3%</SelectItem>
-                        <SelectItem value="5">5%</SelectItem>
-                        <SelectItem value="7">7%</SelectItem>
-                        <SelectItem value="10">10%</SelectItem>
-                        <SelectItem value="15">15%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Automated Trading Settings</h3>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch id="auto-add-to-portfolio" />
-                    <Label htmlFor="auto-add-to-portfolio">Automatically add new stock alerts to my portfolio tracking</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch id="auto-alerts" />
-                    <Label htmlFor="auto-alerts">Enable automatic price alerts for all stocks</Label>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={saveTradingPreferences}>Save Trading Preferences</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
           
           {/* Appearance Tab */}
           <TabsContent value="appearance" className="space-y-6">
