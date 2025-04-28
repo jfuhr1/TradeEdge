@@ -5,6 +5,7 @@ import { PortfolioItem, StockAlert } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 import PortfolioStats from "@/components/portfolio/portfolio-stats";
 import PortfolioList from "@/components/portfolio/portfolio-list";
+import PortfolioMetrics from "@/components/portfolio/portfolio-metrics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type EnrichedPortfolioItem = PortfolioItem & {
@@ -14,8 +15,12 @@ type EnrichedPortfolioItem = PortfolioItem & {
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("active");
   
-  const { data: portfolioItems, isLoading } = useQuery<EnrichedPortfolioItem[]>({
+  const { data: portfolioItems, isLoading: loadingPortfolio } = useQuery<EnrichedPortfolioItem[]>({
     queryKey: ["/api/portfolio"],
+  });
+  
+  const { data: portfolioMetrics, isLoading: loadingMetrics } = useQuery({
+    queryKey: ["/api/portfolio/metrics"],
   });
 
   if (isLoading) {

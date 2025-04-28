@@ -523,6 +523,92 @@ export class MemStorage implements IStorage {
     };
   }
   
+  async getPortfolioMetrics(userId: number): Promise<{
+    totalAlertsBought: number;
+    buyZonePercentage: number;
+    highRiskPercentage: number;
+    aboveBuyZonePercentage: number;
+    monthlyPurchases: { month: string; count: number; }[];
+  }> {
+    // Get all portfolio items for the user (both active and sold)
+    const items = await this.getPortfolioItemsByUser(userId);
+    
+    // Calculate total number of alerts bought
+    const totalAlertsBought = items.length;
+    
+    // Count items in each purchase zone
+    let inBuyZoneCount = 0;
+    let highRiskCount = 0;
+    let aboveBuyZoneCount = 0;
+    
+    for (const item of items) {
+      const stockAlert = this.stockAlerts.get(item.stockAlertId);
+      if (!stockAlert) continue;
+      
+      if (item.boughtPrice >= stockAlert.buyZoneMin && item.boughtPrice <= stockAlert.buyZoneMax) {
+        inBuyZoneCount++;
+      } else if (item.boughtPrice < stockAlert.buyZoneMin) {
+        highRiskCount++;
+      } else if (item.boughtPrice > stockAlert.buyZoneMax) {
+        aboveBuyZoneCount++;
+      }
+    }
+    
+    // Calculate percentages
+    const buyZonePercentage = totalAlertsBought > 0 
+      ? Math.round((inBuyZoneCount / totalAlertsBought) * 100) 
+      : 0;
+    
+    const highRiskPercentage = totalAlertsBought > 0 
+      ? Math.round((highRiskCount / totalAlertsBought) * 100) 
+      : 0;
+    
+    const aboveBuyZonePercentage = totalAlertsBought > 0 
+      ? Math.round((aboveBuyZoneCount / totalAlertsBought) * 100) 
+      : 0;
+    
+    // Generate monthly purchase data (last 6 months)
+    const monthlyPurchases = this.generateMonthlyPurchaseData(items);
+    
+    return {
+      totalAlertsBought,
+      buyZonePercentage,
+      highRiskPercentage,
+      aboveBuyZonePercentage,
+      monthlyPurchases
+    };
+  }
+  
+  // Helper method to generate monthly purchase data
+  private generateMonthlyPurchaseData(items: PortfolioItem[]): { month: string; count: number; }[] {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentDate = new Date();
+    const result: { month: string; count: number; }[] = [];
+    
+    // Get the last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const monthIndex = (currentDate.getMonth() - i + 12) % 12; // To handle wrapping around to previous year
+      const monthName = months[monthIndex];
+      
+      // Count items created in this month
+      let count = 0;
+      const year = currentDate.getMonth() - i < 0 
+        ? currentDate.getFullYear() - 1 
+        : currentDate.getFullYear();
+      
+      for (const item of items) {
+        const created = item.createdAt;
+        if (created.getMonth() === monthIndex && created.getFullYear() === year) {
+          count++;
+        }
+      }
+      
+      result.push({ month: monthName, count });
+    }
+    
+    return result;
+  }
+  
   // Education content operations
   async createEducationContent(content: InsertEducationContent): Promise<EducationContent> {
     const id = this.educationContentId++;

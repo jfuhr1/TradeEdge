@@ -304,6 +304,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to sell portfolio item" });
     }
   });
+  
+  // Portfolio Stats and Metrics API
+  app.get("/api/portfolio/stats", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const stats = await storage.getPortfolioStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch portfolio statistics" });
+    }
+  });
+  
+  app.get("/api/portfolio/metrics", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const metrics = await storage.getPortfolioMetrics(req.user.id);
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch portfolio metrics" });
+    }
+  });
 
   // Education API
   app.get("/api/education", async (req, res) => {
