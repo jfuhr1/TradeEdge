@@ -274,12 +274,166 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
 
   return (
     <div className="space-y-4">
+      {/* Filter Controls */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {/* Status Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3.5 w-3.5" />
+              Status
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setFilters({...filters, status: "all"})}>
+                {filters.status === "all" && <Check className="w-4 h-4 mr-2" />}
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, status: "active"})}>
+                {filters.status === "active" && <Check className="w-4 h-4 mr-2" />}
+                Active
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, status: "closed"})}>
+                {filters.status === "closed" && <Check className="w-4 h-4 mr-2" />}
+                Closed
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Buy Zone Filter - Multi-select */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3.5 w-3.5" />
+              {buyZoneFilterLabel}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.inZone}
+                onCheckedChange={() => toggleBuyZoneFilter('inZone')}
+              >
+                In Buy Zone
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.belowZone}
+                onCheckedChange={() => toggleBuyZoneFilter('belowZone')}
+              >
+                High Risk/Reward
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.aboveZone}
+                onCheckedChange={() => toggleBuyZoneFilter('aboveZone')}
+              >
+                Above Buy Zone
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Target 1 Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3.5 w-3.5" />
+              Target 1
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: null})}>
+                {filters.hitTarget1 === null && <Check className="w-4 h-4 mr-2" />}
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: true})}>
+                {filters.hitTarget1 === true && <Check className="w-4 h-4 mr-2" />}
+                Hit Target
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: false})}>
+                {filters.hitTarget1 === false && <Check className="w-4 h-4 mr-2" />}
+                Didn't Hit Target
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Target 2 Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3.5 w-3.5" />
+              Target 2
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: null})}>
+                {filters.hitTarget2 === null && <Check className="w-4 h-4 mr-2" />}
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: true})}>
+                {filters.hitTarget2 === true && <Check className="w-4 h-4 mr-2" />}
+                Hit Target
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: false})}>
+                {filters.hitTarget2 === false && <Check className="w-4 h-4 mr-2" />}
+                Didn't Hit Target
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Target 3 Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Filter className="h-3.5 w-3.5" />
+              Target 3
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: null})}>
+                {filters.hitTarget3 === null && <Check className="w-4 h-4 mr-2" />}
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: true})}>
+                {filters.hitTarget3 === true && <Check className="w-4 h-4 mr-2" />}
+                Hit Target
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: false})}>
+                {filters.hitTarget3 === false && <Check className="w-4 h-4 mr-2" />}
+                Didn't Hit Target
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Reset Filters Button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8"
+          onClick={resetAllFilters}
+        >
+          Reset Filters
+        </Button>
+      </div>
+      
       {/* Results Counter */}
       <div className="text-sm text-neutral-500 mb-2">
         Showing {filteredAndSortedItems.length} of {items.length} positions
       </div>
       
-      {/* Data Table and Filters */}
+      {/* Data Table */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -415,169 +569,6 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
               <TableHead>Target 1</TableHead>
               <TableHead>Target 2</TableHead>
               <TableHead>Target 3</TableHead>
-            </TableRow>
-            
-            {/* Filter Controls Row */}
-            <TableRow className="border-b">
-              <TableCell colSpan={2} className="py-1">
-                {/* Status Filter */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                      <Filter className="h-3 w-3" />
-                      Status
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, status: "all"})}>
-                        {filters.status === "all" && <Check className="w-4 h-4 mr-2" />}
-                        All
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, status: "active"})}>
-                        {filters.status === "active" && <Check className="w-4 h-4 mr-2" />}
-                        Active
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, status: "closed"})}>
-                        {filters.status === "closed" && <Check className="w-4 h-4 mr-2" />}
-                        Closed
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              
-              <TableCell className="py-1">
-                {/* Buy Zone Filter - Multi-select */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                      <Filter className="h-3 w-3" />
-                      {buyZoneFilterLabel}
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      <DropdownMenuCheckboxItem
-                        checked={filters.buyZone.inZone}
-                        onCheckedChange={() => toggleBuyZoneFilter('inZone')}
-                      >
-                        In Buy Zone
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={filters.buyZone.belowZone}
-                        onCheckedChange={() => toggleBuyZoneFilter('belowZone')}
-                      >
-                        High Risk/Reward
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={filters.buyZone.aboveZone}
-                        onCheckedChange={() => toggleBuyZoneFilter('aboveZone')}
-                      >
-                        Above Buy Zone
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              
-              <TableCell className="py-1" colSpan={5}>
-                {/* Reset Filters Button */}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 text-xs"
-                  onClick={resetAllFilters}
-                >
-                  Reset Filters
-                </Button>
-              </TableCell>
-              
-              <TableCell className="py-1">
-                {/* Target 1 Filter */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                      <Filter className="h-3 w-3" />
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: null})}>
-                        {filters.hitTarget1 === null && <Check className="w-4 h-4 mr-2" />}
-                        All
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: true})}>
-                        {filters.hitTarget1 === true && <Check className="w-4 h-4 mr-2" />}
-                        Hit Target
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget1: false})}>
-                        {filters.hitTarget1 === false && <Check className="w-4 h-4 mr-2" />}
-                        Didn't Hit Target
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              
-              <TableCell className="py-1">
-                {/* Target 2 Filter */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                      <Filter className="h-3 w-3" />
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: null})}>
-                        {filters.hitTarget2 === null && <Check className="w-4 h-4 mr-2" />}
-                        All
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: true})}>
-                        {filters.hitTarget2 === true && <Check className="w-4 h-4 mr-2" />}
-                        Hit Target
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget2: false})}>
-                        {filters.hitTarget2 === false && <Check className="w-4 h-4 mr-2" />}
-                        Didn't Hit Target
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              
-              <TableCell className="py-1">
-                {/* Target 3 Filter */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                      <Filter className="h-3 w-3" />
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: null})}>
-                        {filters.hitTarget3 === null && <Check className="w-4 h-4 mr-2" />}
-                        All
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: true})}>
-                        {filters.hitTarget3 === true && <Check className="w-4 h-4 mr-2" />}
-                        Hit Target
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilters({...filters, hitTarget3: false})}>
-                        {filters.hitTarget3 === false && <Check className="w-4 h-4 mr-2" />}
-                        Didn't Hit Target
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
