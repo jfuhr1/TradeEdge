@@ -3,13 +3,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { Link } from "wouter";
+import { ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
 
 interface PortfolioItemProps {
   item: PortfolioItem & { stockAlert: StockAlert };
@@ -20,41 +21,45 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
   const queryClient = useQueryClient();
   const [isSelling, setIsSelling] = useState(false);
   const [sellPrice, setSellPrice] = useState(item.stockAlert.currentPrice);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Calculate current profit/loss
   const buyValue = item.quantity * item.boughtPrice;
-  let currentValue = 0;
-  let profit = 0;
-  let percentProfit = 0;
+  const currentValue = item.quantity * item.stockAlert.currentPrice;
+  const profit = currentValue - buyValue;
+  const percentProfit = (profit / buyValue) * 100;
   
-  if (item.sold && item.soldPrice) {
-    currentValue = item.quantity * item.soldPrice;
-    profit = currentValue - buyValue;
-    percentProfit = (profit / buyValue) * 100;
-  } else {
-    currentValue = item.quantity * item.stockAlert.currentPrice;
-    profit = currentValue - buyValue;
-    percentProfit = (profit / buyValue) * 100;
-  }
+  // Calculate price status category
+  const getPriceStatus = () => {
+    const highRiskMin = item.stockAlert.buyZoneMin * 0.9;
+    
+    if (item.stockAlert.currentPrice < highRiskMin) {
+      return "below-high-risk"; // Below high risk/reward zone
+    } else if (item.stockAlert.currentPrice < item.stockAlert.buyZoneMin) {
+      return "high-risk"; // In high risk/reward zone
+    } else if (item.stockAlert.currentPrice <= item.stockAlert.buyZoneMax) {
+      return "buy-zone"; // In buy zone
+    } else if (item.stockAlert.currentPrice <= item.stockAlert.target1) {
+      return "above-buy-zone"; // Between buy zone and target 1
+    } else if (item.stockAlert.currentPrice <= item.stockAlert.target2) {
+      return "target-1"; // Between target 1 and target 2
+    } else if (item.stockAlert.currentPrice <= item.stockAlert.target3) {
+      return "target-2"; // Between target 2 and target 3
+    } else {
+      return "above-target-3"; // Above target 3
+    }
+  };
   
-  // Calculate percentages to targets
-  const percentToTarget1 = (item.stockAlert.currentPrice / item.stockAlert.target1) * 100;
-  const percentToTarget2 = (item.stockAlert.currentPrice / item.stockAlert.target2) * 100;
-  const percentToTarget3 = (item.stockAlert.currentPrice / item.stockAlert.target3) * 100;
-  
-  // Find closest target
-  let closestTarget = "target1";
-  let closestPercent = percentToTarget1;
-  
-  if (Math.abs(100 - percentToTarget2) < Math.abs(100 - closestPercent)) {
-    closestTarget = "target2";
-    closestPercent = percentToTarget2;
-  }
-  
-  if (Math.abs(100 - percentToTarget3) < Math.abs(100 - closestPercent)) {
-    closestTarget = "target3";
-    closestPercent = percentToTarget3;
-  }
+  const priceStatus = getPriceStatus();
+
+  // Calculate target percentages
+  const target1Percent = ((item.stockAlert.target1 / item.stockAlert.currentPrice) - 1) * 100;
+  const target2Percent = ((item.stockAlert.target2 / item.stockAlert.currentPrice) - 1) * 100;
+  const target3Percent = ((item.stockAlert.target3 / item.stockAlert.currentPrice) - 1) * 100;
+
+  // Get friendly date display
+  const alertDate = new Date(item.createdAt);
+  const daysAgo = Math.floor((Date.now() - alertDate.getTime()) / (24 * 60 * 60 * 1000));
   
   // Sell mutation
   const sellMutation = useMutation({
@@ -83,185 +88,311 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
   
   return (
     <>
-      <Card className="mb-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-            <div>
-              <div className="flex items-center">
-                <h3 className="font-bold text-lg">{item.stockAlert.symbol}</h3>
-                <span className="ml-2 text-neutral-600">{item.stockAlert.companyName}</span>
-                
-                {item.sold ? (
-                  <Badge variant="outline" className="ml-2 bg-neutral-100 text-neutral-600">
-                    Closed
+      <div className={`bg-white p-4 rounded-lg shadow transition-all duration-200 hover:-translate-y-1 hover:shadow-md border mb-4 ${
+        priceStatus === "high-risk" 
+          ? "border-amber-500" 
+          : priceStatus === "buy-zone"
+            ? "border-green-500"
+            : "border-gray-200"
+      }`}>
+        <div className="flex justify-between">
+          <div>
+            <div className="flex items-center flex-wrap">
+              <h3 className="font-bold text-lg">{item.stockAlert.symbol}</h3>
+              <span className="ml-2 text-neutral-600">{item.stockAlert.companyName}</span>
+              <div className="flex gap-1 ml-2">
+                {priceStatus === "buy-zone" && (
+                  <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                    Buy Zone
                   </Badge>
-                ) : (
-                  percentToTarget1 >= 90 || percentToTarget2 >= 90 || percentToTarget3 >= 90 ? (
-                    <Badge variant="outline" className="ml-2 bg-green-100 text-profit">
-                      Nearing Target
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="ml-2 bg-blue-100 text-primary">
-                      Active
-                    </Badge>
-                  )
                 )}
+                {priceStatus === "high-risk" && (
+                  <Badge variant="outline" className="bg-orange-100 text-amber-800 text-xs">
+                    High R/R
+                  </Badge>
+                )}
+                <Badge variant="outline" className="bg-blue-100 text-primary text-xs">
+                  Owned
+                </Badge>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-neutral-600">Buy Zone</p>
+            <p className="font-medium font-mono">${item.stockAlert.buyZoneMin} - ${item.stockAlert.buyZoneMax}</p>
+          </div>
+        </div>
+        
+        {/* Ownership Information */}
+        <div className="mt-3 grid grid-cols-3 gap-4 p-2 bg-blue-50 rounded border border-blue-100">
+          <div>
+            <p className="text-xs text-neutral-600">Quantity</p>
+            <p className="font-medium font-mono">{item.quantity}</p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">Buy Price</p>
+            <p className="font-medium font-mono">${item.boughtPrice.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">Current Value</p>
+            <p className="font-medium font-mono">${currentValue.toFixed(2)}</p>
+          </div>
+        </div>
+        
+        {/* Advanced Price Visualization */}
+        <div className="mt-8 mb-6">
+          <div className="relative h-16 mb-10">
+            {/* Main progress bar container */}
+            <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
+              {/* High Risk/Reward Zone (10% below buy zone - fixed width) */}
+              <div 
+                className="absolute h-full bg-orange-100 rounded-l-full"
+                style={{ 
+                  width: "15%",
+                  left: "0%"
+                }}
+              ></div>
+
+              {/* Buy Zone */}
+              <div 
+                className="absolute h-full bg-green-100"
+                style={{ 
+                  width: "15%",
+                  left: "15%"
+                }}
+              ></div>
+
+              {/* Target Zone - from buy zone max to target 3 */}
+              <div 
+                className="absolute h-full bg-gray-100"
+                style={{ 
+                  width: "55%",
+                  left: "30%"
+                }}
+              ></div>
+
+              {/* Overperform Zone - beyond target 3 */}
+              <div 
+                className="absolute h-full bg-blue-50 rounded-r-full"
+                style={{ 
+                  width: "15%",
+                  left: "85%"
+                }}
+              ></div>
+
+              {/* Buy Zone Min indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "15%" }}>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${item.stockAlert.buyZoneMin}</div>
               </div>
               
-              <div className="mt-1 flex items-center">
-                <span className="text-lg font-bold font-mono">
-                  ${item.stockAlert.currentPrice.toFixed(2)}
-                </span>
-                <span className={profit >= 0 ? "text-profit text-sm ml-1" : "text-loss text-sm ml-1"}>
-                  {profit >= 0 ? "+" : ""}{percentProfit.toFixed(2)}%
-                </span>
+              {/* Buy Zone Max indicator */}
+              <div className="absolute w-0.5 h-6 bg-green-700 top-0" style={{ left: "30%" }}>
+                <div className="absolute top-6 -translate-x-1/2 text-xs font-medium text-green-700 text-center">${item.stockAlert.buyZoneMax}</div>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="text-sm">
-                  <span className="text-neutral-600">Quantity: </span>
-                  <span className="font-medium font-mono">{item.quantity}</span>
+              {/* Target 1 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = item.stockAlert.target3 - item.stockAlert.buyZoneMax;
+                  const t1Position = (item.stockAlert.target1 - item.stockAlert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t1Position * 55)}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 1</span>
+                  <span className="block text-xs font-medium font-mono">${item.stockAlert.target1}</span>
+                  <span className="block text-xs text-green-600">+{(((item.stockAlert.target1 / item.stockAlert.currentPrice) - 1) * 100).toFixed(1)}%</span>
                 </div>
-                <div className="text-sm">
-                  <span className="text-neutral-600">Bought: </span>
-                  <span className="font-medium font-mono">${item.boughtPrice.toFixed(2)}</span>
+              </div>
+              
+              {/* Target 2 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ 
+                left: (() => {
+                  // Calculate position proportionally in the 55% target zone space (30% to 85%)
+                  const targetZoneWidth = item.stockAlert.target3 - item.stockAlert.buyZoneMax;
+                  const t2Position = (item.stockAlert.target2 - item.stockAlert.buyZoneMax) / targetZoneWidth;
+                  return `${30 + (t2Position * 55)}%`;
+                })()
+              }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 2</span>
+                  <span className="block text-xs font-medium font-mono">${item.stockAlert.target2}</span>
+                  <span className="block text-xs text-green-600">+{(((item.stockAlert.target2 / item.stockAlert.currentPrice) - 1) * 100).toFixed(1)}%</span>
                 </div>
-                <div className="text-sm">
-                  <span className="text-neutral-600">Value: </span>
-                  <span className="font-medium font-mono">${currentValue.toFixed(2)}</span>
+              </div>
+              
+              {/* Target 3 indicator */}
+              <div className="absolute w-0.5 h-6 bg-primary top-0" style={{ left: "85%" }}>
+                <div className="absolute top-6 -ml-16 w-32 text-center">
+                  <span className="text-xs font-medium text-primary">Target 3</span>
+                  <span className="block text-xs font-medium font-mono">${item.stockAlert.target3}</span>
+                  <span className="block text-xs text-green-600">+{(((item.stockAlert.target3 / item.stockAlert.currentPrice) - 1) * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+
+              {/* Buy price indicator (amber color for buy) */}
+              <div className="absolute w-1 h-10 bg-amber-500 -top-3 z-20" style={{ 
+                left: (() => {
+                  if (item.boughtPrice < item.stockAlert.buyZoneMin * 0.9) {
+                    return "0%"; 
+                  } else if (item.boughtPrice < item.stockAlert.buyZoneMin) {
+                    const riskRange = item.stockAlert.buyZoneMin - (item.stockAlert.buyZoneMin * 0.9);
+                    const posInRange = (item.boughtPrice - (item.stockAlert.buyZoneMin * 0.9)) / riskRange;
+                    return `${posInRange * 15}%`;
+                  } else if (item.boughtPrice <= item.stockAlert.buyZoneMax) {
+                    const buyRange = item.stockAlert.buyZoneMax - item.stockAlert.buyZoneMin;
+                    const posInRange = (item.boughtPrice - item.stockAlert.buyZoneMin) / buyRange;
+                    return `${15 + (posInRange * 15)}%`;
+                  } else if (item.boughtPrice <= item.stockAlert.target3) {
+                    const targetZoneWidth = item.stockAlert.target3 - item.stockAlert.buyZoneMax;
+                    const posInRange = (item.boughtPrice - item.stockAlert.buyZoneMax) / targetZoneWidth;
+                    return `${30 + (posInRange * 55)}%`;
+                  } else {
+                    const overRange = item.stockAlert.target3 * 1.1 - item.stockAlert.target3;
+                    const posInRange = Math.min((item.boughtPrice - item.stockAlert.target3) / overRange, 1);
+                    return `${85 + (posInRange * 15)}%`;
+                  }
+                })()
+              }}>
+                <div className="absolute -top-6 -translate-x-1/2 text-center w-24">
+                  <span className="text-[10px] font-medium text-amber-700 block">Your Buy Price</span>
+                  <span className="text-xs font-bold block font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
+                  <span className="text-[10px] text-amber-700 block">
+                    {item.quantity} shares
+                  </span>
+                </div>
+              </div>
+
+              {/* Current price indicator (thicker) */}
+              <div className="absolute w-1 h-8 bg-black -top-2 z-10" style={{ 
+                left: (() => {
+                  if (item.stockAlert.currentPrice < item.stockAlert.buyZoneMin * 0.9) {
+                    return "0%"; // Below high risk zone
+                  } else if (item.stockAlert.currentPrice < item.stockAlert.buyZoneMin) {
+                    // In high risk zone (0-15%)
+                    const riskRange = item.stockAlert.buyZoneMin - (item.stockAlert.buyZoneMin * 0.9);
+                    const posInRange = (item.stockAlert.currentPrice - (item.stockAlert.buyZoneMin * 0.9)) / riskRange;
+                    return `${posInRange * 15}%`;
+                  } else if (item.stockAlert.currentPrice <= item.stockAlert.buyZoneMax) {
+                    // In buy zone (15-30%)
+                    const buyRange = item.stockAlert.buyZoneMax - item.stockAlert.buyZoneMin;
+                    const posInRange = (item.stockAlert.currentPrice - item.stockAlert.buyZoneMin) / buyRange;
+                    return `${15 + (posInRange * 15)}%`;
+                  } else if (item.stockAlert.currentPrice <= item.stockAlert.target3) {
+                    // Between buy zone max and target 3 (30-85%)
+                    const targetZoneWidth = item.stockAlert.target3 - item.stockAlert.buyZoneMax;
+                    const posInRange = (item.stockAlert.currentPrice - item.stockAlert.buyZoneMax) / targetZoneWidth;
+                    return `${30 + (posInRange * 55)}%`;
+                  } else {
+                    // In overperform zone or beyond
+                    const overRange = item.stockAlert.target3 * 1.1 - item.stockAlert.target3;
+                    const posInRange = Math.min((item.stockAlert.currentPrice - item.stockAlert.target3) / overRange, 1);
+                    return `${85 + (posInRange * 15)}%`;
+                  }
+                })()
+              }}>
+                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
+                  <span className="text-[10px] font-medium block">Current Price</span>
+                  <span className="text-xs font-medium block font-mono">${item.stockAlert.currentPrice.toFixed(2)}</span>
+                  <span className={`text-[10px] ${percentProfit >= 0 ? 'text-green-600' : 'text-red-600'} block`}>
+                    {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(1)}%
+                  </span>
                 </div>
               </div>
             </div>
             
-            {item.sold ? (
-              <div className="mt-4 md:mt-0 text-right">
-                <div className="text-sm mb-1">
-                  <span className="text-neutral-600">Sold: </span>
-                  <span className="font-medium font-mono">${item.soldPrice?.toFixed(2)}</span>
-                </div>
-                <div className="text-sm mb-1">
-                  <span className="text-neutral-600">Date: </span>
-                  <span className="font-medium">
-                    {item.soldAt ? format(new Date(item.soldAt), "MMM d, yyyy") : "N/A"}
-                  </span>
-                </div>
-                <div className="text-sm">
-                  <span className="text-neutral-600">Profit: </span>
-                  <span className={`font-medium ${profit >= 0 ? "text-profit" : "text-loss"}`}>
-                    ${profit.toFixed(2)} ({percentProfit.toFixed(2)}%)
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 md:mt-0">
-                <Button 
-                  className="w-full md:w-auto"
-                  onClick={() => setIsSelling(true)}
-                >
-                  Sell Position
-                </Button>
-              </div>
-            )}
+            {/* Zone labels below progress bar */}
+            <div className="absolute top-14 left-0 w-full flex text-[10px]">
+              <div className="w-[15%] text-center text-amber-700">High Risk/Reward</div>
+              <div className="w-[15%] text-center text-green-700">Buy Zone</div>
+              <div className="w-[55%]"></div>
+              <div className="w-[15%] text-center text-blue-700">Overperform</div>
+            </div>
           </div>
-          
-          {!item.sold && (
-            <>
-              {/* Progress and Targets */}
-              <div className="mt-4">
-                <div className="flex justify-between text-xs text-neutral-600 mb-1">
-                  <span>Buy Zone</span>
-                  <span>Target 1</span>
-                  <span>Target 2</span>
-                  <span>Target 3</span>
+        </div>
+        
+        {/* Chart Image (Expandable) */}
+        {isExpanded && (
+          <div className="mt-6 mb-4 bg-gray-50 p-2 rounded">
+            <div className="aspect-w-16 aspect-h-9 rounded overflow-hidden">
+              {item.stockAlert.chartImageUrl ? (
+                <img 
+                  src={item.stockAlert.chartImageUrl} 
+                  alt={`${item.stockAlert.symbol} Stock Chart`} 
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
+                  <BarChart2 size={48} />
+                  <span className="ml-2">Chart image not available</span>
                 </div>
-                
-                {/* Progress bar */}
-                <div className="relative">
-                  <div className="w-full bg-neutral-200 h-4 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-primary h-full" 
-                      style={{ width: `${Math.min(percentToTarget3 * 0.8, 100)}%` }}
-                    ></div>
-                  </div>
-                  
-                  {/* Buy Zone marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.buyZoneMax / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
-                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">Buy Zone</div>
-                  </div>
-                  
-                  {/* Target 1 marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target1 / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
-                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T1</div>
-                  </div>
-                  
-                  {/* Target 2 marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target2 / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
-                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T2</div>
-                  </div>
-                  
-                  {/* Target 3 marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target3 / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
-                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T3</div>
-                  </div>
-                  
-                  {/* Buy price marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.boughtPrice / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-1 h-4 bg-amber-500"></div>
-                    <div className="absolute right-0 bottom-4 text-[10px] text-amber-600 font-bold">Buy</div>
-                  </div>
-                  
-                  {/* Current price marker */}
-                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.currentPrice / item.stockAlert.target3) * 100 * 0.8}%` }}>
-                    <div className="absolute right-0 top-0 w-1 h-4 bg-green-500"></div>
-                    <div className="absolute right-0 top-4 text-[10px] text-green-600 font-bold">Current</div>
-                  </div>
-                </div>
-                
-                {/* Target Values */}
-                <div className="flex justify-between text-xs font-mono mt-6">
-                  <div>
-                    <span className="font-medium">${item.stockAlert.buyZoneMax}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">${item.stockAlert.target1}</span>
-                    <span className="text-profit ml-1">{((item.stockAlert.target1 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">${item.stockAlert.target2}</span>
-                    <span className="text-profit ml-1">{((item.stockAlert.target2 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">${item.stockAlert.target3}</span>
-                    <span className="text-profit ml-1">{((item.stockAlert.target3 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Notification Preferences */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge variant={item.notifyTarget1 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-                  Target 1 {item.notifyTarget1 ? "✓" : ""}
-                </Badge>
-                <Badge variant={item.notifyTarget2 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-                  Target 2 {item.notifyTarget2 ? "✓" : ""}
-                </Badge>
-                <Badge variant={item.notifyTarget3 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-                  Target 3 {item.notifyTarget3 ? "✓" : ""}
-                </Badge>
-                {item.customTargetPercent && (
-                  <Badge variant="default" className="bg-neutral-100 text-neutral-700">
-                    Custom: {item.customTargetPercent}%
-                  </Badge>
-                )}
-              </div>
-            </>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Notification Preferences */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Badge variant={item.notifyTarget1 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+            Target 1 {item.notifyTarget1 ? "✓" : ""}
+          </Badge>
+          <Badge variant={item.notifyTarget2 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+            Target 2 {item.notifyTarget2 ? "✓" : ""}
+          </Badge>
+          <Badge variant={item.notifyTarget3 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+            Target 3 {item.notifyTarget3 ? "✓" : ""}
+          </Badge>
+          {item.customTargetPercent && (
+            <Badge variant="default" className="bg-neutral-100 text-neutral-700">
+              Custom: {item.customTargetPercent}%
+            </Badge>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Action Buttons and Date */}
+        <div className="flex justify-between items-end mt-8">
+          <div className="grid grid-cols-3 gap-4 flex-1 mr-4">
+            <Button 
+              className="py-4 w-full"
+              onClick={() => setIsSelling(true)}
+            >
+              Sell Position
+            </Button>
+            <Link href={`/stock-detail/${item.stockAlert.id}`} className="w-full">
+              <Button 
+                variant="outline" 
+                className="py-4 w-full h-full"
+              >
+                View Details
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              className="py-4 w-full"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  Collapse
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Expand
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-medium text-black">Purchase Date</p>
+            <p className="text-sm font-medium text-black font-mono">
+              {format(new Date(item.createdAt), 'MM/dd/yy')}
+            </p>
+          </div>
+        </div>
+      </div>
       
       {/* Sell Dialog */}
       <Dialog open={isSelling} onOpenChange={setIsSelling}>

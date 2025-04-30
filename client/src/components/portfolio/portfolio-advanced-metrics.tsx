@@ -164,6 +164,11 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
+                <span>Avg. Hold Time</span>
+                <span className="font-bold">{avgHoldingPeriodDays} days</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
                 <span>Best Trade</span>
                 <div className="text-right">
                   <span className="font-bold text-profit">+32.4%</span>
@@ -180,12 +185,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
-                <span>Avg. Hold Time</span>
-                <span className="font-bold">{avgHoldingPeriodDays} days</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Longest Hold" tooltip={tooltips.longestHold} />
+                <span>Longest Hold</span>
                 <div className="text-right">
                   <span className="font-bold">142 days</span>
                   <div className="text-xs text-neutral-500">META (+28.3%)</div>
@@ -193,7 +193,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Shortest Hold" tooltip={tooltips.shortestHold} />
+                <span>Shortest Hold</span>
                 <div className="text-right">
                   <span className="font-bold">6 days</span>
                   <div className="text-xs text-neutral-500">AMD (+12.5%)</div>

@@ -168,7 +168,7 @@ export default function Portfolio() {
                 <p className="text-neutral-600 mt-2">Add stocks to your portfolio from the Stock Alerts page.</p>
               </div>
             ) : (
-              <PortfolioSummary items={portfolioItems} />
+              <PortfolioSummary items={portfolioItems ?? []} />
             )}
           </TabsContent>
         </Tabs>

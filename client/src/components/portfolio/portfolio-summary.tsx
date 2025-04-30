@@ -3,8 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
+type EnrichedPortfolioItem = PortfolioItem & { stockAlert: StockAlert };
+
 interface PortfolioSummaryProps {
-  items: (PortfolioItem & { stockAlert: StockAlert })[];
+  items: EnrichedPortfolioItem[];
 }
 
 export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
