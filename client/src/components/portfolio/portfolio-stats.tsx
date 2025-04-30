@@ -33,7 +33,7 @@ export default function PortfolioStats({
         {/* Current Value */}
         <Card>
           <CardContent className="p-4">
-            <p className="text-neutral-600 text-sm">Total Portfolio Value</p>
+            <p className="text-neutral-600 text-sm">Alert Investment Value</p>
             <p className="text-2xl font-bold font-mono mt-2">
               ${currentValue.toFixed(2)}
             </p>
@@ -52,9 +52,9 @@ export default function PortfolioStats({
             <p className="text-neutral-600 text-sm">Active Positions</p>
             <p className="text-2xl font-bold font-mono mt-2">{activePositions}</p>
             <div className="flex items-center mt-1">
-              <span className="text-primary text-sm font-medium">
+              <a href="/stock-alerts" className="text-primary text-sm font-medium hover:underline">
                 Add more from Stock Alerts
-              </span>
+              </a>
             </div>
           </CardContent>
         </Card>

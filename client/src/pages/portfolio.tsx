@@ -27,24 +27,11 @@ export default function Portfolio() {
     queryKey: ["/api/portfolio"],
   });
   
-  // Create mock metrics data for development
-  // In production, this would be fetched from the API
-  const portfolioMetrics: PortfolioMetricsData = {
-    totalAlertsBought: 28,
-    buyZonePercentage: 65,
-    highRiskPercentage: 15,
-    aboveBuyZonePercentage: 20,
-    monthlyPurchases: [
-      { month: "Jan", count: 2 },
-      { month: "Feb", count: 4 },
-      { month: "Mar", count: 6 },
-      { month: "Apr", count: 8 },
-      { month: "May", count: 5 },
-      { month: "Jun", count: 3 },
-    ]
-  };
+  const { data: portfolioMetrics, isLoading: loadingMetrics } = useQuery<PortfolioMetricsData>({
+    queryKey: ["/api/portfolio/metrics"],
+  });
 
-  const isLoading = loadingPortfolio;
+  const isLoading = loadingPortfolio || loadingMetrics;
 
   if (isLoading) {
     return (
