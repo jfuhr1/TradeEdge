@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import PortfolioStats from "@/components/portfolio/portfolio-stats";
 import PortfolioList from "@/components/portfolio/portfolio-list";
 import PortfolioMetrics from "@/components/portfolio/portfolio-metrics";
+import PortfolioAdvancedMetrics from "@/components/portfolio/portfolio-advanced-metrics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type EnrichedPortfolioItem = PortfolioItem & {
@@ -69,6 +70,29 @@ export default function Portfolio() {
     return sum + profit;
   }, 0);
   
+  // Get win rate (percentage of closed positions that were profitable)
+  const totalWins = closedItems.reduce((count, item) => {
+    if (!item.soldPrice) return count;
+    return (item.soldPrice > item.boughtPrice) ? count + 1 : count;
+  }, 0);
+  
+  const winRate = closedItems.length > 0 
+    ? (totalWins / closedItems.length) * 100 
+    : 0;
+  
+  // Prepare data for advanced metrics
+  const portfolioStatsData = {
+    totalValue: currentValue,
+    totalInvested: totalInvestment,
+    totalGainLoss: totalGainLoss,
+    percentGainLoss: percentGainLoss,
+    totalPositions: activeItems.length + closedItems.length,
+    activePositions: activeItems.length,
+    closedPositions: closedItems.length,
+    totalClosedProfit: totalClosedProfit,
+    winRate: winRate
+  };
+  
   return (
     <MainLayout 
       title="My Portfolio" 
@@ -83,7 +107,6 @@ export default function Portfolio() {
         closedProfit={totalClosedProfit}
       />
       
-      {/* Portfolio Items Tabs */}
       {/* Portfolio Metrics */}
       {portfolioMetrics && (
         <PortfolioMetrics
@@ -94,6 +117,11 @@ export default function Portfolio() {
           monthlyPurchases={portfolioMetrics.monthlyPurchases}
         />
       )}
+      
+      {/* Advanced Portfolio Metrics */}
+      <PortfolioAdvancedMetrics 
+        stats={portfolioStatsData}
+      />
       
       <div className="mt-8">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>

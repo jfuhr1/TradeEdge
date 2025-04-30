@@ -1,5 +1,14 @@
 import { PortfolioItem, StockAlert } from "@shared/schema";
 import PortfolioItemComponent from "./portfolio-item";
+import { format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface PortfolioListProps {
   items: (PortfolioItem & { stockAlert: StockAlert })[];
@@ -37,11 +46,68 @@ export default function PortfolioList({ items, status }: PortfolioListProps) {
     }
   });
   
-  return (
-    <div>
-      {sortedItems.map(item => (
-        <PortfolioItemComponent key={item.id} item={item} />
-      ))}
-    </div>
-  );
+  if (status === "active") {
+    return (
+      <div>
+        {sortedItems.map(item => (
+          <PortfolioItemComponent key={item.id} item={item} />
+        ))}
+      </div>
+    );
+  } else {
+    // Closed positions table
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Stock</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Buy Price</TableHead>
+              <TableHead>Sell Price</TableHead>
+              <TableHead>Buy Date</TableHead>
+              <TableHead>Sell Date</TableHead>
+              <TableHead className="text-right">Profit/Loss</TableHead>
+              <TableHead className="text-right">% Return</TableHead>
+              <TableHead className="text-right">Hold Time</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedItems.map(item => {
+              // Calculate profit/loss
+              const buyValue = item.quantity * item.boughtPrice;
+              const sellValue = item.quantity * (item.soldPrice || 0);
+              const profit = sellValue - buyValue;
+              const percentProfit = (profit / buyValue) * 100;
+              
+              // Calculate hold time in days
+              const buyDate = new Date(item.createdAt);
+              const sellDate = item.soldAt ? new Date(item.soldAt) : new Date();
+              const holdDays = Math.floor((sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+              
+              return (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.stockAlert.symbol}</TableCell>
+                  <TableCell>{item.stockAlert.companyName}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>${item.boughtPrice.toFixed(2)}</TableCell>
+                  <TableCell>${item.soldPrice?.toFixed(2) || "N/A"}</TableCell>
+                  <TableCell>{format(new Date(item.createdAt), "MMM d, yyyy")}</TableCell>
+                  <TableCell>{item.soldAt ? format(new Date(item.soldAt), "MMM d, yyyy") : "N/A"}</TableCell>
+                  <TableCell className={`text-right ${profit >= 0 ? "text-profit" : "text-loss"}`}>
+                    ${profit.toFixed(2)}
+                  </TableCell>
+                  <TableCell className={`text-right ${percentProfit >= 0 ? "text-profit" : "text-loss"}`}>
+                    {percentProfit.toFixed(2)}%
+                  </TableCell>
+                  <TableCell className="text-right">{holdDays} days</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 }
