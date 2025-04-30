@@ -15,13 +15,44 @@ type EnrichedPortfolioItem = PortfolioItem & {
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("active");
   
-  const { data: portfolioItems, isLoading: loadingPortfolio } = useQuery<EnrichedPortfolioItem[]>({
+  // Demo login function for testing
+  const demoLogin = async () => {
+    try {
+      // This is just for testing - in a real app, we'd have proper auth flow
+      await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: 'demo',
+          password: 'password123'
+        }),
+      });
+      
+      // Reload data after login
+      window.location.reload();
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+  
+  const { data: portfolioItems, isLoading: loadingPortfolio, error: portfolioError } = useQuery<EnrichedPortfolioItem[]>({
     queryKey: ["/api/portfolio"],
+    retry: false,
   });
   
-  const { data: portfolioMetrics, isLoading: loadingMetrics } = useQuery({
+  const { data: portfolioMetrics, isLoading: loadingMetrics, error: metricsError } = useQuery({
     queryKey: ["/api/portfolio/metrics"],
+    retry: false, // Don't keep retrying on 401 errors
+    onError: (error) => {
+      console.error("Failed to fetch portfolio metrics:", error);
+    }
   });
+  
+  // Check if we need to display login prompt
+  const authError = portfolioError?.message === "Authentication required" || 
+                    metricsError?.message === "Authentication required";
 
   const isLoading = loadingPortfolio || loadingMetrics;
 
