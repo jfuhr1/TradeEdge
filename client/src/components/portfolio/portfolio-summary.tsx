@@ -439,136 +439,152 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
           <TableHeader>
             <TableRow>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("symbol")}
-                >
-                  Symbol
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "symbol" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Symbol</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("symbol")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "symbol" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("status")}
-                >
-                  Status
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "status" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Status</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("status")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "status" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("buyZone")}
-                >
-                  Buy Zone
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "buyZone" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Buy Zone</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("buyZone")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "buyZone" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("buyPrice")}
-                >
-                  Buy Price
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "buyPrice" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Buy Price</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("buyPrice")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "buyPrice" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("currentOrSellPrice")}
-                >
-                  Current/Sell Price
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "currentOrSellPrice" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Current/Sell Price</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("currentOrSellPrice")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "currentOrSellPrice" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("gainDollar")}
-                >
-                  Gain $
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "gainDollar" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Gain $</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("gainDollar")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "gainDollar" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("gainPercent")}
-                >
-                  Gain %
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "gainPercent" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Gain %</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("gainPercent")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "gainPercent" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
               <TableHead>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="px-0 font-semibold h-8 -ml-4"
-                  onClick={() => toggleSort("duration")}
-                >
-                  Duration
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                  {sortField === "duration" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
-                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="font-semibold">Duration</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-1 h-6 mt-1"
+                    onClick={() => toggleSort("duration")}
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortField === "duration" && (
+                      sortDirection === "asc" 
+                        ? <ChevronUp className="ml-1 h-3 w-3" /> 
+                        : <ChevronDown className="ml-1 h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </TableHead>
-              <TableHead>Target 1</TableHead>
-              <TableHead>Target 2</TableHead>
-              <TableHead>Target 3</TableHead>
+              <TableHead className="text-center font-semibold">Target 1</TableHead>
+              <TableHead className="text-center font-semibold">Target 2</TableHead>
+              <TableHead className="text-center font-semibold">Target 3</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
