@@ -242,7 +242,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
+                <div className="absolute -top-14 -right-20 text-right w-28">
                   <span className="text-[10px] font-medium text-amber-700 block">Your Buy Price</span>
                   <span className="text-xs font-bold block font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
                   <span className="text-[10px] text-amber-700 block">
@@ -279,7 +279,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
+                <div className="absolute -top-14 -left-20 text-left w-28">
                   <span className="text-[10px] font-medium block">Current Price</span>
                   <span className="text-xs font-medium block font-mono">${item.stockAlert.currentPrice.toFixed(2)}</span>
                   <span className={`text-[10px] ${percentProfit >= 0 ? 'text-green-600' : 'text-red-600'} block`}>
