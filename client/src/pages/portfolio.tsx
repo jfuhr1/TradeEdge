@@ -7,6 +7,7 @@ import PortfolioStats from "@/components/portfolio/portfolio-stats";
 import PortfolioList from "@/components/portfolio/portfolio-list";
 import PortfolioMetrics from "@/components/portfolio/portfolio-metrics";
 import PortfolioAdvancedMetrics from "@/components/portfolio/portfolio-advanced-metrics";
+import PortfolioSummary from "@/components/portfolio/portfolio-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type EnrichedPortfolioItem = PortfolioItem & {
@@ -133,6 +134,9 @@ export default function Portfolio() {
               <TabsTrigger value="closed">
                 Closed Positions ({closedItems.length})
               </TabsTrigger>
+              <TabsTrigger value="summary">
+                Summary ({portfolioItems?.length || 0})
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -154,6 +158,17 @@ export default function Portfolio() {
               </div>
             ) : (
               <PortfolioList items={closedItems} status="closed" />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="summary">
+            {portfolioItems?.length === 0 ? (
+              <div className="bg-white p-6 rounded-lg shadow text-center">
+                <p className="text-neutral-600">You don't have any positions yet.</p>
+                <p className="text-neutral-600 mt-2">Add stocks to your portfolio from the Stock Alerts page.</p>
+              </div>
+            ) : (
+              <PortfolioSummary items={portfolioItems} />
             )}
           </TabsContent>
         </Tabs>

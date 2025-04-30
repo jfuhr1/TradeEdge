@@ -135,7 +135,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Average Holding Period" tooltip={tooltips.avgHoldingPeriod} />
+                <span>Average Holding Period</span>
                 <span className="font-bold">{avgHoldingPeriodDays} days</span>
               </div>
               
@@ -159,33 +159,45 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Total Trades" tooltip={tooltips.totalTrades} />
+                <span>Total Trades</span>
                 <span className="font-bold">{stats.totalPositions}</span>
               </div>
               
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Best Trade" tooltip={tooltips.bestTrade} />
-                <span className="font-bold text-profit">+32.4%</span>
+                <span>Best Trade</span>
+                <div className="text-right">
+                  <span className="font-bold text-profit">+32.4%</span>
+                  <div className="text-xs text-neutral-500">NVDA on Apr 12</div>
+                </div>
               </div>
               
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Worst Trade" tooltip={tooltips.worstTrade} />
-                <span className="font-bold text-loss">-15.8%</span>
+                <span>Worst Trade</span>
+                <div className="text-right">
+                  <span className="font-bold text-loss">-15.8%</span>
+                  <div className="text-xs text-neutral-500">INTC on Feb 28</div>
+                </div>
               </div>
               
               <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Avg. Hold Time" tooltip={tooltips.avgHoldTime} />
+                <span>Avg. Hold Time</span>
                 <span className="font-bold">{avgHoldingPeriodDays} days</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <MetricWithTooltip label="Longest Hold" tooltip={tooltips.longestHold} />
-                <span className="font-bold">142 days</span>
+                <div className="text-right">
+                  <span className="font-bold">142 days</span>
+                  <div className="text-xs text-neutral-500">META (+28.3%)</div>
+                </div>
               </div>
               
               <div className="flex justify-between items-center">
                 <MetricWithTooltip label="Shortest Hold" tooltip={tooltips.shortestHold} />
-                <span className="font-bold">6 days</span>
+                <div className="text-right">
+                  <span className="font-bold">6 days</span>
+                  <div className="text-xs text-neutral-500">AMD (+12.5%)</div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -194,63 +206,27 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Additional Trade Data</CardTitle>
+          <CardTitle className="text-lg">Financial Overview</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
-              <p className="text-neutral-600 text-sm flex items-center">
+              <p className="text-neutral-600 text-sm">
                 <span>Total Value Traded</span>
-                <TooltipProvider>
-                  <UITooltip>
-                    <TooltipTrigger asChild>
-                      <span className="ml-1 cursor-help">
-                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="w-64 p-3">
-                      <p className="text-sm">Total dollar amount invested across all trades.</p>
-                    </TooltipContent>
-                  </UITooltip>
-                </TooltipProvider>
               </p>
               <p className="text-xl font-bold font-mono">${stats.totalInvested.toFixed(2)}</p>
             </div>
             
             <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
-              <p className="text-neutral-600 text-sm flex items-center">
+              <p className="text-neutral-600 text-sm">
                 <span>Active Positions Value</span>
-                <TooltipProvider>
-                  <UITooltip>
-                    <TooltipTrigger asChild>
-                      <span className="ml-1 cursor-help">
-                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="w-64 p-3">
-                      <p className="text-sm">Current market value of all open positions.</p>
-                    </TooltipContent>
-                  </UITooltip>
-                </TooltipProvider>
               </p>
               <p className="text-xl font-bold font-mono">${stats.totalValue.toFixed(2)}</p>
             </div>
             
             <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
-              <p className="text-neutral-600 text-sm flex items-center">
+              <p className="text-neutral-600 text-sm">
                 <span>Realized Profit</span>
-                <TooltipProvider>
-                  <UITooltip>
-                    <TooltipTrigger asChild>
-                      <span className="ml-1 cursor-help">
-                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="w-64 p-3">
-                      <p className="text-sm">Total profit from closed positions only.</p>
-                    </TooltipContent>
-                  </UITooltip>
-                </TooltipProvider>
               </p>
               <p className="text-xl font-bold font-mono">${stats.totalClosedProfit.toFixed(2)}</p>
             </div>

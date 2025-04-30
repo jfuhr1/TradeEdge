@@ -166,51 +166,77 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
           
           {!item.sold && (
             <>
-              {/* Targets */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className={`p-2 rounded text-center ${
-                  closestTarget === "target1" ? "bg-blue-50 border border-primary" : "bg-neutral-100"
-                }`}>
-                  <p className="text-xs text-neutral-600">Target 1</p>
-                  <p className="font-bold font-mono">${item.stockAlert.target1}</p>
-                  <p className="text-xs text-profit">
-                    {((item.stockAlert.target1 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%
-                  </p>
-                  <div className="w-full bg-neutral-200 h-1 mt-1 rounded-full overflow-hidden">
+              {/* Progress and Targets */}
+              <div className="mt-4">
+                <div className="flex justify-between text-xs text-neutral-600 mb-1">
+                  <span>Buy Zone</span>
+                  <span>Target 1</span>
+                  <span>Target 2</span>
+                  <span>Target 3</span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="relative">
+                  <div className="w-full bg-neutral-200 h-4 rounded-full overflow-hidden">
                     <div 
                       className="bg-primary h-full" 
-                      style={{ width: `${Math.min(percentToTarget1, 100)}%` }}
+                      style={{ width: `${Math.min(percentToTarget3 * 0.8, 100)}%` }}
                     ></div>
                   </div>
-                </div>
-                <div className={`p-2 rounded text-center ${
-                  closestTarget === "target2" ? "bg-blue-50 border border-primary" : "bg-neutral-100"
-                }`}>
-                  <p className="text-xs text-neutral-600">Target 2</p>
-                  <p className="font-bold font-mono">${item.stockAlert.target2}</p>
-                  <p className="text-xs text-profit">
-                    {((item.stockAlert.target2 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%
-                  </p>
-                  <div className="w-full bg-neutral-200 h-1 mt-1 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-primary h-full" 
-                      style={{ width: `${Math.min(percentToTarget2, 100)}%` }}
-                    ></div>
+                  
+                  {/* Buy Zone marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.buyZoneMax / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
+                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">Buy Zone</div>
+                  </div>
+                  
+                  {/* Target 1 marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target1 / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
+                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T1</div>
+                  </div>
+                  
+                  {/* Target 2 marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target2 / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
+                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T2</div>
+                  </div>
+                  
+                  {/* Target 3 marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.target3 / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-px h-4 bg-neutral-400"></div>
+                    <div className="absolute right-0 bottom-4 text-[10px] text-neutral-500">T3</div>
+                  </div>
+                  
+                  {/* Buy price marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.boughtPrice / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-1 h-4 bg-amber-500"></div>
+                    <div className="absolute right-0 bottom-4 text-[10px] text-amber-600 font-bold">Buy</div>
+                  </div>
+                  
+                  {/* Current price marker */}
+                  <div className="absolute top-0 left-0 h-4" style={{ width: `${(item.stockAlert.currentPrice / item.stockAlert.target3) * 100 * 0.8}%` }}>
+                    <div className="absolute right-0 top-0 w-1 h-4 bg-green-500"></div>
+                    <div className="absolute right-0 top-4 text-[10px] text-green-600 font-bold">Current</div>
                   </div>
                 </div>
-                <div className={`p-2 rounded text-center ${
-                  closestTarget === "target3" ? "bg-blue-50 border border-primary" : "bg-neutral-100"
-                }`}>
-                  <p className="text-xs text-neutral-600">Target 3</p>
-                  <p className="font-bold font-mono">${item.stockAlert.target3}</p>
-                  <p className="text-xs text-profit">
-                    {((item.stockAlert.target3 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%
-                  </p>
-                  <div className="w-full bg-neutral-200 h-1 mt-1 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-primary h-full" 
-                      style={{ width: `${Math.min(percentToTarget3, 100)}%` }}
-                    ></div>
+                
+                {/* Target Values */}
+                <div className="flex justify-between text-xs font-mono mt-6">
+                  <div>
+                    <span className="font-medium">${item.stockAlert.buyZoneMax}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">${item.stockAlert.target1}</span>
+                    <span className="text-profit ml-1">{((item.stockAlert.target1 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">${item.stockAlert.target2}</span>
+                    <span className="text-profit ml-1">{((item.stockAlert.target2 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">${item.stockAlert.target3}</span>
+                    <span className="text-profit ml-1">{((item.stockAlert.target3 / item.stockAlert.currentPrice - 1) * 100).toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
