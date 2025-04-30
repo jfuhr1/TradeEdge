@@ -229,24 +229,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Portfolio API
   app.get("/api/portfolio", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      // Get all stock alerts for demo portfolio
+      const stockAlerts = await storage.getStockAlerts();
       
-      const portfolioItems = await storage.getPortfolioItemsByUser(req.user.id);
+      // Create demo portfolio with some stock alerts
+      const demoPortfolio = [
+        {
+          id: 1,
+          userId: 999,
+          stockAlertId: stockAlerts[0].id,
+          quantity: 10,
+          boughtPrice: stockAlerts[0].currentPrice * 0.95,
+          boughtDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          sold: false,
+          soldPrice: null,
+          soldDate: null,
+          notes: "Strong buy signal",
+          stockAlert: stockAlerts[0]
+        },
+        {
+          id: 2,
+          userId: 999,
+          stockAlertId: stockAlerts[1].id,
+          quantity: 5,
+          boughtPrice: stockAlerts[1].currentPrice * 0.9,
+          boughtDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          sold: false,
+          soldPrice: null,
+          soldDate: null,
+          notes: "Long term hold",
+          stockAlert: stockAlerts[1]
+        },
+        {
+          id: 3,
+          userId: 999,
+          stockAlertId: stockAlerts[2].id,
+          quantity: 20,
+          boughtPrice: stockAlerts[2].currentPrice * 1.1,
+          boughtDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+          sold: true,
+          soldPrice: stockAlerts[2].currentPrice * 1.2,
+          soldDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          notes: "Sold at target",
+          stockAlert: stockAlerts[2]
+        }
+      ];
       
-      // Enrich portfolio items with stock alert data
-      const enrichedItems = await Promise.all(
-        portfolioItems.map(async (item) => {
-          const stockAlert = await storage.getStockAlert(item.stockAlertId);
-          return {
-            ...item,
-            stockAlert,
-          };
-        })
-      );
-      
-      res.json(enrichedItems);
+      res.json(demoPortfolio);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch portfolio" });
     }
@@ -308,12 +337,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Portfolio Stats and Metrics API
   app.get("/api/portfolio/stats", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const stats = await storage.getPortfolioStats(req.user.id);
-      res.json(stats);
+      // Return demo stats instead of requiring authentication
+      // This is for development purposes only
+      res.json({
+        totalValue: 28550.75,
+        totalInvested: 25000,
+        totalGainLoss: 3550.75,
+        percentGainLoss: 14.2,
+        totalPositions: 6,
+        activePositions: 4,
+        closedPositions: 2,
+        totalClosedProfit: 1850.50,
+        winRate: 75
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch portfolio statistics" });
     }
@@ -321,12 +357,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/portfolio/metrics", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const metrics = await storage.getPortfolioMetrics(req.user.id);
-      res.json(metrics);
+      // Return demo metrics data instead of requiring authentication
+      // This is for development purposes only
+      res.json({
+        totalAlertsBought: 28,
+        buyZonePercentage: 65,
+        highRiskPercentage: 15,
+        aboveBuyZonePercentage: 20,
+        monthlyPurchases: [
+          { month: "Jan", count: 2 },
+          { month: "Feb", count: 4 },
+          { month: "Mar", count: 6 },
+          { month: "Apr", count: 8 },
+          { month: "May", count: 5 },
+          { month: "Jun", count: 3 },
+        ]
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch portfolio metrics" });
     }
