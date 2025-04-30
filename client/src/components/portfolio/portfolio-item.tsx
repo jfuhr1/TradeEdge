@@ -281,7 +281,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-20 -translate-x-1/2 text-center">
+                <div className="absolute -top-8 -translate-x-1/2 text-center">
                   <div className={`${percentProfit >= 0 ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'} px-2 py-1 border rounded shadow-sm`}>
                     <div className="flex items-center space-x-1">
                       <span className="text-[8px] font-medium">CURRENT:</span>
