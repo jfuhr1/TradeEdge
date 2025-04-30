@@ -73,52 +73,7 @@ export default function PortfolioStats({
         </Card>
       </div>
 
-      {/* Portfolio Value Chart */}
-      <Card className="w-full">
-        <CardContent className="p-4">
-          <div className="flex justify-between mb-4">
-            <h3 className="font-medium">Portfolio Value Trend</h3>
-            <div className="flex text-sm">
-              <span className="text-neutral-500 mr-4">7 days</span>
-              <span className="text-primary font-medium">30 days</span>
-              <span className="text-neutral-500 ml-4">All time</span>
-            </div>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={mockData}
-                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-              >
-                <XAxis 
-                  dataKey="day" 
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip 
-                  formatter={(value) => [`$${value}`, 'Portfolio Value']}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#1E88E5" 
-                  strokeWidth={2}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }

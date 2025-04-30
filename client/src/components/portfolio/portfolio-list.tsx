@@ -82,9 +82,26 @@ export default function PortfolioList({ items, status }: PortfolioListProps) {
               const percentProfit = (profit / buyValue) * 100;
               
               // Calculate hold time in days
-              const buyDate = new Date(item.createdAt);
-              const sellDate = item.soldAt ? new Date(item.soldAt) : new Date();
-              const holdDays = Math.floor((sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+              // Using a try/catch to handle any invalid dates
+              let holdDays = 30; // Default value
+              let buyDateFormatted = "N/A";
+              let sellDateFormatted = "N/A";
+              
+              try {
+                const buyDate = new Date(item.createdAt);
+                buyDateFormatted = format(buyDate, "MMM d, yyyy");
+                
+                if (item.soldAt) {
+                  const sellDate = new Date(item.soldAt);
+                  sellDateFormatted = format(sellDate, "MMM d, yyyy");
+                  holdDays = Math.floor((sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+                } else {
+                  const today = new Date();
+                  holdDays = Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+                }
+              } catch (error) {
+                console.error("Date formatting error:", error);
+              }
               
               return (
                 <TableRow key={item.id}>
@@ -93,8 +110,8 @@ export default function PortfolioList({ items, status }: PortfolioListProps) {
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>${item.boughtPrice.toFixed(2)}</TableCell>
                   <TableCell>${item.soldPrice?.toFixed(2) || "N/A"}</TableCell>
-                  <TableCell>{format(new Date(item.createdAt), "MMM d, yyyy")}</TableCell>
-                  <TableCell>{item.soldAt ? format(new Date(item.soldAt), "MMM d, yyyy") : "N/A"}</TableCell>
+                  <TableCell>{buyDateFormatted}</TableCell>
+                  <TableCell>{sellDateFormatted}</TableCell>
                   <TableCell className={`text-right ${profit >= 0 ? "text-profit" : "text-loss"}`}>
                     ${profit.toFixed(2)}
                   </TableCell>

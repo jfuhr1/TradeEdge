@@ -45,61 +45,53 @@ export default function PortfolioMetrics({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-between w-full mb-4">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary">
-                  {totalAlertsBought}
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-primary">
+                {totalAlertsBought}
+              </div>
+              <div className="text-muted-foreground text-sm">
+                Total Alerts Purchased
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+              <div className="bg-green-50 rounded-lg p-6 shadow-sm text-center border border-green-100">
+                <div className="text-4xl font-bold text-green-600 mb-2">{buyZonePercentage}%</div>
+                <div className="text-lg font-medium text-green-800">In Buy Zone</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Purchases made within the optimal buying range, offering the best risk-reward ratio.
                 </div>
-                <div className="text-muted-foreground text-sm">
-                  Total Alerts Purchased
+                <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${buyZonePercentage}%` }}></div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-green-50 rounded-md p-2">
-                  <div className="text-xs text-muted-foreground">In Buy Zone</div>
-                  <div className="font-semibold text-green-600">{buyZonePercentage}%</div>
+              
+              <div className="bg-amber-50 rounded-lg p-6 shadow-sm text-center border border-amber-100">
+                <div className="text-4xl font-bold text-amber-600 mb-2">{highRiskPercentage}%</div>
+                <div className="text-lg font-medium text-amber-800">High Risk/Reward</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Higher risk trades with potential for higher returns, but less margin of safety.
                 </div>
-                <div className="bg-amber-50 rounded-md p-2">
-                  <div className="text-xs text-muted-foreground">High Risk</div>
-                  <div className="font-semibold text-amber-600">{highRiskPercentage}%</div>
+                <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${highRiskPercentage}%` }}></div>
                 </div>
-                <div className="bg-red-50 rounded-md p-2">
-                  <div className="text-xs text-muted-foreground">Above Zone</div>
-                  <div className="font-semibold text-red-600">{aboveBuyZonePercentage}%</div>
+              </div>
+              
+              <div className="bg-red-50 rounded-lg p-6 shadow-sm text-center border border-red-100">
+                <div className="text-4xl font-bold text-red-600 mb-2">{aboveBuyZonePercentage}%</div>
+                <div className="text-lg font-medium text-red-800">Above Buy Zone</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Purchases made above recommended entry points, with reduced margin of safety.
+                </div>
+                <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${aboveBuyZonePercentage}%` }}></div>
                 </div>
               </div>
             </div>
             
-            <div className="w-full h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={purchaseDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {purchaseDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => `${value.toFixed(1)}%`} 
-                    labelFormatter={(label) => label as string}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="mt-4 text-sm text-muted-foreground text-center">
-              <p>
-                <span className="font-medium text-green-600">{buyZonePercentage}%</span> of your purchases were made in the optimal buy zone, which is ideal for maximizing profit potential.
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-md text-sm text-blue-600">
+              <p className="text-center">
+                <span className="font-semibold">Pro Tip:</span> Aim to have at least 70% of your purchases within the buy zone to maximize profit potential and reduce risk.
               </p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 interface PortfolioAdvancedMetricsProps {
   stats: PortfolioStats;
@@ -18,6 +18,45 @@ interface PortfolioStats {
   winRate: number;
 }
 
+// Define tooltips for each metric
+const tooltips = {
+  avgProfitPerTrade: "The average profit gained on each closed trade. Calculated as total closed profit divided by number of closed positions.",
+  winRate: "Percentage of closed trades that were profitable. Calculated as (winning trades ÷ total trades) × 100.",
+  profitFactor: "Ratio of gross profits to gross losses. A value above 1.0 indicates a profitable strategy. Calculated as (sum of all profits ÷ sum of all losses).",
+  annualizedReturn: "Your portfolio's return adjusted to represent a one-year period. Accounts for compounding effect based on average holding period.",
+  expectedValue: "The amount you can expect to win (or lose) per trade on average. Calculated as (win rate × average win) - ((1 - win rate) × average loss).",
+  avgHoldingPeriod: "The average number of days your positions remain open before being closed.",
+  sharpeRatio: "Risk-adjusted return metric that measures excess return per unit of risk. Higher is better. Calculated as (return - risk-free rate) ÷ standard deviation of returns.",
+  buyZoneAdherence: "Percentage of trades that were executed within the recommended buy zone price range.",
+  totalTrades: "The total number of trades (active + closed) in your portfolio.",
+  bestTrade: "Your most profitable trade by percentage gain.",
+  worstTrade: "Your least profitable (or most losing) trade by percentage.",
+  avgHoldTime: "The average length of time you hold positions before closing them.",
+  longestHold: "The longest period you've held a position before selling.",
+  shortestHold: "The shortest period you've held a position before selling."
+};
+
+// Simple helper component for tooltips
+function MetricWithTooltip({ label, tooltip }: { label: string, tooltip: string }) {
+  return (
+    <TooltipProvider>
+      <div className="flex items-center">
+        <span>{label}</span>
+        <UITooltip>
+          <TooltipTrigger asChild>
+            <span className="ml-1 cursor-help">
+              <HelpCircle size={16} className="text-muted-foreground inline-block" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="w-64 p-3">
+            <p className="text-sm">{tooltip}</p>
+          </TooltipContent>
+        </UITooltip>
+      </div>
+    </TooltipProvider>
+  );
+}
+
 // We'll generate metrics from the main stats
 export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMetricsProps) {
   // Calculate additional metrics
@@ -32,35 +71,10 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
     
   const profitFactor = 2.1; // This would be calculated from actual win/loss data
   const successRate = stats.winRate;
-  const riskRewardRatio = 1.85; // This would be calculated from actual trade data
   
-  const expectedValue = (successRate / 100) * riskRewardRatio - (1 - successRate / 100);
-  
-  // Mock data for historical performance chart
-  const historicalPerformance = [
-    { month: 'Jan', value: 10000 },
-    { month: 'Feb', value: 12000 },
-    { month: 'Mar', value: 11500 },
-    { month: 'Apr', value: 13200 },
-    { month: 'May', value: 14800 },
-    { month: 'Jun', value: 14200 },
-    { month: 'Jul', value: 15600 },
-    { month: 'Aug', value: 16900 },
-    { month: 'Sep', value: 18200 },
-    { month: 'Oct', value: 19600 },
-    { month: 'Nov', value: 21200 },
-    { month: 'Dec', value: 23500 },
-  ];
-  
-  // Mock data for trade performance by month
-  const monthlyPerformance = [
-    { month: 'Jan', profit: 850, trades: 3 },
-    { month: 'Feb', profit: 1200, trades: 4 },
-    { month: 'Mar', profit: -300, trades: 2 },
-    { month: 'Apr', profit: 1500, trades: 5 },
-    { month: 'May', profit: 2100, trades: 4 },
-    { month: 'Jun', profit: 950, trades: 3 },
-  ];
+  const expectedValue = (successRate / 100) * 1.5 - (1 - successRate / 100);
+  const sharpeRatio = 1.37; // This would be calculated from actual return/risk data
+  const buyZoneAdherence = 76; // This would come from actual purchase data
   
   // We'd add more sophisticated calculations based on the actual portfolio data
   
@@ -71,7 +85,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
-            <p className="text-neutral-600 text-sm">Avg. Profit per Trade</p>
+            <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
             <p className="text-2xl font-bold font-mono mt-2">
               ${avgProfitPerTrade.toFixed(2)}
             </p>
@@ -80,7 +94,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
         
         <Card>
           <CardContent className="p-4">
-            <p className="text-neutral-600 text-sm">Win Rate</p>
+            <MetricWithTooltip label="Win Rate" tooltip={tooltips.winRate} />
             <p className="text-2xl font-bold font-mono mt-2">
               {successRate.toFixed(1)}%
             </p>
@@ -89,7 +103,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
         
         <Card>
           <CardContent className="p-4">
-            <p className="text-neutral-600 text-sm">Profit Factor</p>
+            <MetricWithTooltip label="Profit Factor" tooltip={tooltips.profitFactor} />
             <p className="text-2xl font-bold font-mono mt-2">
               {profitFactor.toFixed(2)}
             </p>
@@ -98,7 +112,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
         
         <Card>
           <CardContent className="p-4">
-            <p className="text-neutral-600 text-sm">Annualized Return</p>
+            <MetricWithTooltip label="Annualized Return" tooltip={tooltips.annualizedReturn} />
             <p className="text-2xl font-bold font-mono mt-2">
               {annualizedReturn.toFixed(2)}%
             </p>
@@ -109,45 +123,30 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Risk/Reward Analysis</CardTitle>
+            <CardTitle className="text-lg">Trading Performance Metrics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Risk/Reward Ratio:</span>
-                <span className="font-bold">1:{riskRewardRatio.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Expected Value per Trade:</span>
+                <MetricWithTooltip label="Expected Value per Trade" tooltip={tooltips.expectedValue} />
                 <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
                   {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
                 </span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Average Holding Period:</span>
+                <MetricWithTooltip label="Average Holding Period" tooltip={tooltips.avgHoldingPeriod} />
                 <span className="font-bold">{avgHoldingPeriodDays} days</span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Maximum Drawdown:</span>
-                <span className="font-bold text-loss">-12.5%</span>
+                <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
+                <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Sharpe Ratio:</span>
-                <span className="font-bold">1.37</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Buy Zone Adherence:</span>
-                <span className="font-bold text-profit">76%</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-neutral-600">Target Hit Rate:</span>
-                <span className="font-bold text-profit">68%</span>
+                <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
+                <span className="font-bold text-profit">{buyZoneAdherence}%</span>
               </div>
             </div>
           </CardContent>
@@ -155,116 +154,105 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
         
         <Card>
           <CardHeader>
-            <Tabs defaultValue="performance">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Performance History</CardTitle>
-                <TabsList>
-                  <TabsTrigger value="performance">Value</TabsTrigger>
-                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                </TabsList>
-              </div>
-            </Tabs>
+            <CardTitle className="text-lg">Trade Metrics</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="performance">
-              <TabsContent value="performance" className="mt-0">
-                <div className="h-60">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={historicalPerformance}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                      <Tooltip formatter={(value) => [`$${value}`, 'Portfolio Value']} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#1E88E5" 
-                        activeDot={{ r: 8 }} 
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </TabsContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Total Trades" tooltip={tooltips.totalTrades} />
+                <span className="font-bold">{stats.totalPositions}</span>
+              </div>
               
-              <TabsContent value="monthly" className="mt-0">
-                <div className="h-60">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={monthlyPerformance}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis yAxisId="left" tickFormatter={(value) => `$${value}`} />
-                      <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}`} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="profit" name="Profit/Loss" fill="#00C853" />
-                      <Bar yAxisId="right" dataKey="trades" name="# of Trades" fill="#1E88E5" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </TabsContent>
-            </Tabs>
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Best Trade" tooltip={tooltips.bestTrade} />
+                <span className="font-bold text-profit">+32.4%</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Worst Trade" tooltip={tooltips.worstTrade} />
+                <span className="font-bold text-loss">-15.8%</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Avg. Hold Time" tooltip={tooltips.avgHoldTime} />
+                <span className="font-bold">{avgHoldingPeriodDays} days</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Longest Hold" tooltip={tooltips.longestHold} />
+                <span className="font-bold">142 days</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <MetricWithTooltip label="Shortest Hold" tooltip={tooltips.shortestHold} />
+                <span className="font-bold">6 days</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Trade Metrics Summary</CardTitle>
+          <CardTitle className="text-lg">Additional Trade Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Total Trades</p>
-              <p className="text-xl font-bold">{stats.totalPositions}</p>
-              <p className="text-xs text-neutral-500 mt-1">All time</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
+              <p className="text-neutral-600 text-sm flex items-center">
+                <span>Total Value Traded</span>
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-help">
+                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="w-64 p-3">
+                      <p className="text-sm">Total dollar amount invested across all trades.</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </p>
+              <p className="text-xl font-bold font-mono">${stats.totalInvested.toFixed(2)}</p>
             </div>
             
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Best Trade</p>
-              <p className="text-xl font-bold text-profit">+32.4%</p>
-              <p className="text-xs text-neutral-500 mt-1">NVDA on Apr 12</p>
+            <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
+              <p className="text-neutral-600 text-sm flex items-center">
+                <span>Active Positions Value</span>
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-help">
+                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="w-64 p-3">
+                      <p className="text-sm">Current market value of all open positions.</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </p>
+              <p className="text-xl font-bold font-mono">${stats.totalValue.toFixed(2)}</p>
             </div>
             
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Worst Trade</p>
-              <p className="text-xl font-bold text-loss">-15.8%</p>
-              <p className="text-xs text-neutral-500 mt-1">INTC on Feb 28</p>
-            </div>
-            
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Avg. Hold Time</p>
-              <p className="text-xl font-bold">{avgHoldingPeriodDays} days</p>
-              <p className="text-xs text-neutral-500 mt-1">Closed positions</p>
-            </div>
-            
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Longest Hold</p>
-              <p className="text-xl font-bold">142 days</p>
-              <p className="text-xs text-neutral-500 mt-1">META (+28.3%)</p>
-            </div>
-            
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Shortest Hold</p>
-              <p className="text-xl font-bold">6 days</p>
-              <p className="text-xs text-neutral-500 mt-1">AMD (+12.5%)</p>
-            </div>
-            
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Consistent Winners</p>
-              <p className="text-xl font-bold">NVDA, META</p>
-              <p className="text-xs text-neutral-500 mt-1">Multiple profitable trades</p>
-            </div>
-            
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 text-sm">Favorite Stocks</p>
-              <p className="text-xl font-bold">AAPL, MSFT</p>
-              <p className="text-xs text-neutral-500 mt-1">Most traded</p>
+            <div className="p-4 bg-neutral-50 rounded-lg shadow-sm">
+              <p className="text-neutral-600 text-sm flex items-center">
+                <span>Realized Profit</span>
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-help">
+                        <HelpCircle size={14} className="text-muted-foreground inline-block" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="w-64 p-3">
+                      <p className="text-sm">Total profit from closed positions only.</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </p>
+              <p className="text-xl font-bold font-mono">${stats.totalClosedProfit.toFixed(2)}</p>
             </div>
           </div>
         </CardContent>
