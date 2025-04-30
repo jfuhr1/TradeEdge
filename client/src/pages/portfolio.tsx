@@ -12,6 +12,14 @@ type EnrichedPortfolioItem = PortfolioItem & {
   stockAlert: StockAlert;
 };
 
+interface PortfolioMetricsData {
+  totalAlertsBought: number;
+  buyZonePercentage: number;
+  highRiskPercentage: number;
+  aboveBuyZonePercentage: number;
+  monthlyPurchases: { month: string; count: number; }[];
+}
+
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("active");
   
@@ -42,12 +50,9 @@ export default function Portfolio() {
     retry: false,
   });
   
-  const { data: portfolioMetrics, isLoading: loadingMetrics, error: metricsError } = useQuery({
+  const { data: portfolioMetrics, isLoading: loadingMetrics, error: metricsError } = useQuery<PortfolioMetricsData>({
     queryKey: ["/api/portfolio/metrics"],
     retry: false, // Don't keep retrying on 401 errors
-    onError: (error) => {
-      console.error("Failed to fetch portfolio metrics:", error);
-    }
   });
   
   // Check if we need to display login prompt
@@ -61,6 +66,28 @@ export default function Portfolio() {
       <MainLayout title="My Portfolio">
         <div className="flex justify-center p-8">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // Handle authentication error
+  if (authError) {
+    return (
+      <MainLayout title="My Portfolio">
+        <div className="flex flex-col items-center justify-center p-8 space-y-4">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md text-center">
+            <h2 className="text-xl font-semibold text-orange-800 mb-2">Authentication Required</h2>
+            <p className="text-orange-700 mb-4">
+              You need to log in to view your portfolio and metrics.
+            </p>
+            <button 
+              onClick={demoLogin}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Login with Demo Account
+            </button>
+          </div>
         </div>
       </MainLayout>
     );
