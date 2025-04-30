@@ -250,8 +250,6 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   <span className="font-bold text-[10px] text-amber-700">B</span>
                   <span className="font-bold text-[10px] text-amber-700">U</span>
                   <span className="font-bold text-[10px] text-amber-700">Y</span>
-                  <span className="text-[8px] font-medium text-amber-700 mt-1">${item.boughtPrice.toFixed(2)}</span>
-                  <span className="text-[7px] font-medium text-amber-700">{item.quantity}x</span>
                 </div>
               </div>
 
@@ -283,10 +281,10 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-6 -translate-x-1/2 text-center">
+                <div className="absolute -top-16 -translate-x-1/2 text-center">
                   <div className={`${percentProfit >= 0 ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'} px-2 py-0.5 border rounded shadow-sm`}>
                     <div className="flex flex-col items-center">
-                      <span className="text-[9px] font-medium">NOW</span>
+                      <span className="text-[9px] font-medium">CURRENT</span>
                       <span className={`text-xs font-bold font-mono ${percentProfit >= 0 ? 'text-green-700' : 'text-red-700'} whitespace-nowrap`}>
                         ${item.stockAlert.currentPrice.toFixed(2)}
                       </span>
