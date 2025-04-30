@@ -16,9 +16,10 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type EnrichedPortfolioItem = PortfolioItem & { stockAlert: StockAlert };
 
@@ -40,7 +41,11 @@ type SortDirection = "asc" | "desc";
 
 type FilterState = {
   status: "all" | "active" | "closed";
-  buyZone: "all" | "inZone" | "aboveZone" | "belowZone";
+  buyZone: {
+    inZone: boolean;
+    belowZone: boolean;
+    aboveZone: boolean;
+  };
   hitTarget1: boolean | null;
   hitTarget2: boolean | null;
   hitTarget3: boolean | null;
@@ -48,12 +53,15 @@ type FilterState = {
 
 export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
   // State for filters and sorting
-  const [viewType, setViewType] = useState<"all" | "active" | "closed">("all");
   const [sortField, setSortField] = useState<SortableField>("symbol");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [filters, setFilters] = useState<FilterState>({
     status: "all",
-    buyZone: "all",
+    buyZone: {
+      inZone: false,
+      belowZone: false,
+      aboveZone: false
+    },
     hitTarget1: null,
     hitTarget2: null,
     hitTarget3: null,
@@ -71,35 +79,58 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
     }
   };
 
-  // Filter items based on viewType first (tab selection)
-  const viewFilteredItems = useMemo(() => {
-    if (viewType === "all") return items;
-    return items.filter(item => viewType === "active" ? !item.sold : item.sold);
-  }, [items, viewType]);
+  // Count how many buy zone filters are active
+  const activeBuyZoneFilters = 
+    (filters.buyZone.inZone ? 1 : 0) + 
+    (filters.buyZone.belowZone ? 1 : 0) + 
+    (filters.buyZone.aboveZone ? 1 : 0);
 
-  // Apply additional filters and sorting
+  // Buy zone filter label
+  const buyZoneFilterLabel = activeBuyZoneFilters === 0 
+    ? "Buy Zone"
+    : `Buy Zone (${activeBuyZoneFilters})`;
+
+  // Toggle a buy zone filter
+  const toggleBuyZoneFilter = (zone: 'inZone' | 'belowZone' | 'aboveZone') => {
+    setFilters({
+      ...filters,
+      buyZone: {
+        ...filters.buyZone,
+        [zone]: !filters.buyZone[zone]
+      }
+    });
+  };
+
+  // Apply all filters and sorting
   const filteredAndSortedItems = useMemo(() => {
-    // Start with view-filtered items
-    let result = [...viewFilteredItems];
+    // Start with all items
+    let result = [...items];
     
-    // Apply additional filters
+    // Apply status filter
     if (filters.status !== "all") {
       result = result.filter(item => 
         filters.status === "active" ? !item.sold : item.sold
       );
     }
     
-    if (filters.buyZone !== "all") {
+    // Apply buy zone filters
+    const anyBuyZoneFilterActive = 
+      filters.buyZone.inZone || 
+      filters.buyZone.belowZone || 
+      filters.buyZone.aboveZone;
+    
+    if (anyBuyZoneFilterActive) {
       result = result.filter(item => {
-        if (filters.buyZone === "inZone") {
-          return item.boughtPrice >= item.stockAlert.buyZoneMin && 
-                 item.boughtPrice <= item.stockAlert.buyZoneMax;
-        } else if (filters.buyZone === "belowZone") {
-          return item.boughtPrice < item.stockAlert.buyZoneMin;
-        } else if (filters.buyZone === "aboveZone") {
-          return item.boughtPrice > item.stockAlert.buyZoneMax;
-        }
-        return true;
+        const isInZone = item.boughtPrice >= item.stockAlert.buyZoneMin && 
+                         item.boughtPrice <= item.stockAlert.buyZoneMax;
+        const isBelowZone = item.boughtPrice < item.stockAlert.buyZoneMin;
+        const isAboveZone = item.boughtPrice > item.stockAlert.buyZoneMax;
+        
+        return (
+          (filters.buyZone.inZone && isInZone) ||
+          (filters.buyZone.belowZone && isBelowZone) ||
+          (filters.buyZone.aboveZone && isAboveZone)
+        );
       });
     }
     
@@ -204,7 +235,7 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
           : (bValue > aValue ? 1 : -1);
       }
     });
-  }, [viewFilteredItems, filters, sortField, sortDirection]);
+  }, [items, filters, sortField, sortDirection]);
 
   // Function to calculate and display buy zone status
   const getBuyZoneStatus = (item: EnrichedPortfolioItem) => {
@@ -226,17 +257,23 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
     return maxPrice >= targetPrice;
   };
 
+  // Reset all filters
+  const resetAllFilters = () => {
+    setFilters({
+      status: "all",
+      buyZone: {
+        inZone: false,
+        belowZone: false,
+        aboveZone: false
+      },
+      hitTarget1: null,
+      hitTarget2: null,
+      hitTarget3: null,
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {/* View Type Tabs */}
-      <Tabs value={viewType} onValueChange={(value) => setViewType(value as "all" | "active" | "closed")}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Positions</TabsTrigger>
-          <TabsTrigger value="active">Active Positions</TabsTrigger>
-          <TabsTrigger value="closed">Closed Positions</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      
       {/* Filter Controls */}
       <div className="flex flex-wrap gap-2 mb-4">
         {/* Status Filter */}
@@ -266,33 +303,35 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Buy Zone Filter */}
+        {/* Buy Zone Filter - Multi-select */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 gap-1">
               <Filter className="h-3.5 w-3.5" />
-              Buy Zone
+              {buyZoneFilterLabel}
               <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setFilters({...filters, buyZone: "all"})}>
-                {filters.buyZone === "all" && <Check className="w-4 h-4 mr-2" />}
-                All
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilters({...filters, buyZone: "inZone"})}>
-                {filters.buyZone === "inZone" && <Check className="w-4 h-4 mr-2" />}
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.inZone}
+                onCheckedChange={() => toggleBuyZoneFilter('inZone')}
+              >
                 In Buy Zone
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilters({...filters, buyZone: "belowZone"})}>
-                {filters.buyZone === "belowZone" && <Check className="w-4 h-4 mr-2" />}
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.belowZone}
+                onCheckedChange={() => toggleBuyZoneFilter('belowZone')}
+              >
                 High Risk/Reward
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilters({...filters, buyZone: "aboveZone"})}>
-                {filters.buyZone === "aboveZone" && <Check className="w-4 h-4 mr-2" />}
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters.buyZone.aboveZone}
+                onCheckedChange={() => toggleBuyZoneFilter('aboveZone')}
+              >
                 Above Buy Zone
-              </DropdownMenuItem>
+              </DropdownMenuCheckboxItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -377,6 +416,16 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        {/* Reset Filters Button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8"
+          onClick={resetAllFilters}
+        >
+          Reset Filters
+        </Button>
       </div>
       
       {/* Results Counter */}
