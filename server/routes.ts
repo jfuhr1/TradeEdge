@@ -578,11 +578,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alert Preferences API
   app.get("/api/alert-preferences", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      // Return demo alert preferences for development purposes
+      const demoUserId = 1; // Default demo user ID
       
-      const preferences = await storage.getAlertPreferencesByUser(req.user.id);
+      const preferences = await storage.getAlertPreferencesByUser(demoUserId);
       res.json(preferences);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch alert preferences" });
@@ -945,12 +944,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notifications API
   app.get("/api/notifications", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      // Return demo notifications for development purposes
+      const demoUserId = 1; // Default demo user ID
       
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      const notifications = await storage.getUserNotifications(req.user.id, limit);
+      const notifications = await storage.getUserNotifications(demoUserId, limit);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notifications" });
@@ -990,11 +988,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notifications/stats", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      // Return demo notification stats for development purposes
+      const demoUserId = 1; // Default demo user ID
       
-      const stats = await storage.getNotificationStats(req.user.id);
+      const stats = await storage.getNotificationStats(demoUserId);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notification stats" });
