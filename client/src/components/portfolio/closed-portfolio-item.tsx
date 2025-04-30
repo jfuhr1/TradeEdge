@@ -25,16 +25,21 @@ export default function ClosedPortfolioItem({ item }: ClosedPortfolioItemProps) 
   let sellDateFormatted = "N/A";
   
   try {
+    // For buy date, use the createdAt timestamp (when the position was added to portfolio)
     const buyDate = new Date(item.createdAt);
     buyDateFormatted = format(buyDate, "MMM d, yyyy");
     
+    // For sell date, use the soldAt timestamp that was recorded when sold
     if (item.soldAt) {
       const sellDate = new Date(item.soldAt);
       sellDateFormatted = format(sellDate, "MMM d, yyyy");
+      // Calculate holding period in days between buy and sell
       holdDays = Math.floor((sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
     } else {
+      // If no soldAt timestamp (shouldn't happen for closed positions), use current date
       const today = new Date();
       holdDays = Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+      sellDateFormatted = "N/A";
     }
     
     // Sanity check
@@ -43,6 +48,8 @@ export default function ClosedPortfolioItem({ item }: ClosedPortfolioItemProps) 
     }
   } catch (error) {
     console.error("Date formatting error:", error);
+    buyDateFormatted = "N/A";
+    sellDateFormatted = "N/A";
   }
   
   // Calculate price status category
