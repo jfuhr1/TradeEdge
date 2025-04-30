@@ -242,12 +242,14 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-6 -translate-x-1/2 text-center">
-                  <div className="bg-amber-100 px-2 py-1 border border-amber-300 rounded shadow-sm">
-                    <span className="text-xs font-bold font-mono text-amber-700 whitespace-nowrap">
-                      Buy: ${item.boughtPrice.toFixed(2)} ({item.quantity}x)
-                    </span>
+                <div className="absolute -top-20 -translate-x-1/2 flex flex-col items-center">
+                  <div className="flex flex-col items-center font-bold text-[10px] tracking-widest text-amber-700">
+                    <span>B</span>
+                    <span>U</span>
+                    <span>Y</span>
                   </div>
+                  <span className="text-xs font-bold font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
+                  <span className="text-[9px] font-medium text-amber-700">{item.quantity}x</span>
                 </div>
               </div>
 
@@ -280,10 +282,16 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                 })()
               }}>
                 <div className="absolute -top-6 -translate-x-1/2 text-center">
-                  <div className={`${percentProfit >= 0 ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'} px-2 py-1 border rounded shadow-sm`}>
-                    <span className={`text-xs font-bold font-mono ${percentProfit >= 0 ? 'text-green-700' : 'text-red-700'} whitespace-nowrap`}>
-                      Now: ${item.stockAlert.currentPrice.toFixed(2)} {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(1)}%
-                    </span>
+                  <div className={`${percentProfit >= 0 ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'} px-2 py-0.5 border rounded shadow-sm`}>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[9px] font-medium">NOW</span>
+                      <span className={`text-xs font-bold font-mono ${percentProfit >= 0 ? 'text-green-700' : 'text-red-700'} whitespace-nowrap`}>
+                        ${item.stockAlert.currentPrice.toFixed(2)}
+                      </span>
+                      <span className={`text-[9px] ${percentProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                        {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
