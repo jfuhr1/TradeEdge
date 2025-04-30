@@ -218,8 +218,9 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                 </div>
               </div>
 
-              {/* Buy price indicator (amber color for buy) */}
-              <div className="absolute w-1 h-10 bg-amber-500 -top-3 z-20" style={{ 
+              {/* Buy price indicator as vertical text */}
+              <div style={{ 
+                position: 'absolute',
                 left: (() => {
                   if (item.boughtPrice < item.stockAlert.buyZoneMin * 0.9) {
                     return "0%"; 
@@ -240,16 +241,17 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                     const posInRange = Math.min((item.boughtPrice - item.stockAlert.target3) / overRange, 1);
                     return `${85 + (posInRange * 15)}%`;
                   }
-                })()
+                })(),
+                top: '-12px',
+                transform: 'translateX(-50%)',
+                zIndex: 20
               }}>
-                <div className="absolute -top-20 -translate-x-1/2 flex flex-col items-center">
-                  <div className="flex flex-col items-center font-bold text-[10px] tracking-widest text-amber-700">
-                    <span>B</span>
-                    <span>U</span>
-                    <span>Y</span>
-                  </div>
-                  <span className="text-xs font-bold font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
-                  <span className="text-[9px] font-medium text-amber-700">{item.quantity}x</span>
+                <div className="flex flex-col items-center">
+                  <span className="font-bold text-[10px] text-amber-700">B</span>
+                  <span className="font-bold text-[10px] text-amber-700">U</span>
+                  <span className="font-bold text-[10px] text-amber-700">Y</span>
+                  <span className="text-[8px] font-medium text-amber-700 mt-1">${item.boughtPrice.toFixed(2)}</span>
+                  <span className="text-[7px] font-medium text-amber-700">{item.quantity}x</span>
                 </div>
               </div>
 
