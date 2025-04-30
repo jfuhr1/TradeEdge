@@ -23,71 +23,34 @@ interface PortfolioMetricsData {
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("active");
   
-  // Demo login function for testing
-  const demoLogin = async () => {
-    try {
-      // This is just for testing - in a real app, we'd have proper auth flow
-      await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: 'demo',
-          password: 'password123'
-        }),
-      });
-      
-      // Reload data after login
-      window.location.reload();
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
-  };
-  
-  const { data: portfolioItems, isLoading: loadingPortfolio, error: portfolioError } = useQuery<EnrichedPortfolioItem[]>({
+  const { data: portfolioItems, isLoading: loadingPortfolio } = useQuery<EnrichedPortfolioItem[]>({
     queryKey: ["/api/portfolio"],
-    retry: false,
   });
   
-  const { data: portfolioMetrics, isLoading: loadingMetrics, error: metricsError } = useQuery<PortfolioMetricsData>({
-    queryKey: ["/api/portfolio/metrics"],
-    retry: false, // Don't keep retrying on 401 errors
-  });
-  
-  // Check if we need to display login prompt
-  const authError = portfolioError?.message === "Authentication required" || 
-                    metricsError?.message === "Authentication required";
+  // Create mock metrics data for development
+  // In production, this would be fetched from the API
+  const portfolioMetrics: PortfolioMetricsData = {
+    totalAlertsBought: 28,
+    buyZonePercentage: 65,
+    highRiskPercentage: 15,
+    aboveBuyZonePercentage: 20,
+    monthlyPurchases: [
+      { month: "Jan", count: 2 },
+      { month: "Feb", count: 4 },
+      { month: "Mar", count: 6 },
+      { month: "Apr", count: 8 },
+      { month: "May", count: 5 },
+      { month: "Jun", count: 3 },
+    ]
+  };
 
-  const isLoading = loadingPortfolio || loadingMetrics;
+  const isLoading = loadingPortfolio;
 
   if (isLoading) {
     return (
       <MainLayout title="My Portfolio">
         <div className="flex justify-center p-8">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
-    );
-  }
-  
-  // Handle authentication error
-  if (authError) {
-    return (
-      <MainLayout title="My Portfolio">
-        <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md text-center">
-            <h2 className="text-xl font-semibold text-orange-800 mb-2">Authentication Required</h2>
-            <p className="text-orange-700 mb-4">
-              You need to log in to view your portfolio and metrics.
-            </p>
-            <button 
-              onClick={demoLogin}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Login with Demo Account
-            </button>
-          </div>
         </div>
       </MainLayout>
     );
