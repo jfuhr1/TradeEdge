@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
+import { ChevronDown, ChevronUp, BarChart2, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface PortfolioItemProps {
   item: PortfolioItem & { stockAlert: StockAlert };
@@ -21,6 +23,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
   const queryClient = useQueryClient();
   const [isSelling, setIsSelling] = useState(false);
   const [sellPrice, setSellPrice] = useState(item.stockAlert.currentPrice);
+  const [sellDate, setSellDate] = useState<Date | undefined>(new Date());
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Calculate current profit/loss
@@ -73,6 +76,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
     mutationFn: async () => {
       const res = await apiRequest("PUT", `/api/portfolio/${item.id}/sell`, {
         soldPrice: sellPrice,
+        soldAt: sellDate ? sellDate.toISOString() : new Date().toISOString(),
       });
       return await res.json();
     },
@@ -123,7 +127,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
 
         
         {/* Advanced Price Visualization */}
-        <div className="mt-8 mb-6">
+        <div className="mt-12 mb-6">
           <div className="relative h-16 mb-10">
             {/* Main progress bar container */}
             <div className="absolute top-0 w-full h-4 bg-gray-100 rounded-full overflow-visible">
@@ -238,7 +242,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-6 -translate-x-1/2 text-center w-24">
+                <div className="absolute -top-14 -translate-x-1/2 text-center w-24">
                   <span className="text-[10px] font-medium text-amber-700 block">Your Buy Price</span>
                   <span className="text-xs font-bold block font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
                   <span className="text-[10px] text-amber-700 block">
@@ -296,7 +300,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
         </div>
         
         {/* Ownership Information */}
-        <div className="mt-4 grid grid-cols-4 gap-4 p-2 bg-blue-50 rounded border border-blue-100">
+        <div className="mt-4 grid grid-cols-5 gap-4 p-2 bg-blue-50 rounded border border-blue-100">
           <div>
             <p className="text-xs text-neutral-600">Quantity</p>
             <p className="font-medium font-mono">{item.quantity}</p>
@@ -310,7 +314,13 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
             <p className="font-medium font-mono">${currentValue.toFixed(2)}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral-600">Profit/Loss</p>
+            <p className="text-xs text-neutral-600">P/L ($)</p>
+            <p className={`font-medium font-mono ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              ${profit.toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">P/L (%)</p>
             <p className={`font-medium font-mono ${percentProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(2)}%
             </p>
@@ -421,6 +431,29 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                 value={sellPrice}
                 onChange={e => setSellPrice(parseFloat(e.target.value) || 0)}
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Sell Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {sellDate ? format(sellDate, "PPP") : "Select a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={sellDate}
+                    onSelect={setSellDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="flex items-center justify-between">
