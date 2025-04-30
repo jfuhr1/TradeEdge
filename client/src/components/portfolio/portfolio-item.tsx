@@ -108,16 +108,6 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
               <h3 className="font-bold text-lg">{item.stockAlert.symbol}</h3>
               <span className="ml-2 text-neutral-600">{item.stockAlert.companyName}</span>
               <div className="flex gap-1 ml-2">
-                {priceStatus === "buy-zone" && (
-                  <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
-                    Buy Zone
-                  </Badge>
-                )}
-                {priceStatus === "high-risk" && (
-                  <Badge variant="outline" className="bg-orange-100 text-amber-800 text-xs">
-                    High R/R
-                  </Badge>
-                )}
                 <Badge variant="outline" className="bg-blue-100 text-primary text-xs">
                   Owned
                 </Badge>
@@ -130,21 +120,7 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
           </div>
         </div>
         
-        {/* Ownership Information */}
-        <div className="mt-3 grid grid-cols-3 gap-4 p-2 bg-blue-50 rounded border border-blue-100">
-          <div>
-            <p className="text-xs text-neutral-600">Quantity</p>
-            <p className="font-medium font-mono">{item.quantity}</p>
-          </div>
-          <div>
-            <p className="text-xs text-neutral-600">Buy Price</p>
-            <p className="font-medium font-mono">${item.boughtPrice.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-neutral-600">Current Value</p>
-            <p className="font-medium font-mono">${currentValue.toFixed(2)}</p>
-          </div>
-        </div>
+
         
         {/* Advanced Price Visualization */}
         <div className="mt-8 mb-6">
@@ -319,6 +295,28 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
           </div>
         </div>
         
+        {/* Ownership Information */}
+        <div className="mt-4 grid grid-cols-4 gap-4 p-2 bg-blue-50 rounded border border-blue-100">
+          <div>
+            <p className="text-xs text-neutral-600">Quantity</p>
+            <p className="font-medium font-mono">{item.quantity}</p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">Buy Price</p>
+            <p className="font-medium font-mono">${item.boughtPrice.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">Current Value</p>
+            <p className="font-medium font-mono">${currentValue.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-neutral-600">Profit/Loss</p>
+            <p className={`font-medium font-mono ${percentProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(2)}%
+            </p>
+          </div>
+        </div>
+        
         {/* Chart Image (Expandable) */}
         {isExpanded && (
           <div className="mt-6 mb-4 bg-gray-50 p-2 rounded">
@@ -339,23 +337,14 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
           </div>
         )}
         
-        {/* Notification Preferences */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Badge variant={item.notifyTarget1 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-            Target 1 {item.notifyTarget1 ? "✓" : ""}
-          </Badge>
-          <Badge variant={item.notifyTarget2 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-            Target 2 {item.notifyTarget2 ? "✓" : ""}
-          </Badge>
-          <Badge variant={item.notifyTarget3 ? "default" : "outline"} className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-            Target 3 {item.notifyTarget3 ? "✓" : ""}
-          </Badge>
-          {item.customTargetPercent && (
-            <Badge variant="default" className="bg-neutral-100 text-neutral-700">
-              Custom: {item.customTargetPercent}%
+        {/* Custom Target (if applicable) */}
+        {item.customTargetPercent && (
+          <div className="mt-4">
+            <Badge variant="default" className="bg-blue-100 text-primary">
+              Custom Target: {item.customTargetPercent}%
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Action Buttons and Date */}
         <div className="flex justify-between items-end mt-8">
