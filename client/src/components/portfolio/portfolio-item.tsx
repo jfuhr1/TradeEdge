@@ -242,12 +242,12 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-14 -right-20 text-right w-28">
-                  <span className="text-[10px] font-medium text-amber-700 block">Your Buy Price</span>
-                  <span className="text-xs font-bold block font-mono text-amber-700">${item.boughtPrice.toFixed(2)}</span>
-                  <span className="text-[10px] text-amber-700 block">
-                    {item.quantity} shares
-                  </span>
+                <div className="absolute -top-6 -translate-x-1/2 text-center">
+                  <div className="bg-amber-100 px-2 py-1 border border-amber-300 rounded shadow-sm">
+                    <span className="text-xs font-bold font-mono text-amber-700 whitespace-nowrap">
+                      Buy: ${item.boughtPrice.toFixed(2)} ({item.quantity}x)
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -279,12 +279,12 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
                   }
                 })()
               }}>
-                <div className="absolute -top-14 -left-20 text-left w-28">
-                  <span className="text-[10px] font-medium block">Current Price</span>
-                  <span className="text-xs font-medium block font-mono">${item.stockAlert.currentPrice.toFixed(2)}</span>
-                  <span className={`text-[10px] ${percentProfit >= 0 ? 'text-green-600' : 'text-red-600'} block`}>
-                    {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(1)}%
-                  </span>
+                <div className="absolute -top-6 -translate-x-1/2 text-center">
+                  <div className={`${percentProfit >= 0 ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'} px-2 py-1 border rounded shadow-sm`}>
+                    <span className={`text-xs font-bold font-mono ${percentProfit >= 0 ? 'text-green-700' : 'text-red-700'} whitespace-nowrap`}>
+                      Now: ${item.stockAlert.currentPrice.toFixed(2)} {percentProfit >= 0 ? '+' : ''}{percentProfit.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
