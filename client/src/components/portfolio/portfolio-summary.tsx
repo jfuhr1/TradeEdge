@@ -60,7 +60,7 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
             percentProfit = (profit / buyValue) * 100;
             
             // Calculate hold time
-            let holdDays = 30; // Default value
+            let holdDays = 0; // Default value
             
             try {
               const buyDate = new Date(item.createdAt);
@@ -71,6 +71,11 @@ export default function PortfolioSummary({ items }: PortfolioSummaryProps) {
               } else {
                 const today = new Date();
                 holdDays = Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+              }
+              
+              // Sanity check
+              if (isNaN(holdDays) || holdDays < 0) {
+                holdDays = 0;
               }
             } catch (error) {
               console.error("Date formatting error:", error);

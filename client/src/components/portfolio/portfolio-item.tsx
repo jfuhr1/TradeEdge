@@ -58,8 +58,15 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
   const target3Percent = ((item.stockAlert.target3 / item.stockAlert.currentPrice) - 1) * 100;
 
   // Get friendly date display
-  const alertDate = new Date(item.createdAt);
-  const daysAgo = Math.floor((Date.now() - alertDate.getTime()) / (24 * 60 * 60 * 1000));
+  let alertDate;
+  let daysAgo = 0;
+  
+  try {
+    alertDate = new Date(item.createdAt);
+    daysAgo = Math.floor((Date.now() - alertDate.getTime()) / (24 * 60 * 60 * 1000));
+  } catch (error) {
+    console.error("Error parsing date:", error);
+  }
   
   // Sell mutation
   const sellMutation = useMutation({
@@ -388,7 +395,15 @@ export default function PortfolioItemComponent({ item }: PortfolioItemProps) {
           <div className="text-right">
             <p className="text-xs font-medium text-black">Purchase Date</p>
             <p className="text-sm font-medium text-black font-mono">
-              {format(new Date(item.createdAt), 'MM/dd/yy')}
+              {
+                (() => {
+                  try {
+                    return format(new Date(item.createdAt), 'MM/dd/yy');
+                  } catch (error) {
+                    return "N/A";
+                  }
+                })()
+              }
             </p>
           </div>
         </div>

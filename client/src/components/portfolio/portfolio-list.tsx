@@ -99,8 +99,15 @@ export default function PortfolioList({ items, status }: PortfolioListProps) {
                   const today = new Date();
                   holdDays = Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
                 }
+                
+                // Sanity check
+                if (isNaN(holdDays) || holdDays < 0) {
+                  holdDays = 0;
+                }
               } catch (error) {
                 console.error("Date formatting error:", error);
+                buyDateFormatted = "N/A";
+                sellDateFormatted = "N/A";
               }
               
               return (
