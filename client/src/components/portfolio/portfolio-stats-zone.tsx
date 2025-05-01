@@ -104,175 +104,97 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
       <Tabs value={activeStatTab} onValueChange={setActiveStatTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="trends">Purchase Trends</TabsTrigger>
           <TabsTrigger value="metrics">Advanced Metrics</TabsTrigger>
         </TabsList>
       
         <TabsContent value="performance">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Trade Stats Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Trade Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Total Positions</span>
-                    <p className="text-lg font-semibold">{portfolioStats.totalPositions}</p>
+          {/* Buy Zone Analytics - Full size */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Buy Zone Analytics</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="flex flex-col items-center">
+                <div className="text-center mb-4">
+                  <div className="text-4xl font-bold text-primary">
+                    {purchaseMetrics.totalAlertsBought}
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Win Rate</span>
-                    <p className={`text-lg font-semibold ${portfolioStats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
-                      {portfolioStats.winRate.toFixed(1)}%
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Profit Factor</span>
-                    <p className="text-lg font-semibold">{profitFactor.toFixed(2)}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Avg. Profit per Trade</span>
-                    <p className={`text-lg font-semibold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      ${avgProfitPerTrade.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Expected Value</span>
-                    <p className={`text-lg font-semibold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Annualized Return</span>
-                    <p className={`text-lg font-semibold ${annualizedReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {annualizedReturn.toFixed(2)}%
-                    </p>
+                  <div className="text-muted-foreground text-sm">
+                    Total Alerts Purchased
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Purchase Zone Analytics - Original but at 75% size */}
-            <Card className="col-span-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Purchase Zone Analytics</CardTitle>
-              </CardHeader>
-              <CardContent className="pb-6">
-                <div className="flex flex-col items-center scale-75 origin-top-left">
-                  <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-primary">
-                      {purchaseMetrics.totalAlertsBought}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                  <div className="bg-green-50 rounded-lg p-6 shadow-sm text-center border border-green-100">
+                    <div className="text-4xl font-bold text-green-600 mb-2">{purchaseMetrics.buyZonePercentage}%</div>
+                    <div className="text-lg font-medium text-green-800">In Buy Zone</div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Purchases made within the optimal buying range, offering the best risk-reward ratio.
                     </div>
-                    <div className="text-muted-foreground text-sm">
-                      Total Alerts Purchased
+                    <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${purchaseMetrics.buyZonePercentage}%` }}></div>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
-                    <div className="bg-green-50 rounded-lg p-4 shadow-sm text-center border border-green-100">
-                      <div className="text-3xl font-bold text-green-600 mb-2">{purchaseMetrics.buyZonePercentage}%</div>
-                      <div className="text-base font-medium text-green-800">In Buy Zone</div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Purchases made within the optimal buying range, offering the best risk-reward ratio.
-                      </div>
-                      <div className="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${purchaseMetrics.buyZonePercentage}%` }}></div>
-                      </div>
+                  <div className="bg-amber-50 rounded-lg p-6 shadow-sm text-center border border-amber-100">
+                    <div className="text-4xl font-bold text-amber-600 mb-2">{purchaseMetrics.highRiskPercentage}%</div>
+                    <div className="text-lg font-medium text-amber-800">High Risk/Reward</div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Higher risk trades with potential for higher returns, but less margin of safety.
                     </div>
-                    
-                    <div className="bg-amber-50 rounded-lg p-4 shadow-sm text-center border border-amber-100">
-                      <div className="text-3xl font-bold text-amber-600 mb-2">{purchaseMetrics.highRiskPercentage}%</div>
-                      <div className="text-base font-medium text-amber-800">High Risk/Reward</div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Higher risk trades with potential for higher returns, but less margin of safety.
-                      </div>
-                      <div className="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${purchaseMetrics.highRiskPercentage}%` }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-red-50 rounded-lg p-4 shadow-sm text-center border border-red-100">
-                      <div className="text-3xl font-bold text-red-600 mb-2">{purchaseMetrics.aboveBuyZonePercentage}%</div>
-                      <div className="text-base font-medium text-red-800">Above Buy Zone</div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Purchases made above recommended entry points, with reduced margin of safety.
-                      </div>
-                      <div className="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${purchaseMetrics.aboveBuyZonePercentage}%` }}></div>
-                      </div>
+                    <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500 rounded-full" style={{ width: `${purchaseMetrics.highRiskPercentage}%` }}></div>
                     </div>
                   </div>
                   
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md text-xs text-blue-600">
-                    <p className="text-center">
-                      <span className="font-semibold">Pro Tip:</span> Aim to have at least 70% of your purchases within the buy zone to maximize profit potential and reduce risk.
-                    </p>
+                  <div className="bg-red-50 rounded-lg p-6 shadow-sm text-center border border-red-100">
+                    <div className="text-4xl font-bold text-red-600 mb-2">{purchaseMetrics.aboveBuyZonePercentage}%</div>
+                    <div className="text-lg font-medium text-red-800">Above Buy Zone</div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Purchases made above recommended entry points, with reduced margin of safety.
+                    </div>
+                    <div className="mt-4 h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-red-500 rounded-full" style={{ width: `${purchaseMetrics.aboveBuyZonePercentage}%` }}></div>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-md text-sm text-blue-600">
+                  <p className="text-center">
+                    <span className="font-semibold">Pro Tip:</span> Aim to have at least 70% of your purchases within the buy zone to maximize profit potential and reduce risk.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           
-          {/* Trade Examples - Best, Worst, etc. */}
+          {/* Trade Examples - Best, Worst only */}
           <Card className="mt-6">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Trade Highlights</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Best Trade</h3>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">NVDA on Apr 12</span>
+                    <span className="text-sm">NVDA</span>
                     <span className="text-profit font-semibold">+32.4%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">Bought at $925, sold at $1,225</p>
+                  <p className="text-xs text-muted-foreground">Bought at $925 on Apr 12, 2025</p>
+                  <p className="text-xs text-muted-foreground">Sold at $1,225 on May 24, 2025</p>
                 </div>
                 
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Worst Trade</h3>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">INTC on Feb 28</span>
+                    <span className="text-sm">INTC</span>
                     <span className="text-loss font-semibold">-15.8%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">Bought at $42, sold at $35.36</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Holding Periods</h3>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Average</span>
-                    <span className="font-semibold">{avgHoldingPeriodDays} days</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Range</span>
-                    <span className="font-semibold">6-142 days</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground">Bought at $42 on Feb 28, 2025</p>
+                  <p className="text-xs text-muted-foreground">Sold at $35.36 on Mar 15, 2025</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="trends">
-          {/* Monthly Alert Purchase Trends Chart */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Monthly Alert Purchase Trends</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyPurchaseData} margin={{ top: 10, right: 30, left: 0, bottom: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" angle={-45} textAnchor="end" height={50} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip formatter={(value) => [`${value} alerts`, "Purchased"]} />
-                  <Bar dataKey="count" fill="#1E88E5">
-                    <LabelList dataKey="count" position="top" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
@@ -324,32 +246,12 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
               <CardTitle className="text-lg">Advanced Trading Metrics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {/* Column 1 - Performance Metrics */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
-                    <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
-                    <span className="font-bold text-profit">{buyZoneAdherence}%</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Annualized Return" tooltip={tooltips.annualizedReturn} />
-                    <span className={`font-bold ${annualizedReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {annualizedReturn.toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Expected Value per Trade" tooltip={tooltips.expectedValue} />
-                    <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
-                    </span>
+                    <MetricWithTooltip label="Total Positions" tooltip={tooltips.totalTrades} />
+                    <span className="font-bold">{portfolioStats.totalPositions}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -363,27 +265,62 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                     <MetricWithTooltip label="Profit Factor" tooltip={tooltips.profitFactor} />
                     <span className="font-bold">{profitFactor.toFixed(2)}</span>
                   </div>
-                </div>
-                
-                <div className="space-y-4">
+                  
                   <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
-                    <span className={`font-bold ${avgProfitPerTrade > 0 ? 'text-profit' : 'text-loss'}`}>
+                    <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
                       ${avgProfitPerTrade.toFixed(2)}
                     </span>
                   </div>
+                </div>
+                
+                {/* Column 2 - Risk & Return */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
+                    <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
+                  </div>
                   
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Expected Value" tooltip={tooltips.expectedValue} />
+                    <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Annualized Return" tooltip={tooltips.annualizedReturn} />
+                    <span className={`font-bold ${annualizedReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {annualizedReturn.toFixed(2)}%
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
+                    <span className="font-bold text-profit">{buyZoneAdherence}%</span>
+                  </div>
+                </div>
+                
+                {/* Column 3 - Time & Position */}
+                <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Avg. Holding Period" tooltip={tooltips.avgHoldingPeriod} />
                     <span className="font-bold">{avgHoldingPeriodDays} days</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span>Position Count</span>
-                    <div className="text-right">
-                      <span className="font-bold">{portfolioStats.activePositions} active</span>
-                      <span className="text-muted-foreground text-sm ml-1">/ {portfolioStats.closedPositions} closed</span>
-                    </div>
+                    <span>Holding Period Range</span>
+                    <span className="font-bold">6-142 days</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Active Positions</span>
+                    <span className="font-bold">{portfolioStats.activePositions}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Closed Positions</span>
+                    <span className="font-bold">{portfolioStats.closedPositions}</span>
                   </div>
                 </div>
               </div>
