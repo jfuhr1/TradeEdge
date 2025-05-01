@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import MainLayout from "@/components/layout/main-layout";
 import { PortfolioItem, StockAlert } from "@shared/schema";
 import { Loader2 } from "lucide-react";
-import PortfolioDashboard from "@/components/portfolio/portfolio-dashboard";
+import PortfolioHeadlineStats from "@/components/portfolio/portfolio-headline-stats";
 import PortfolioList from "@/components/portfolio/portfolio-list";
-import PortfolioMetrics from "@/components/portfolio/portfolio-metrics";
+import PortfolioStatsZone from "@/components/portfolio/portfolio-stats-zone";
 import PortfolioSummary from "@/components/portfolio/portfolio-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -93,26 +93,32 @@ export default function Portfolio() {
     winRate: winRate
   };
   
+  // Calculate average profit percentage across all closed positions
+  const avgProfitPercent = closedItems.length > 0 
+    ? closedItems.reduce((sum, item) => {
+        if (!item.soldPrice) return sum;
+        const percentProfit = ((item.soldPrice - item.boughtPrice) / item.boughtPrice) * 100;
+        return sum + percentProfit;
+      }, 0) / closedItems.length
+    : 0;
+
   return (
     <MainLayout 
       title="My Portfolio" 
       description="Track your stock positions and performance"
     >
-      {/* Portfolio Dashboard - Consolidated metrics */}
-      <PortfolioDashboard stats={portfolioStatsData} />
+      {/* Headline stats - just the 4 most important metrics */}
+      <PortfolioHeadlineStats
+        portfolioValue={currentValue}
+        totalGainLoss={totalGainLoss}
+        percentGainLoss={percentGainLoss}
+        activePositions={activeItems.length}
+        realizedProfit={totalClosedProfit}
+        averageProfitPercent={avgProfitPercent}
+      />
       
-      {/* Purchase Zone Analytics */}
-      {portfolioMetrics && (
-        <PortfolioMetrics
-          totalAlertsBought={portfolioMetrics.totalAlertsBought}
-          buyZonePercentage={portfolioMetrics.buyZonePercentage}
-          highRiskPercentage={portfolioMetrics.highRiskPercentage}
-          aboveBuyZonePercentage={portfolioMetrics.aboveBuyZonePercentage}
-          monthlyPurchases={portfolioMetrics.monthlyPurchases}
-        />
-      )}
-      
-      <div className="mt-8">
+      {/* Position Tabs */}
+      <div className="mb-8">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-4">
             <TabsList>
@@ -161,6 +167,14 @@ export default function Portfolio() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Stats Zone - All the detailed metrics */}
+      {portfolioMetrics && (
+        <PortfolioStatsZone
+          portfolioStats={portfolioStatsData}
+          purchaseMetrics={portfolioMetrics}
+        />
+      )}
     </MainLayout>
   );
 }
