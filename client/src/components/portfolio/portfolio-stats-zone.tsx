@@ -269,13 +269,6 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                     <span>Closed Positions</span>
                     <span className="font-bold">{portfolioStats.closedPositions}</span>
                   </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
-                    <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      ${avgProfitPerTrade.toFixed(2)}
-                    </span>
-                  </div>
                 </div>
                 
                 {/* Column 2 - Time & Adherence */}
@@ -306,6 +299,13 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   </div>
                   
                   <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
+                    <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      ${avgProfitPerTrade.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Profit Factor" tooltip={tooltips.profitFactor} />
                     <span className="font-bold">{profitFactor.toFixed(2)}</span>
                   </div>
@@ -319,13 +319,6 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                     <MetricWithTooltip label="Annualized Return" tooltip={tooltips.annualizedReturn} />
                     <span className={`font-bold ${annualizedReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {annualizedReturn.toFixed(2)}%
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Expected Value" tooltip={tooltips.expectedValue} />
-                    <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
                     </span>
                   </div>
                 </div>
