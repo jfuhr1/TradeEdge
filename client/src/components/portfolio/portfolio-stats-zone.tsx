@@ -179,7 +179,10 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   <h3 className="text-sm font-medium">Best Trade</h3>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">NVDA</span>
-                    <span className="text-profit font-semibold">+32.4%</span>
+                    <div className="text-right">
+                      <span className="text-profit font-semibold">+32.4%</span>
+                      <span className="text-profit text-sm ml-2">(+$300)</span>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">Bought at $925 on Apr 12, 2025</p>
                   <p className="text-xs text-muted-foreground">Sold at $1,225 on May 24, 2025</p>
@@ -189,7 +192,10 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   <h3 className="text-sm font-medium">Worst Trade</h3>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">INTC</span>
-                    <span className="text-loss font-semibold">-15.8%</span>
+                    <div className="text-right">
+                      <span className="text-loss font-semibold">-15.8%</span>
+                      <span className="text-loss text-sm ml-2">(-$6.64)</span>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">Bought at $42 on Feb 28, 2025</p>
                   <p className="text-xs text-muted-foreground">Sold at $35.36 on Mar 15, 2025</p>
@@ -247,13 +253,51 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {/* Column 1 - Performance Metrics */}
+                {/* Column 1 - Position Stats */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Total Positions" tooltip={tooltips.totalTrades} />
                     <span className="font-bold">{portfolioStats.totalPositions}</span>
                   </div>
                   
+                  <div className="flex justify-between items-center">
+                    <span>Active Positions</span>
+                    <span className="font-bold">{portfolioStats.activePositions}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Closed Positions</span>
+                    <span className="font-bold">{portfolioStats.closedPositions}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
+                    <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      ${avgProfitPerTrade.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Column 2 - Time & Adherence */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Avg. Holding Period" tooltip={tooltips.avgHoldingPeriod} />
+                    <span className="font-bold">{avgHoldingPeriodDays} days</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Holding Period Range</span>
+                    <span className="font-bold">6-142 days</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
+                    <span className="font-bold text-profit">{buyZoneAdherence}%</span>
+                  </div>
+                </div>
+                
+                {/* Column 3 - Performance Metrics */}
+                <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Win Rate" tooltip={tooltips.winRate} />
                     <span className={`font-bold ${portfolioStats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
@@ -267,25 +311,8 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
-                    <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      ${avgProfitPerTrade.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Column 2 - Risk & Return */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
                     <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Expected Value" tooltip={tooltips.expectedValue} />
-                    <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
-                    </span>
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -296,31 +323,10 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
-                    <span className="font-bold text-profit">{buyZoneAdherence}%</span>
-                  </div>
-                </div>
-                
-                {/* Column 3 - Time & Position */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Avg. Holding Period" tooltip={tooltips.avgHoldingPeriod} />
-                    <span className="font-bold">{avgHoldingPeriodDays} days</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Holding Period Range</span>
-                    <span className="font-bold">6-142 days</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Active Positions</span>
-                    <span className="font-bold">{portfolioStats.activePositions}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Closed Positions</span>
-                    <span className="font-bold">{portfolioStats.closedPositions}</span>
+                    <MetricWithTooltip label="Expected Value" tooltip={tooltips.expectedValue} />
+                    <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
