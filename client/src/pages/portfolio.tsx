@@ -3,10 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import MainLayout from "@/components/layout/main-layout";
 import { PortfolioItem, StockAlert } from "@shared/schema";
 import { Loader2 } from "lucide-react";
-import PortfolioStats from "@/components/portfolio/portfolio-stats";
+import PortfolioDashboard from "@/components/portfolio/portfolio-dashboard";
 import PortfolioList from "@/components/portfolio/portfolio-list";
 import PortfolioMetrics from "@/components/portfolio/portfolio-metrics";
-import PortfolioAdvancedMetrics from "@/components/portfolio/portfolio-advanced-metrics";
 import PortfolioSummary from "@/components/portfolio/portfolio-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -99,16 +98,10 @@ export default function Portfolio() {
       title="My Portfolio" 
       description="Track your stock positions and performance"
     >
-      {/* Portfolio Stats Summary */}
-      <PortfolioStats 
-        activePositions={activeItems.length}
-        currentValue={currentValue}
-        totalGainLoss={totalGainLoss}
-        percentGainLoss={percentGainLoss}
-        closedProfit={totalClosedProfit}
-      />
+      {/* Portfolio Dashboard - Consolidated metrics */}
+      <PortfolioDashboard stats={portfolioStatsData} />
       
-      {/* Portfolio Metrics */}
+      {/* Purchase Zone Analytics */}
       {portfolioMetrics && (
         <PortfolioMetrics
           totalAlertsBought={portfolioMetrics.totalAlertsBought}
@@ -118,11 +111,6 @@ export default function Portfolio() {
           monthlyPurchases={portfolioMetrics.monthlyPurchases}
         />
       )}
-      
-      {/* Advanced Portfolio Metrics */}
-      <PortfolioAdvancedMetrics 
-        stats={portfolioStatsData}
-      />
       
       <div className="mt-8">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
