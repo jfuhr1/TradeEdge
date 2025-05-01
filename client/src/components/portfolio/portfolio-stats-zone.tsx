@@ -256,7 +256,7 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                 {/* Column 1 - Position Stats */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Total Positions" tooltip={tooltips.totalTrades} />
+                    <span>Total Positions</span>
                     <span className="font-bold">{portfolioStats.totalPositions}</span>
                   </div>
                   
@@ -281,7 +281,7 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                 {/* Column 2 - Time & Adherence */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Avg. Holding Period" tooltip={tooltips.avgHoldingPeriod} />
+                    <span>Avg. Holding Period</span>
                     <span className="font-bold">{avgHoldingPeriodDays} days</span>
                   </div>
                   
@@ -299,7 +299,7 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                 {/* Column 3 - Performance Metrics */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
+                    <span>Avg. Profit per Trade</span>
                     <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
                       ${avgProfitPerTrade.toFixed(2)}
                     </span>
