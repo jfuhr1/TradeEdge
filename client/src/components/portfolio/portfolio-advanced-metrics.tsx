@@ -120,78 +120,74 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="mb-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Trading Performance Metrics</CardTitle>
+            <CardTitle className="text-lg">Trading Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Expected Value per Trade" tooltip={tooltips.expectedValue} />
-                <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
-                  {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
-                <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
-                <span className="font-bold text-profit">{buyZoneAdherence}%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Trade Metrics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex justify-between items-center">
-                <span>Total Trades</span>
-                <span className="font-bold">{stats.totalPositions}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <MetricWithTooltip label="Avg. Hold Time" tooltip={tooltips.avgHoldTime} />
-                <span className="font-bold">{avgHoldingPeriodDays} days</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span>Best Trade</span>
-                <div className="text-right">
-                  <span className="font-bold text-profit">+32.4%</span>
-                  <div className="text-xs text-neutral-500">NVDA on Apr 12</div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* First column - Performance Metrics */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <MetricWithTooltip label="Expected Value per Trade" tooltip={tooltips.expectedValue} />
+                  <span className={`font-bold ${expectedValue >= 0 ? 'text-profit' : 'text-loss'}`}>
+                    {expectedValue >= 0 ? '+' : ''}{expectedValue.toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
+                  <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <MetricWithTooltip label="Buy Zone Adherence" tooltip={tooltips.buyZoneAdherence} />
+                  <span className="font-bold text-profit">{buyZoneAdherence}%</span>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center">
-                <span>Worst Trade</span>
-                <div className="text-right">
-                  <span className="font-bold text-loss">-15.8%</span>
-                  <div className="text-xs text-neutral-500">INTC on Feb 28</div>
+              {/* Second column - Basic trade stats */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Total Trades</span>
+                  <span className="font-bold">{stats.totalPositions}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <MetricWithTooltip label="Avg. Hold Time" tooltip={tooltips.avgHoldTime} />
+                  <span className="font-bold">{avgHoldingPeriodDays} days</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span>Win Rate</span>
+                  <span className="font-bold">{successRate.toFixed(1)}%</span>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center">
-                <span>Longest Hold</span>
-                <div className="text-right">
-                  <span className="font-bold">142 days</span>
-                  <div className="text-xs text-neutral-500">META (+28.3%)</div>
+              {/* Third column - Best/worst trades */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Best Trade</span>
+                  <div className="text-right">
+                    <span className="font-bold text-profit">+32.4%</span>
+                    <div className="text-xs text-neutral-500">NVDA on Apr 12</div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span>Shortest Hold</span>
-                <div className="text-right">
-                  <span className="font-bold">6 days</span>
-                  <div className="text-xs text-neutral-500">AMD (+12.5%)</div>
+                
+                <div className="flex justify-between items-center">
+                  <span>Worst Trade</span>
+                  <div className="text-right">
+                    <span className="font-bold text-loss">-15.8%</span>
+                    <div className="text-xs text-neutral-500">INTC on Feb 28</div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span>Hold Range</span>
+                  <div className="text-right">
+                    <span className="font-bold">6-142 days</span>
+                  </div>
                 </div>
               </div>
             </div>
