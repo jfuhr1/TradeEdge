@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Link } from "wouter";
 
 interface PortfolioStatsProps {
   activePositions: number;
@@ -52,9 +53,9 @@ export default function PortfolioStats({
             <p className="text-neutral-600 text-sm">Active Positions</p>
             <p className="text-2xl font-bold font-mono mt-2">{activePositions}</p>
             <div className="flex items-center mt-1">
-              <a href="/stock-alerts" className="text-primary text-sm font-medium hover:underline">
+              <Link to="/stock-alerts" className="text-primary text-sm font-medium hover:underline">
                 Add more from Stock Alerts
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>

@@ -135,11 +135,6 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
-                <span>Average Holding Period</span>
-                <span className="font-bold">{avgHoldingPeriodDays} days</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
                 <MetricWithTooltip label="Sharpe Ratio" tooltip={tooltips.sharpeRatio} />
                 <span className="font-bold">{sharpeRatio.toFixed(2)}</span>
               </div>
@@ -164,7 +159,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
               </div>
               
               <div className="flex justify-between items-center">
-                <span>Avg. Hold Time</span>
+                <MetricWithTooltip label="Avg. Hold Time" tooltip={tooltips.avgHoldTime} />
                 <span className="font-bold">{avgHoldingPeriodDays} days</span>
               </div>
               
