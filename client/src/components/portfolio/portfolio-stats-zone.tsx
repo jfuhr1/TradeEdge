@@ -269,6 +269,13 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                     <span>Closed Positions</span>
                     <span className="font-bold">{portfolioStats.closedPositions}</span>
                   </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <MetricWithTooltip label="Win Rate" tooltip={tooltips.winRate} />
+                    <span className={`font-bold ${portfolioStats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
+                      {portfolioStats.winRate.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
                 
                 {/* Column 2 - Time & Adherence */}
@@ -291,13 +298,6 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                 
                 {/* Column 3 - Performance Metrics */}
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Win Rate" tooltip={tooltips.winRate} />
-                    <span className={`font-bold ${portfolioStats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
-                      {portfolioStats.winRate.toFixed(1)}%
-                    </span>
-                  </div>
-                  
                   <div className="flex justify-between items-center">
                     <MetricWithTooltip label="Avg. Profit per Trade" tooltip={tooltips.avgProfitPerTrade} />
                     <span className={`font-bold ${avgProfitPerTrade >= 0 ? 'text-profit' : 'text-loss'}`}>
