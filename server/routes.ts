@@ -1267,5 +1267,230 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all users (admin only)
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageUsers) {
+          return res.status(403).json({ message: "You don't have permission to view users" });
+        }
+      }
+      
+      const users = await storage.getAllUsers();
+      res.status(200).json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).send(`Error fetching users: ${error.message}`);
+    }
+  });
+  
+  // Get admin permissions for a user
+  app.get("/api/admin/permissions/:userId", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageAdmins) {
+          return res.status(403).json({ message: "You don't have permission to manage admins" });
+        }
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).send("Invalid user ID");
+      }
+      
+      const permissions = await storage.getAdminPermissions(userId);
+      res.status(200).json(permissions || {});
+    } catch (error) {
+      console.error("Error fetching admin permissions:", error);
+      res.status(500).send(`Error fetching admin permissions: ${error.message}`);
+    }
+  });
+  
+  // Update admin permissions for a user
+  app.post("/api/admin/permissions/:userId", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageAdmins) {
+          return res.status(403).json({ message: "You don't have permission to manage admins" });
+        }
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).send("Invalid user ID");
+      }
+      
+      // Get user to check if they're a super admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).send("User not found");
+      }
+      
+      // Don't allow changing super admin permissions
+      if (targetUser.adminRole === 'super_admin' && targetUser.id !== req.user.id) {
+        return res.status(403).json({ message: "Cannot modify super admin permissions" });
+      }
+      
+      const updatedPermissions = await storage.updateAdminPermissions(userId, req.body);
+      res.status(200).json(updatedPermissions);
+    } catch (error) {
+      console.error("Error updating admin permissions:", error);
+      res.status(500).send(`Error updating admin permissions: ${error.message}`);
+    }
+  });
+  
+  // Toggle admin status
+  app.post("/api/admin/toggle-admin-status/:userId", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageAdmins) {
+          return res.status(403).json({ message: "You don't have permission to manage admins" });
+        }
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).send("Invalid user ID");
+      }
+      
+      // Get user to check if they're a super admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).send("User not found");
+      }
+      
+      // Don't allow changing super admin status
+      if (targetUser.adminRole === 'super_admin' && req.body.isAdmin === false) {
+        return res.status(403).json({ message: "Cannot remove super admin status" });
+      }
+      
+      const updatedUser = await storage.updateUserAdminStatus(userId, req.body.isAdmin);
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error("Error toggling admin status:", error);
+      res.status(500).send(`Error toggling admin status: ${error.message}`);
+    }
+  });
+  
+  // Update admin role
+  app.post("/api/admin/update-role/:userId", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageAdmins) {
+          return res.status(403).json({ message: "You don't have permission to manage admins" });
+        }
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).send("Invalid user ID");
+      }
+      
+      // Get user to check if they're a super admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).send("User not found");
+      }
+      
+      // Don't allow changing super admin role
+      if (targetUser.adminRole === 'super_admin') {
+        return res.status(403).json({ message: "Cannot change super admin role" });
+      }
+      
+      // Validate the role
+      const validRoles = ['super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin'];
+      if (!validRoles.includes(req.body.role)) {
+        return res.status(400).send("Invalid role specified");
+      }
+      
+      const updatedUser = await storage.updateUserAdminRole(userId, req.body.role);
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error("Error updating admin role:", error);
+      res.status(500).send(`Error updating admin role: ${error.message}`);
+    }
+  });
+  
+  // Check if user is admin (used for UI protections)
+  app.get("/api/user/is-admin", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      res.status(200).json({ isAdmin });
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.status(500).send(`Error checking admin status: ${error.message}`);
+    }
+  });
+  
   return httpServer;
 }

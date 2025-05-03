@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   isAdmin: boolean("is_admin").default(false),
+  adminRole: text("admin_role"), // 'super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -400,3 +401,48 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
 
 export type UserNotification = typeof userNotifications.$inferSelect;
 export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
+
+// Admin Permission Model
+export const adminPermissions = pgTable("admin_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  
+  // Permission areas
+  canManageUsers: boolean("can_manage_users").notNull().default(false),
+  canManageAdmins: boolean("can_manage_admins").notNull().default(false),
+  
+  // Alert permissions
+  canCreateAlerts: boolean("can_create_alerts").notNull().default(false),
+  canEditAlerts: boolean("can_edit_alerts").notNull().default(false),
+  canDeleteAlerts: boolean("can_delete_alerts").notNull().default(false),
+  
+  // Content permissions
+  canCreateEducation: boolean("can_create_education").notNull().default(false),
+  canEditEducation: boolean("can_edit_education").notNull().default(false),
+  canDeleteEducation: boolean("can_delete_education").notNull().default(false),
+  
+  // Article permissions
+  canCreateArticles: boolean("can_create_articles").notNull().default(false),
+  canEditArticles: boolean("can_edit_articles").notNull().default(false),
+  canDeleteArticles: boolean("can_delete_articles").notNull().default(false),
+  
+  // Coaching permissions
+  canManageCoaching: boolean("can_manage_coaching").notNull().default(false),
+  canScheduleSessions: boolean("can_schedule_sessions").notNull().default(false),
+  canViewSessionDetails: boolean("can_view_session_details").notNull().default(false),
+  
+  // Analytics permissions
+  canViewAnalytics: boolean("can_view_analytics").notNull().default(false),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertAdminPermissionSchema = createInsertSchema(adminPermissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AdminPermission = typeof adminPermissions.$inferSelect;
+export type InsertAdminPermission = z.infer<typeof insertAdminPermissionSchema>;
