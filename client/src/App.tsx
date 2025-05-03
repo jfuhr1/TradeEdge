@@ -10,6 +10,8 @@ import Education from "./pages/education";
 import Coaching from "./pages/coaching";
 
 // Admin pages
+import AdminIndex from "./pages/admin/index";
+import AdminUsers from "./pages/admin/users/index";
 import CreateAlert from "./pages/admin/create-alert";
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminEducation from "./pages/admin/education";
@@ -60,7 +62,9 @@ function App() {
           <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
           
           {/* Admin routes */}
+          <ProtectedRoute path="/admin" component={AdminIndex} />
           <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
+          <ProtectedRoute path="/admin/users" component={AdminUsers} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
           <ProtectedRoute path="/admin/education" component={AdminEducation} />
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />

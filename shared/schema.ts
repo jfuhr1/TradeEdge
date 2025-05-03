@@ -428,6 +428,7 @@ export const adminPermissions = pgTable("admin_permissions", {
   
   // Coaching permissions
   canManageCoaching: boolean("can_manage_coaching").notNull().default(false),
+  canManageGroupSessions: boolean("can_manage_group_sessions").notNull().default(false),
   canScheduleSessions: boolean("can_schedule_sessions").notNull().default(false),
   canViewSessionDetails: boolean("can_view_session_details").notNull().default(false),
   
