@@ -21,7 +21,7 @@ export default function PermissionsManager({ userId }: PermissionsManagerProps) 
   // Fetch the user's current permissions
   const { data: userPermissions, isLoading } = useQuery<AdminPermission>({
     queryKey: [`/api/admin/users/${userId}/permissions`],
-    onSuccess: (data) => {
+    onSuccess: (data: AdminPermission) => {
       setPermissions(data);
     },
   });

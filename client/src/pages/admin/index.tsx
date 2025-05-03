@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import AdminLayout from "@/components/admin/AdminLayout";
 import {
   Card,
   CardContent,
@@ -8,384 +10,464 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  BarChart3,
+  Users,
+  BellRing,
+  GraduationCap,
+  CalendarDays,
+  FileText,
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+  X,
+  EyeOff,
+  Eye,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, Users2, AlertCircle, BookOpen, FileText, Calendar, BarChart3, Cog } from "lucide-react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { AdminPermission } from "@shared/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Loader2 } from "lucide-react";
+import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 
 export default function AdminIndex() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [activeCards, setActiveCards] = useState<string[]>(['users', 'alerts', 'education', 'articles', 'coaching', 'analytics', 'settings']);
-
-  // Fetch admin permissions
-  const { data: permissions, isLoading: permissionsLoading } = useQuery<AdminPermission>({
-    queryKey: ['/api/admin/permissions'],
-    enabled: !!user?.isAdmin,
+  const { hasPermission } = useAdminPermissions();
+  
+  // State for toggling card visibility
+  const [visibleCards, setVisibleCards] = useState({
+    users: true,
+    alerts: true,
+    education: true,
+    coaching: true,
+    analytics: true,
   });
 
   // Toggle card visibility
-  const toggleCard = (cardId: string) => {
-    if (activeCards.includes(cardId)) {
-      setActiveCards(activeCards.filter(id => id !== cardId));
-    } else {
-      setActiveCards([...activeCards, cardId]);
-    }
-    
-    // Save preferences to localStorage
-    localStorage.setItem('adminDashboardCards', JSON.stringify(
-      activeCards.includes(cardId) 
-        ? activeCards.filter(id => id !== cardId)
-        : [...activeCards, cardId]
-    ));
+  const toggleCardVisibility = (cardKey: keyof typeof visibleCards) => {
+    setVisibleCards({
+      ...visibleCards,
+      [cardKey]: !visibleCards[cardKey],
+    });
   };
 
-  // Load saved preferences on mount
-  useEffect(() => {
-    const savedCards = localStorage.getItem('adminDashboardCards');
-    if (savedCards) {
-      try {
-        const parsedCards = JSON.parse(savedCards);
-        if (Array.isArray(parsedCards)) {
-          setActiveCards(parsedCards);
-        }
-      } catch (error) {
-        console.error('Error parsing saved dashboard preferences:', error);
-      }
-    }
-  }, []);
+  // Mock data - these would be API calls in a real implementation
+  const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["/api/admin/dashboard/users"],
+    // In a real app, this would be enabled
+    enabled: false,
+  });
 
-  if (permissionsLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
-    );
-  }
+  const { data: alertsData, isLoading: isLoadingAlerts } = useQuery({
+    queryKey: ["/api/admin/dashboard/alerts"],
+    enabled: false,
+  });
+
+  const { data: educationData, isLoading: isLoadingEducation } = useQuery({
+    queryKey: ["/api/admin/dashboard/education"],
+    enabled: false,
+  });
+
+  const { data: coachingData, isLoading: isLoadingCoaching } = useQuery({
+    queryKey: ["/api/admin/dashboard/coaching"],
+    enabled: false,
+  });
+
+  const { data: analyticsData, isLoading: isLoadingAnalytics } = useQuery({
+    queryKey: ["/api/admin/dashboard/analytics"],
+    enabled: false,
+  });
+
+  // Mock data until the API endpoints are implemented
+  const mockUsersData = {
+    totalUsers: 328,
+    newThisWeek: 42,
+    tierDistribution: {
+      free: 212,
+      paid: 82,
+      premium: 29,
+      mentorship: 5,
+    },
+  };
+
+  const mockAlertsData = {
+    totalAlerts: 15,
+    activeAlerts: 8,
+    closedAlerts: 7,
+    recentAlerts: [
+      { id: 1, symbol: "AAPL", status: "active" },
+      { id: 2, symbol: "TSLA", status: "active" },
+      { id: 3, symbol: "MSFT", status: "closed" },
+    ],
+  };
+
+  const mockEducationData = {
+    totalContent: 24,
+    viewsThisWeek: 856,
+    categories: {
+      beginner: 10,
+      intermediate: 8,
+      advanced: 6,
+    },
+  };
+
+  const mockCoachingData = {
+    upcomingSessions: 8,
+    completedThisMonth: 32,
+    totalRevenue: "$16,400",
+    bookedGroupSessions: 4,
+  };
+
+  const mockAnalyticsData = {
+    activeUsers: 185,
+    pageViews: 4827,
+    avgSessionTime: "8:42",
+    engagementRate: "76.4%",
+  };
 
   return (
     <AdminLayout>
-      <div className="container mx-auto px-4 py-6">
+      <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button variant="outline" onClick={() => setActiveCards(['users', 'alerts', 'education', 'articles', 'coaching', 'analytics', 'settings'])}>
-            Reset Layout
-          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Overview of platform metrics and management tools
+            </p>
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <MoreHorizontal className="h-4 w-4 mr-2" />
+                Customize View
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Toggle Sections</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => toggleCardVisibility("users")}>
+                {visibleCards.users ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {visibleCards.users ? "Hide" : "Show"} Users
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleCardVisibility("alerts")}>
+                {visibleCards.alerts ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {visibleCards.alerts ? "Hide" : "Show"} Alerts
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleCardVisibility("education")}>
+                {visibleCards.education ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {visibleCards.education ? "Hide" : "Show"} Education
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleCardVisibility("coaching")}>
+                {visibleCards.coaching ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {visibleCards.coaching ? "Hide" : "Show"} Coaching
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleCardVisibility("analytics")}>
+                {visibleCards.analytics ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {visibleCards.analytics ? "Hide" : "Show"} Analytics
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* User Management Card */}
-          {activeCards.includes('users') && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <Users2 className="h-5 w-5 mr-2 text-primary" />
-                    User Management
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('users')}
-                  >
-                    Hide
-                  </Button>
+          {/* Users Card */}
+          {visibleCards.users && hasPermission("canManageUsers") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Users</CardTitle>
+                  <CardDescription>
+                    Manage platform users and permissions
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  Manage users, permissions and memberships
-                </CardDescription>
+                <Users className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Total Users: <span className="font-semibold">328</span></p>
-                <ul className="space-y-2">
-                  <li>Free: <span className="font-semibold">212</span></li>
-                  <li>Paid: <span className="font-semibold">82</span></li>
-                  <li>Premium: <span className="font-semibold">29</span></li>
-                  <li>Mentorship: <span className="font-semibold">5</span></li>
-                </ul>
+              <CardContent>
+                {isLoadingUsers ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Users</span>
+                      <span className="font-medium">{mockUsersData.totalUsers}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">New This Week</span>
+                      <span className="font-medium">{mockUsersData.newThisWeek}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Premium Users</span>
+                      <span className="font-medium">{mockUsersData.tierDistribution.premium + mockUsersData.tierDistribution.mentorship}</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
+              <CardFooter>
                 <Link href="/admin/users">
-                  <Button variant="default" className="w-full">Manage Users</Button>
+                  <Button variant="ghost" className="w-full">
+                    View All Users
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
               </CardFooter>
             </Card>
           )}
 
-          {/* Alerts Management Card */}
-          {activeCards.includes('alerts') && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <AlertCircle className="h-5 w-5 mr-2 text-primary" />
-                    Stock Alerts
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('alerts')}
-                  >
-                    Hide
-                  </Button>
+          {/* Alerts Card */}
+          {visibleCards.alerts && hasPermission("canCreateAlerts") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Stock Alerts</CardTitle>
+                  <CardDescription>
+                    Manage stock alerts and recommendations
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  Create and manage stock alerts
-                </CardDescription>
+                <BellRing className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Active Alerts: <span className="font-semibold">18</span></p>
-                <ul className="space-y-2">
-                  <li>In Buy Zone: <span className="font-semibold">5</span></li>
-                  <li>Target Reached: <span className="font-semibold">7</span></li>
-                  <li>Below Buy Zone: <span className="font-semibold">6</span></li>
-                </ul>
+              <CardContent>
+                {isLoadingAlerts ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Active Alerts</span>
+                      <span className="font-medium">{mockAlertsData.activeAlerts}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Alerts</span>
+                      <span className="font-medium">{mockAlertsData.totalAlerts}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">User Saves</span>
+                      <span className="font-medium">428</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t flex justify-between">
+              <CardFooter className="flex justify-between">
                 <Link href="/admin/alerts">
-                  <Button variant="outline" className="flex-1 mr-2">View Alerts</Button>
+                  <Button variant="ghost">
+                    View Alerts
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
-                <Link href="/admin/create-alert">
-                  <Button variant="default" className="flex-1">Create Alert</Button>
-                </Link>
+                {hasPermission("canCreateAlerts") && (
+                  <Link href="/admin/alerts/new">
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
               </CardFooter>
             </Card>
           )}
 
-          {/* Education Content Card */}
-          {activeCards.includes('education') && permissions?.canCreateEducation && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <BookOpen className="h-5 w-5 mr-2 text-primary" />
-                    Education Content
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('education')}
-                  >
-                    Hide
-                  </Button>
+          {/* Education Card */}
+          {visibleCards.education && hasPermission("canCreateEducation") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Education</CardTitle>
+                  <CardDescription>
+                    Manage educational content and resources
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  Manage educational resources and courses
-                </CardDescription>
+                <GraduationCap className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Total Resources: <span className="font-semibold">42</span></p>
-                <ul className="space-y-2">
-                  <li>Videos: <span className="font-semibold">18</span></li>
-                  <li>Courses: <span className="font-semibold">12</span></li>
-                  <li>Guides: <span className="font-semibold">12</span></li>
-                </ul>
+              <CardContent>
+                {isLoadingEducation ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Content Items</span>
+                      <span className="font-medium">{mockEducationData.totalContent}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Views This Week</span>
+                      <span className="font-medium">{mockEducationData.viewsThisWeek}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Average Completion</span>
+                      <span className="font-medium">68%</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
+              <CardFooter className="flex justify-between">
                 <Link href="/admin/education">
-                  <Button variant="default" className="w-full">Manage Education</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          )}
-
-          {/* Articles Card */}
-          {activeCards.includes('articles') && permissions?.canCreateArticles && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-primary" />
-                    Articles
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('articles')}
-                  >
-                    Hide
+                  <Button variant="ghost">
+                    View Education
+                    <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
-                </div>
-                <CardDescription>
-                  Manage articles and market insights
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Total Articles: <span className="font-semibold">24</span></p>
-                <ul className="space-y-2">
-                  <li>Published: <span className="font-semibold">20</span></li>
-                  <li>Drafts: <span className="font-semibold">4</span></li>
-                  <li>Featured: <span className="font-semibold">3</span></li>
-                </ul>
-              </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
-                <Link href="/admin/articles">
-                  <Button variant="default" className="w-full">Manage Articles</Button>
                 </Link>
+                {hasPermission("canCreateEducation") && (
+                  <Link href="/admin/education/new">
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
               </CardFooter>
             </Card>
           )}
 
           {/* Coaching Card */}
-          {activeCards.includes('coaching') && (permissions?.canManageCoaching || permissions?.canManageGroupSessions) && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-primary" />
-                    Coaching
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('coaching')}
-                  >
-                    Hide
-                  </Button>
+          {visibleCards.coaching && hasPermission("canManageCoaching") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Coaching</CardTitle>
+                  <CardDescription>
+                    Manage coaching sessions and bookings
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  Manage coaching sessions and schedules
-                </CardDescription>
+                <CalendarDays className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Upcoming Sessions: <span className="font-semibold">8</span></p>
-                <ul className="space-y-2">
-                  <li>One-on-One: <span className="font-semibold">5</span></li>
-                  <li>Group: <span className="font-semibold">3</span></li>
-                  <li>This Week: <span className="font-semibold">2</span></li>
-                </ul>
+              <CardContent>
+                {isLoadingCoaching ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Upcoming Sessions</span>
+                      <span className="font-medium">{mockCoachingData.upcomingSessions}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Monthly Sessions</span>
+                      <span className="font-medium">{mockCoachingData.completedThisMonth}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Group Sessions</span>
+                      <span className="font-medium">{mockCoachingData.bookedGroupSessions}</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
+              <CardFooter className="flex justify-between">
                 <Link href="/admin/coaching">
-                  <Button variant="default" className="w-full">Manage Coaching</Button>
+                  <Button variant="ghost">
+                    View Sessions
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
+                {hasPermission("canManageCoaching") && (
+                  <Link href="/admin/coaching/new">
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
               </CardFooter>
             </Card>
           )}
 
           {/* Analytics Card */}
-          {activeCards.includes('analytics') && permissions?.canViewAnalytics && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2 text-primary" />
-                    Analytics
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('analytics')}
-                  >
-                    Hide
-                  </Button>
+          {visibleCards.analytics && hasPermission("canViewAnalytics") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Analytics</CardTitle>
+                  <CardDescription>
+                    Insights and platform performance
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  View performance metrics and analytics
-                </CardDescription>
+                <BarChart3 className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Alert Success Rate: <span className="font-semibold">86%</span></p>
-                <ul className="space-y-2">
-                  <li>Hit Target 1: <span className="font-semibold">92%</span></li>
-                  <li>Hit Target 2: <span className="font-semibold">65%</span></li>
-                  <li>Hit Target 3: <span className="font-semibold">38%</span></li>
-                </ul>
+              <CardContent>
+                {isLoadingAnalytics ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Active Users</span>
+                      <span className="font-medium">{mockAnalyticsData.activeUsers}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Page Views</span>
+                      <span className="font-medium">{mockAnalyticsData.pageViews}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Avg. Session Time</span>
+                      <span className="font-medium">{mockAnalyticsData.avgSessionTime}</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
-                <Link href="/admin/performance">
-                  <Button variant="default" className="w-full">View Analytics</Button>
+              <CardFooter>
+                <Link href="/admin/analytics">
+                  <Button variant="ghost" className="w-full">
+                    View Analytics
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
               </CardFooter>
             </Card>
           )}
 
-          {/* Admin Settings Card */}
-          {activeCards.includes('settings') && (
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center">
-                    <Cog className="h-5 w-5 mr-2 text-primary" />
-                    Admin Settings
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => toggleCard('settings')}
-                  >
-                    Hide
-                  </Button>
+          {/* Content Card */}
+          {visibleCards.analytics && hasPermission("canCreateContent") && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium">Content</CardTitle>
+                  <CardDescription>
+                    Manage articles and blog content
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  Manage admin accounts and system settings
-                </CardDescription>
+                <FileText className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <p className="mb-4">Admin Users: <span className="font-semibold">5</span></p>
-                <ul className="space-y-2">
-                  <li>Super Admins: <span className="font-semibold">1</span></li>
-                  <li>Content Admins: <span className="font-semibold">2</span></li>
-                  <li>Alerts Admins: <span className="font-semibold">2</span></li>
-                </ul>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Published Articles</span>
+                    <span className="font-medium">18</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Drafts</span>
+                    <span className="font-medium">4</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Article Reads</span>
+                    <span className="font-medium">2,356</span>
+                  </div>
+                </div>
               </CardContent>
-              <CardFooter className="bg-gray-50 dark:bg-gray-800 border-t">
-                <Link href="/admin/settings">
-                  <Button variant="default" className="w-full">Manage Settings</Button>
+              <CardFooter className="flex justify-between">
+                <Link href="/admin/content">
+                  <Button variant="ghost">
+                    View Content
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
+                {hasPermission("canCreateContent") && (
+                  <Link href="/admin/content/new">
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
               </CardFooter>
             </Card>
           )}
         </div>
-
-        {/* Show toggles for hidden cards */}
-        {activeCards.length < 7 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Hidden Sections</h2>
-            <div className="flex flex-wrap gap-2">
-              {!activeCards.includes('users') && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('users')}>
-                  <Users2 className="h-4 w-4 mr-2" /> Show Users
-                </Button>
-              )}
-              {!activeCards.includes('alerts') && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('alerts')}>
-                  <AlertCircle className="h-4 w-4 mr-2" /> Show Alerts
-                </Button>
-              )}
-              {!activeCards.includes('education') && permissions?.canCreateEducation && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('education')}>
-                  <BookOpen className="h-4 w-4 mr-2" /> Show Education
-                </Button>
-              )}
-              {!activeCards.includes('articles') && permissions?.canCreateArticles && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('articles')}>
-                  <FileText className="h-4 w-4 mr-2" /> Show Articles
-                </Button>
-              )}
-              {!activeCards.includes('coaching') && (permissions?.canManageCoaching || permissions?.canManageGroupSessions) && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('coaching')}>
-                  <Calendar className="h-4 w-4 mr-2" /> Show Coaching
-                </Button>
-              )}
-              {!activeCards.includes('analytics') && permissions?.canViewAnalytics && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('analytics')}>
-                  <BarChart3 className="h-4 w-4 mr-2" /> Show Analytics
-                </Button>
-              )}
-              {!activeCards.includes('settings') && (
-                <Button variant="outline" size="sm" onClick={() => toggleCard('settings')}>
-                  <Cog className="h-4 w-4 mr-2" /> Show Settings
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </AdminLayout>
   );

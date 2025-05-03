@@ -1,254 +1,203 @@
-import React, { useState } from "react";
+import React, { useState, ReactNode } from "react";
 import { Link, useLocation } from "wouter";
+import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 import {
-  AlertCircle,
   BarChart3,
-  BookOpen,
-  Calendar,
-  ChevronDown,
+  Users,
+  BellRing,
+  GraduationCap,
+  CalendarDays,
   FileText,
-  Home,
-  LogOut,
   Settings,
-  Users2,
   Menu,
   X,
+  Home,
+  LogOut,
 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
-import { AdminPermission } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AdminLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const { logoutMutation } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { hasPermission, canManageAdmins, isLoading } = useAdminPermissions();
 
-  // Fetch admin permissions
-  const { data: permissions } = useQuery<AdminPermission>({
-    queryKey: ['/api/admin/permissions'],
-    enabled: !!user?.isAdmin,
-  });
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
-
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Mobile menu */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild className="md:hidden absolute top-4 left-4 z-30">
-          <Button variant="outline" size="icon">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64">
-          <SheetHeader className="py-4 px-6">
-            <div className="flex justify-between items-center">
-              <SheetTitle>TradeEdge Pro</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto px-3 py-2">
-              <nav className="flex flex-col space-y-1">
-                {renderNavItems(permissions, location, () => setIsOpen(false))}
-              </nav>
-            </div>
-            <div className="px-3 py-4 border-t">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                  {user?.name?.charAt(0) || user?.username?.charAt(0) || "A"}
-                </div>
-                <div className="ml-2">
-                  <p className="text-sm font-medium">{user?.name || user?.username}</p>
-                  <p className="text-xs text-muted-foreground">{user?.adminRole || 'Admin'}</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop sidebar */}
-      <div className="hidden md:flex md:flex-col md:w-64 md:border-r bg-card">
-        <div className="flex items-center h-16 px-6 border-b">
-          <Link href="/admin" className="flex items-center">
-            <span className="text-xl font-bold">TradeEdge Pro</span>
-          </Link>
-        </div>
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto px-3 py-4">
-            <nav className="flex flex-col space-y-1">
-              {renderNavItems(permissions, location)}
-            </nav>
-          </div>
-          <div className="px-3 py-4 border-t">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                      {user?.name?.charAt(0) || user?.username?.charAt(0) || "A"}
-                    </div>
-                    <div className="ml-2 text-left">
-                      <p className="text-sm font-medium">{user?.name || user?.username}</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                        {user?.adminRole || 'Admin'}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <Link href="/admin/settings">
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                </Link>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto bg-background">
-        <header className="h-16 flex items-center px-6 border-b md:px-8">
-          <div className="md:hidden w-8">
-            {/* Spacer for mobile to align title */}
-          </div>
-          <div className="flex-1 flex justify-center md:justify-start">
-            <h1 className="text-xl font-semibold">Admin Portal</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Link href="/">
-              <Button variant="outline" size="sm">
-                <Home className="h-4 w-4 mr-2" />
-                Return to App
-              </Button>
-            </Link>
-          </div>
-        </header>
-        <main>{children}</main>
-      </div>
-    </div>
-  );
-}
-
-function renderNavItems(permissions: AdminPermission | undefined, currentPath: string, onClick?: () => void) {
-  const navItems = [
+  const navigationItems = [
     {
-      path: "/admin",
-      label: "Dashboard",
-      icon: <Home className="h-5 w-5" />,
-      visible: true,
+      name: "Dashboard",
+      href: "/admin",
+      icon: Home,
+      requiredPermission: null, // Accessible to all admins
     },
     {
-      path: "/admin/users",
-      label: "User Management",
-      icon: <Users2 className="h-5 w-5" />,
-      visible: permissions?.canManageUsers,
+      name: "Users",
+      href: "/admin/users",
+      icon: Users,
+      requiredPermission: "canManageUsers",
     },
     {
-      path: "/admin/create-alert",
-      label: "Create Alert",
-      icon: <AlertCircle className="h-5 w-5" />,
-      visible: permissions?.canCreateAlerts,
+      name: "Analytics",
+      href: "/admin/analytics",
+      icon: BarChart3,
+      requiredPermission: "canViewAnalytics",
     },
     {
-      path: "/admin/alerts",
-      label: "Manage Alerts",
-      icon: <AlertCircle className="h-5 w-5" />,
-      visible: permissions?.canEditAlerts || permissions?.canDeleteAlerts,
+      name: "Stock Alerts",
+      href: "/admin/alerts",
+      icon: BellRing,
+      requiredPermission: "canCreateAlerts",
     },
     {
-      path: "/admin/education",
-      label: "Education Content",
-      icon: <BookOpen className="h-5 w-5" />,
-      visible: permissions?.canCreateEducation || permissions?.canEditEducation || permissions?.canDeleteEducation,
+      name: "Education",
+      href: "/admin/education",
+      icon: GraduationCap,
+      requiredPermission: "canCreateEducation",
     },
     {
-      path: "/admin/articles",
-      label: "Articles",
-      icon: <FileText className="h-5 w-5" />,
-      visible: permissions?.canCreateArticles || permissions?.canEditArticles || permissions?.canDeleteArticles,
+      name: "Coaching",
+      href: "/admin/coaching",
+      icon: CalendarDays,
+      requiredPermission: "canManageCoaching",
     },
     {
-      path: "/admin/coaching",
-      label: "Coaching",
-      icon: <Calendar className="h-5 w-5" />,
-      visible: permissions?.canManageCoaching || permissions?.canManageGroupSessions || permissions?.canScheduleSessions,
+      name: "Content",
+      href: "/admin/content",
+      icon: FileText,
+      requiredPermission: "canCreateContent",
     },
     {
-      path: "/admin/performance",
-      label: "Performance",
-      icon: <BarChart3 className="h-5 w-5" />,
-      visible: permissions?.canViewAnalytics,
-    },
-    {
-      path: "/admin/settings",
-      label: "Settings",
-      icon: <Settings className="h-5 w-5" />,
-      visible: true,
+      name: "Settings",
+      href: "/admin/settings",
+      icon: Settings,
+      requiredPermission: null, // Accessible to all admins
     },
   ];
 
-  return navItems
-    .filter((item) => item.visible)
-    .map((item) => (
-      <Link
-        key={item.path}
-        href={item.path}
-        onClick={onClick}
-      >
+  // Utility function to check if a nav item should be shown
+  const shouldShowNavItem = (item: any) => {
+    // If no specific permission is required, show to all admins
+    if (item.requiredPermission === null) {
+      return true;
+    }
+    
+    // For admin management, use the special canManageAdmins check
+    if (item.requiredPermission === "canManageAdmins") {
+      return canManageAdmins();
+    }
+
+    // Otherwise, check the specific permission
+    return hasPermission(item.requiredPermission as any);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      {/* Mobile Navigation Toggle */}
+      <div className="md:hidden p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
+        <h1 className="text-lg font-semibold">TradeEdge Pro Admin</h1>
         <Button
-          variant={currentPath === item.path ? "default" : "ghost"}
-          className="w-full justify-start"
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
         >
-          {React.cloneElement(item.icon, {
-            className: `mr-2 h-5 w-5 ${currentPath === item.path ? "text-primary-foreground" : "text-muted-foreground"}`,
-          })}
-          {item.label}
+          {mobileNavOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </Button>
-      </Link>
-    ));
+      </div>
+
+      {/* Mobile Navigation */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 bg-background z-50 pt-16">
+          <ScrollArea className="h-full">
+          <nav className="px-2 py-4">
+            {navigationItems.filter(shouldShowNavItem).map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                <a
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium my-1 ${
+                    location === item.href
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 mr-2 shrink-0" />
+                  {item.name}
+                </a>
+              </Link>
+            ))}
+            <div className="mt-4 pt-4 border-t">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                onClick={() => logoutMutation.mutate()}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </nav>
+          </ScrollArea>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex md:flex-col md:w-64 border-r shrink-0">
+        <div className="p-6">
+          <h1 className="text-xl font-bold">TradeEdge Pro</h1>
+          <p className="text-sm text-muted-foreground">Admin Portal</p>
+        </div>
+        <nav className="flex-1 px-4 py-2">
+          {navigationItems.filter(shouldShowNavItem).map((item) => (
+            <Link key={item.name} href={item.href}>
+              <a
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium my-1 ${
+                  location === item.href
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <item.icon className="h-4 w-4 mr-2 shrink-0" />
+                {item.name}
+              </a>
+            </Link>
+          ))}
+        </nav>
+        <div className="p-4 border-t mt-auto">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => logoutMutation.mutate()}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </aside>
+
+      {/* Content Area */}
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
+  );
 }

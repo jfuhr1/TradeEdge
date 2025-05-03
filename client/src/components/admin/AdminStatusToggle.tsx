@@ -1,39 +1,59 @@
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { User } from "@shared/schema";
-import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { Loader2 } from "lucide-react";
+import React from 'react';
+import { Switch } from '@/components/ui/switch';
+import { useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminStatusToggleProps {
-  user: User;
-  disabled?: boolean;
+  userId: number;
+  isAdmin: boolean | null;
 }
 
-export function AdminStatusToggle({ user, disabled = false }: AdminStatusToggleProps) {
-  const { toggleAdminStatusMutation } = useAdminPermissions();
-  const [isAdmin, setIsAdmin] = useState(!!user.isAdmin);
-  
-  const handleToggle = () => {
-    const newAdminStatus = !isAdmin;
-    setIsAdmin(newAdminStatus);
-    toggleAdminStatusMutation.mutate({
-      userId: user.id,
-      isAdmin: newAdminStatus
-    });
+export default function AdminStatusToggle({ userId, isAdmin }: AdminStatusToggleProps) {
+  const { toast } = useToast();
+
+  // Mutation for toggling admin status
+  const toggleAdminStatus = useMutation({
+    mutationFn: async (newStatus: boolean) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/admin/users/${userId}/admin-status`,
+        { isAdmin: newStatus }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/users/${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/users`] });
+      
+      toast({
+        title: "Admin Status Updated",
+        description: `User is now ${isAdmin ? 'no longer' : 'an'} admin.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error Updating Admin Status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggle = (checked: boolean) => {
+    toggleAdminStatus.mutate(checked);
   };
-  
+
   return (
     <div className="flex items-center space-x-2">
-      <Switch
-        checked={isAdmin}
+      <Switch 
+        checked={!!isAdmin} 
         onCheckedChange={handleToggle}
-        disabled={disabled || toggleAdminStatusMutation.isPending || user.adminRole === 'super_admin'}
+        disabled={toggleAdminStatus.isPending}
       />
       <span className="text-sm">
-        {toggleAdminStatusMutation.isPending ? (
-          <Loader2 className="h-4 w-4 inline mr-2 animate-spin" />
-        ) : null}
-        {isAdmin ? "Admin" : "Not Admin"}
+        {toggleAdminStatus.isPending ? "Updating..." : (isAdmin ? "Admin" : "Not Admin")}
       </span>
     </div>
   );
