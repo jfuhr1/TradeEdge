@@ -68,6 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${user.name}!`,
       });
+      
+      // Redirect based on admin status
+      setTimeout(() => {
+        if (user.isAdmin) {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 500); // Small delay to allow toast to be shown
     },
     onError: (error: Error) => {
       toast({
@@ -89,6 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome, ${user.name}!`,
       });
+
+      // Redirect based on admin status
+      setTimeout(() => {
+        if (user.isAdmin) {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 500); // Small delay to allow toast to be shown
     },
     onError: (error: Error) => {
       toast({
@@ -115,6 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
+      
+      // Redirect to auth page
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 500); // Small delay to allow toast to be shown
     },
     onError: (error: Error) => {
       toast({
