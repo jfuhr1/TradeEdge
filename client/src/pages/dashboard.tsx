@@ -605,10 +605,16 @@ export default function Dashboard() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{alert.companyName}</p>
+                          <div className="h-[40px] overflow-hidden">
+                            <p className="text-sm text-muted-foreground">{alert.companyName}</p>
+                            <p className="text-sm text-muted-foreground">&nbsp;</p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="flex items-center justify-end mb-1">
+                          <p className="text-xs font-mono font-medium text-muted-foreground">
+                            {new Date(alert.createdAt).toLocaleDateString()}
+                          </p>
+                          <div className="flex items-center justify-end mt-2">
                             <p className={`text-lg font-mono font-semibold ${
                               isPriceInBuyZone 
                                 ? 'text-green-600' 
@@ -629,15 +635,11 @@ export default function Dashboard() {
                     </CardHeader>
                     
                     <CardContent className="p-4">
-                      <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="mb-3">
                         <div className="text-sm bg-gray-50 p-2 rounded">
                           <p className="text-xs font-medium text-muted-foreground">Buy Zone</p>
-                          <p className="font-mono font-medium text-green-600">${alert.buyZoneMin.toFixed(2)}</p>
+                          <p className="font-mono font-medium text-green-600">${alert.buyZoneMin.toFixed(2)} -</p>
                           <p className="font-mono font-medium text-green-600">${alert.buyZoneMax.toFixed(2)}</p>
-                        </div>
-                        <div className="text-sm bg-gray-50 p-2 rounded">
-                          <p className="text-xs font-medium text-muted-foreground">Date Added</p>
-                          <p className="font-mono font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                       
