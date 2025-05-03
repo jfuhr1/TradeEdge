@@ -13,7 +13,8 @@ import {
   achievementBadges, AchievementBadge, InsertAchievementBadge,
   userAchievementProgress, UserAchievementProgress, InsertUserAchievementProgress,
   successCards, SuccessCard, InsertSuccessCard,
-  userNotifications, UserNotification, InsertUserNotification
+  userNotifications, UserNotification, InsertUserNotification,
+  adminPermissions, AdminPermission, InsertAdminPermission
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -157,6 +158,7 @@ export class MemStorage implements IStorage {
   private achievementBadgesList: Map<number, AchievementBadge>;
   private userAchievementProgressList: Map<number, UserAchievementProgress>;
   private userNotifications: Map<number, UserNotification>; // Add notifications map
+  private adminPermissionsList: Map<number, AdminPermission>; // Add admin permissions map
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -175,6 +177,7 @@ export class MemStorage implements IStorage {
   private achievementBadgeId: number;
   private userAchievementProgressId: number;
   private notificationId: number;
+  private adminPermissionId: number;
 
   constructor() {
     this.users = new Map();
@@ -192,6 +195,7 @@ export class MemStorage implements IStorage {
     this.achievementBadgesList = new Map();
     this.userAchievementProgressList = new Map();
     this.userNotifications = new Map();
+    this.adminPermissionsList = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;
@@ -208,6 +212,7 @@ export class MemStorage implements IStorage {
     this.achievementBadgeId = 1;
     this.userAchievementProgressId = 1;
     this.notificationId = 1;
+    this.adminPermissionId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -280,6 +285,180 @@ export class MemStorage implements IStorage {
   async checkIfAdmin(userId: number): Promise<boolean> {
     const user = await this.getUser(userId);
     return user?.isAdmin === true;
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    // Set default admin role if making user an admin
+    let adminRole = user.adminRole;
+    if (isAdmin && !adminRole) {
+      adminRole = "admin"; // Default role
+    } else if (!isAdmin) {
+      adminRole = null; // Remove role if no longer admin
+    }
+    
+    const updatedUser = await this.updateUser(userId, { 
+      isAdmin: isAdmin, 
+      adminRole 
+    });
+    
+    if (!updatedUser) {
+      throw new Error("Failed to update user admin status");
+    }
+    
+    return updatedUser;
+  }
+  
+  async updateUserAdminRole(userId: number, role: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    // Make sure user is an admin
+    if (!user.isAdmin) {
+      user.isAdmin = true;
+    }
+    
+    const updatedUser = await this.updateUser(userId, { 
+      isAdmin: true, 
+      adminRole: role 
+    });
+    
+    if (!updatedUser) {
+      throw new Error("Failed to update user admin role");
+    }
+    
+    return updatedUser;
+  }
+  
+  async getAdminPermissions(userId: number): Promise<AdminPermission | null> {
+    // Check if user exists and is an admin
+    const user = await this.getUser(userId);
+    if (!user || !user.isAdmin) {
+      return null;
+    }
+    
+    // Find existing permissions if any
+    const permissions = Array.from(this.adminPermissionsList.values())
+      .find(p => p.userId === userId);
+    
+    // If user is super admin, return full permissions
+    if (user.adminRole === 'super_admin') {
+      // If super admin has no permissions record yet, create one with all permissions
+      if (!permissions) {
+        return this.createAdminPermissions({
+          userId,
+          canManageUsers: true,
+          canManageAdmins: true,
+          canCreateAlerts: true,
+          canEditAlerts: true,
+          canDeleteAlerts: true,
+          canCreateEducation: true,
+          canEditEducation: true,
+          canDeleteEducation: true,
+          canCreateArticles: true,
+          canEditArticles: true,
+          canDeleteArticles: true,
+          canManageCoaching: true,
+          canScheduleSessions: true,
+          canViewSessionDetails: true,
+          canViewAnalytics: true
+        });
+      }
+      
+      // Return existing super admin permissions
+      return permissions;
+    }
+    
+    // Return existing permissions or default based on admin role
+    if (permissions) {
+      return permissions;
+    }
+    
+    // Create default permissions based on admin role
+    const defaultPermissions: Partial<AdminPermission> = {
+      userId,
+      canManageUsers: false,
+      canManageAdmins: false,
+      canViewAnalytics: true,
+    };
+    
+    // Assign specific permissions based on admin role
+    if (user.adminRole === 'alerts_admin') {
+      defaultPermissions.canCreateAlerts = true;
+      defaultPermissions.canEditAlerts = true;
+    } else if (user.adminRole === 'education_admin') {
+      defaultPermissions.canCreateEducation = true;
+      defaultPermissions.canEditEducation = true;
+      defaultPermissions.canCreateArticles = true;
+      defaultPermissions.canEditArticles = true;
+    } else if (user.adminRole === 'coaching_admin') {
+      defaultPermissions.canManageCoaching = true;
+      defaultPermissions.canScheduleSessions = true;
+      defaultPermissions.canViewSessionDetails = true;
+    }
+    
+    return this.createAdminPermissions(defaultPermissions as AdminPermission);
+  }
+  
+  async createAdminPermissions(permissions: AdminPermission): Promise<AdminPermission> {
+    const id = this.adminPermissionId++;
+    const adminPermission: AdminPermission = { 
+      id,
+      ...permissions
+    };
+    
+    this.adminPermissionsList.set(id, adminPermission);
+    return adminPermission;
+  }
+  
+  async updateAdminPermissions(userId: number, updates: Partial<AdminPermission>): Promise<AdminPermission> {
+    // Get current permissions
+    let permissions = await this.getAdminPermissions(userId);
+    
+    // If no permissions exist, create default ones
+    if (!permissions) {
+      const defaultPermissions: AdminPermission = {
+        id: 0, // Will be replaced by createAdminPermissions
+        userId,
+        canManageUsers: false,
+        canManageAdmins: false,
+        canCreateAlerts: false,
+        canEditAlerts: false,
+        canDeleteAlerts: false,
+        canCreateEducation: false,
+        canEditEducation: false,
+        canDeleteEducation: false,
+        canCreateArticles: false,
+        canEditArticles: false,
+        canDeleteArticles: false,
+        canManageCoaching: false,
+        canScheduleSessions: false,
+        canViewSessionDetails: false,
+        canViewAnalytics: false
+      };
+      
+      permissions = await this.createAdminPermissions(defaultPermissions);
+    }
+    
+    // Update permissions
+    const updatedPermissions = {
+      ...permissions,
+      ...updates
+    };
+    
+    this.adminPermissionsList.set(permissions.id, updatedPermissions);
+    return updatedPermissions;
   }
   
   // Stock alert operations
