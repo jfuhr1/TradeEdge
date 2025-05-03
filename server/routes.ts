@@ -1200,5 +1200,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }, 15000); // Update every 15 seconds
   
+  // Admin routes for stock alert management with all fields
+  app.post("/api/admin/stock-alert", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const alertData = req.body;
+      
+      // If updating an existing alert
+      if (alertData.id) {
+        const updatedAlert = await storage.updateStockAlert(alertData.id, alertData);
+        if (!updatedAlert) {
+          return res.status(404).send("Stock alert not found");
+        }
+        return res.status(200).json(updatedAlert);
+      } 
+      
+      // Creating a new alert
+      const newAlert = await storage.createStockAlert(alertData);
+      res.status(201).json(newAlert);
+    } catch (error) {
+      console.error("Error creating/updating stock alert:", error);
+      res.status(500).send(`Error creating/updating stock alert: ${error.message}`);
+    }
+  });
+  
+  // Admin route to update stock price for testing
+  app.post("/api/admin/update-stock-price", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { id, currentPrice } = req.body;
+      
+      if (!id || currentPrice === undefined) {
+        return res.status(400).send("Missing required fields: id and currentPrice");
+      }
+      
+      const updatedAlert = await storage.updateStockAlertPrice(id, currentPrice);
+      
+      if (!updatedAlert) {
+        return res.status(404).send("Stock alert not found");
+      }
+      
+      res.status(200).json(updatedAlert);
+    } catch (error) {
+      console.error("Error updating stock price:", error);
+      res.status(500).send(`Error updating stock price: ${error.message}`);
+    }
+  });
+  
   return httpServer;
 }

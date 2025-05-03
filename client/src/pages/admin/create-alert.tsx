@@ -249,9 +249,8 @@ export default function CreateAlert() {
         };
       }
       
-      // Normal API request if not in demo mode
-      // Use query parameter approach for demo mode
-      const endpoint = isDemoMode ? '/api/stock-alerts?demo=true' : '/api/stock-alerts';
+      // Use the admin endpoint for direct create/update
+      const endpoint = isDemoMode ? '/api/stock-alerts?demo=true' : '/api/admin/stock-alert';
       const res = await apiRequest('POST', endpoint, data);
       return res.json();
     },
@@ -442,20 +441,40 @@ export default function CreateAlert() {
       return; // Don't submit yet, let user see the new risk first
     }
     
+    // Combine all confluences into a single array
+    const confluences = [
+      ...selectedPriceConfluences,
+      ...selectedVolumeConfluences,
+      ...selectedMomentumConfluences,
+      ...selectedChartConfluences,
+      ...selectedSentimentConfluences
+    ];
+    
+    // Set the main chart type (defaulting to daily if both are present)
+    const mainChartType = data.dailyChartUrl && data.weeklyChartUrl ? 'daily' : 
+                          data.dailyChartUrl ? 'daily' : 
+                          data.weeklyChartUrl ? 'weekly' : 'daily';
+    
     // Make sure all selected data is properly set
     const formData = {
       ...data,
       // Add status field for the API (not shown in the form)
       status: "active",
-      technicalReasons: [],
+      currentPrice: 0, // This will be updated via the WebSocket
+      technicalReasons: data.technicalReasons || [],
+      
+      // New schema fields
       tags: selectedTags,
-      priceConfluences: selectedPriceConfluences,
-      volumeConfluences: selectedVolumeConfluences,
-      momentumConfluences: selectedMomentumConfluences,
-      chartConfluences: selectedChartConfluences,
-      sentimentConfluences: selectedSentimentConfluences,
-      riskFactors: selectedRiskFactors
+      confluences: confluences,
+      riskFactors: selectedRiskFactors,
+      dailyChartImageUrl: data.dailyChartUrl,
+      weeklyChartImageUrl: data.weeklyChartUrl,
+      mainChartType: mainChartType,
+      
+      // Legacy support for chart image
+      chartImageUrl: data.dailyChartUrl || data.weeklyChartUrl || ''
     };
+    
     createStockAlert.mutate(formData);
   }
 
