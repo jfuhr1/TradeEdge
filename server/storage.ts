@@ -292,6 +292,12 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
   
+  async getAdminUsers(): Promise<User[]> {
+    return Array.from(this.users.values())
+      .filter(user => user.isAdmin === true)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
   async updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User> {
     const user = await this.getUser(userId);
     if (!user) {

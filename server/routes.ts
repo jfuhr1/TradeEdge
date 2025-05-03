@@ -1297,6 +1297,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get admin users only (admin only)
+  app.get("/api/admin/users/admins", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageAdmins) {
+          return res.status(403).json({ message: "You don't have permission to manage admins" });
+        }
+      }
+      
+      const adminUsers = await storage.getAdminUsers();
+      res.status(200).json(adminUsers);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).send(`Error fetching admin users: ${error.message}`);
+    }
+  });
+  
   // Get admin permissions for a user
   app.get("/api/admin/permissions/:userId", async (req, res) => {
     try {
@@ -1489,6 +1519,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking admin status:", error);
       res.status(500).send(`Error checking admin status: ${error.message}`);
+    }
+  });
+  
+  // Get current user's admin permissions
+  app.get("/api/user/admin-permissions", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const permissions = await storage.getAdminPermissions(req.user.id);
+      res.status(200).json(permissions || {});
+    } catch (error) {
+      console.error("Error fetching user admin permissions:", error);
+      res.status(500).send(`Error fetching user admin permissions: ${error.message}`);
     }
   });
   
