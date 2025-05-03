@@ -614,32 +614,45 @@ export default function Dashboard() {
                           <p className="text-xs font-mono font-medium text-muted-foreground">
                             {new Date(alert.createdAt).toLocaleDateString()}
                           </p>
-                          <div className="flex items-center justify-end mt-2">
-                            <p className={`text-lg font-mono font-semibold ${
-                              isPriceInBuyZone 
-                                ? 'text-green-600' 
-                                : isPriceBelowBuyZone 
-                                  ? 'text-amber-600'
-                                  : ''
-                            }`}>
-                              ${alert.currentPrice.toFixed(2)}
-                            </p>
-                          </div>
-                          {connected && 
-                            <div className="flex items-center justify-end text-xs text-green-600">
-                              <Wifi className="h-3 w-3 mr-1" /> Live
-                            </div>
-                          }
                         </div>
                       </div>
                     </CardHeader>
                     
                     <CardContent className="p-4">
-                      <div className="mb-3">
-                        <div className="text-sm bg-gray-50 p-2 rounded">
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className={`text-sm p-2 rounded ${
+                          isPriceInBuyZone 
+                            ? 'bg-green-50 border border-green-100' 
+                            : isPriceBelowBuyZone 
+                              ? 'bg-amber-50 border border-amber-100'
+                              : 'bg-gray-50 border border-gray-100'
+                        }`}>
                           <p className="text-xs font-medium text-muted-foreground">Buy Zone</p>
                           <p className="font-mono font-medium text-green-600">${alert.buyZoneMin.toFixed(2)} -</p>
                           <p className="font-mono font-medium text-green-600">${alert.buyZoneMax.toFixed(2)}</p>
+                        </div>
+                        <div className={`text-right p-2 rounded ${
+                          isPriceInBuyZone 
+                            ? 'bg-green-50 border border-green-100' 
+                            : isPriceBelowBuyZone 
+                              ? 'bg-amber-50 border border-amber-100'
+                              : 'bg-gray-50 border border-gray-100'
+                        }`}>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Current Price</p>
+                          <p className={`text-xl font-mono font-semibold ${
+                            isPriceInBuyZone 
+                              ? 'text-green-600' 
+                              : isPriceBelowBuyZone 
+                                ? 'text-amber-600'
+                                : ''
+                          }`}>
+                            ${alert.currentPrice.toFixed(2)}
+                          </p>
+                          {connected && 
+                            <div className="flex items-center justify-end text-xs text-green-600 mt-1">
+                              <Wifi className="h-3 w-3 mr-1" /> Live
+                            </div>
+                          }
                         </div>
                       </div>
                       
