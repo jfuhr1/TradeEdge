@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 import { 
   insertStockAlertSchema, 
   insertPortfolioItemSchema, 
@@ -12,6 +14,8 @@ import {
   insertSuccessCardSchema,
   insertUserNotificationSchema
 } from "@shared/schema";
+
+const scryptAsync = promisify(scrypt);
 
 // Function to create sample notifications for demo purposes
 async function createSampleNotifications() {
@@ -85,9 +89,110 @@ async function createSampleNotifications() {
   });
 }
 
+// Function to create admin user
+async function createAdminUser() {
+  try {
+    // Check if user already exists
+    const existingUser = await storage.getUserByUsername("PortfolioConsultant");
+    
+    if (existingUser) {
+      console.log("Admin user already exists.");
+      
+      // Update user to admin if not already
+      if (!existingUser.isAdmin) {
+        await storage.updateUser(existingUser.id, {
+          isAdmin: true,
+          adminRole: "super_admin"
+        });
+        console.log("User updated to admin successfully");
+      }
+      
+      // Check if admin permissions exist
+      const existingPermissions = await storage.getAdminPermissions(existingUser.id);
+      
+      if (!existingPermissions) {
+        // Create admin permissions with full access
+        await storage.createAdminPermissions({
+          userId: existingUser.id,
+          canManageUsers: true,
+          canManageAdmins: true,
+          canCreateAlerts: true,
+          canEditAlerts: true,
+          canDeleteAlerts: true,
+          canCreateEducation: true,
+          canEditEducation: true,
+          canDeleteEducation: true,
+          canCreateArticles: true,
+          canEditArticles: true,
+          canDeleteArticles: true,
+          canManageCoaching: true,
+          canManageGroupSessions: true,
+          canScheduleSessions: true,
+          canViewSessionDetails: true,
+          canViewAnalytics: true
+        });
+        console.log("Admin permissions created successfully");
+      }
+      
+      return existingUser;
+    } else {
+      // Create new admin user
+      console.log("Creating new admin user...");
+      
+      // Hash password
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync("Jordan26!", salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      const newUser = await storage.createUser({
+        username: "PortfolioConsultant",
+        email: "josh.fuhr@bisontrading.co",
+        name: "Josh Fuhr",
+        password: hashedPassword,
+        tier: "premium",
+        isAdmin: true,
+        adminRole: "super_admin"
+      });
+      
+      console.log("New admin user created successfully");
+      
+      // Create admin permissions
+      await storage.createAdminPermissions({
+        userId: newUser.id,
+        canManageUsers: true,
+        canManageAdmins: true,
+        canCreateAlerts: true,
+        canEditAlerts: true,
+        canDeleteAlerts: true,
+        canCreateEducation: true,
+        canEditEducation: true,
+        canDeleteEducation: true,
+        canCreateArticles: true,
+        canEditArticles: true,
+        canDeleteArticles: true,
+        canManageCoaching: true,
+        canManageGroupSessions: true,
+        canScheduleSessions: true,
+        canViewSessionDetails: true,
+        canViewAnalytics: true
+      });
+      
+      console.log("Admin permissions created successfully");
+      
+      return newUser;
+    }
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+    throw error;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Create admin user
+  await createAdminUser();
   
   // Initialize sample notifications
   await createSampleNotifications();
