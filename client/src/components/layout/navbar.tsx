@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { AlertNotifications } from "@/components/alerts/alert-notifications";
@@ -15,7 +16,13 @@ import {
   Settings,
   User,
   Trophy,
-  X
+  X,
+  Users,
+  BellRing,
+  GraduationCap,
+  FileText,
+  BarChart3,
+  ShieldAlert
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +39,14 @@ export function Navbar() {
   const [location] = useLocation();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Get admin permissions if user is an admin
+  const { 
+    canAccessAdmin, 
+    hasPermission, 
+    canManageAdmins,
+    isLoading: isLoadingPermissions 
+  } = useAdminPermissions();
 
   // Different navbar for logged out users
   if (!user) {
@@ -120,18 +135,79 @@ export function Navbar() {
             </Button>
 
             
-            {isAdmin && (
-              <Button
-                variant={location.startsWith("/admin") ? "default" : "ghost"}
-                className="w-full justify-start"
-                asChild
-                onClick={() => setIsOpen(false)}
-              >
-                <Link href="/admin/dashboard">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Admin Dashboard
-                </Link>
-              </Button>
+            {/* Admin Links - Only visible to users with admin permissions */}
+            {isAdmin && !isLoadingPermissions && (
+              <>
+                <Separator className="my-2" />
+                
+                <Button
+                  variant={location === "/admin" ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  asChild
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Link href="/admin">
+                    <ShieldAlert className="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </Link>
+                </Button>
+                
+                {hasPermission("canManageUsers") && (
+                  <Button
+                    variant={location === "/admin/users" ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    asChild
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Link href="/admin/users">
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage Users
+                    </Link>
+                  </Button>
+                )}
+                
+                {hasPermission("canViewAnalytics") && (
+                  <Button
+                    variant={location === "/admin/analytics" ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    asChild
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Link href="/admin/analytics">
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Analytics
+                    </Link>
+                  </Button>
+                )}
+                
+                {hasPermission("canCreateAlerts") && (
+                  <Button
+                    variant={location === "/admin/alerts" ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    asChild
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Link href="/admin/alerts">
+                      <BellRing className="h-4 w-4 mr-2" />
+                      Stock Alerts
+                    </Link>
+                  </Button>
+                )}
+                
+                {hasPermission("canCreateEducation") && (
+                  <Button
+                    variant={location === "/admin/education" ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    asChild
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Link href="/admin/education">
+                      <GraduationCap className="h-4 w-4 mr-2" />
+                      Education
+                    </Link>
+                  </Button>
+                )}
+              </>
             )}
           </div>
           <Separator className="my-6" />
@@ -186,15 +262,42 @@ export function Navbar() {
             <Link href="/notification-settings">Notification Settings</Link>
           </DropdownMenuItem>
 
-          {isAdmin && (
+          {isAdmin && !isLoadingPermissions && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/admin/dashboard">Admin Dashboard</Link>
+                <Link href="/admin">
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/create-alert">Create Alert</Link>
-              </DropdownMenuItem>
+              
+              {hasPermission("canManageUsers") && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/users">
+                    <Users className="mr-2 h-4 w-4" />
+                    Manage Users
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              
+              {hasPermission("canCreateAlerts") && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/alerts">
+                    <BellRing className="mr-2 h-4 w-4" />
+                    Manage Alerts
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              
+              {hasPermission("canViewAnalytics") && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/analytics">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Analytics
+                  </Link>
+                </DropdownMenuItem>
+              )}
             </>
           )}
         </DropdownMenuContent>
