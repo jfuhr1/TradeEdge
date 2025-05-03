@@ -552,11 +552,6 @@ export default function Dashboard() {
             </>
           ) : (
             displayAlerts.map((alert) => {
-              // Calculate price position as % relative to the full range
-              const fullRange = alert.target3 - (alert.buyZoneMin * 0.9);
-              const currentPosition = ((alert.currentPrice - (alert.buyZoneMin * 0.9)) / fullRange) * 100;
-              const clampedPosition = Math.min(Math.max(currentPosition, 0), 100);
-              
               // Determine status and color scheme
               const isPriceInBuyZone = alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax;
               const isPriceBelowBuyZone = alert.currentPrice < alert.buyZoneMin;
@@ -565,10 +560,6 @@ export default function Dashboard() {
               const target1Percent = ((alert.target1 / alert.currentPrice) - 1) * 100;
               const target2Percent = ((alert.target2 / alert.currentPrice) - 1) * 100;
               const target3Percent = ((alert.target3 / alert.currentPrice) - 1) * 100;
-              
-              // Date display
-              const alertDate = new Date(alert.createdAt);
-              const isNew = Date.now() - alertDate.getTime() < 24 * 60 * 60 * 1000;
               
               return (
                 <Card 
@@ -613,17 +604,12 @@ export default function Dashboard() {
                                 Above Buy Zone
                               </Badge>
                             )}
-                            {isNew && (
-                              <Badge variant="outline" className="bg-blue-100 text-blue-800 text-xs">
-                                New
-                              </Badge>
-                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">{alert.companyName}</p>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center justify-end mb-1">
-                            <p className={`text-lg font-mono font-semibold mr-2 ${
+                            <p className={`text-lg font-mono font-semibold ${
                               isPriceInBuyZone 
                                 ? 'text-green-600' 
                                 : isPriceBelowBuyZone 
@@ -632,12 +618,6 @@ export default function Dashboard() {
                             }`}>
                               ${alert.currentPrice.toFixed(2)}
                             </p>
-                            <Link href={`/stock-detail/${alert.symbol}`}>
-                              <Button variant="ghost" size="sm" className="h-7 px-2 py-1">
-                                <Eye className="h-3.5 w-3.5 mr-1" />
-                                View
-                              </Button>
-                            </Link>
                           </div>
                           {connected && 
                             <div className="flex items-center justify-end text-xs text-green-600">
@@ -649,45 +629,6 @@ export default function Dashboard() {
                     </CardHeader>
                     
                     <CardContent className="p-4">
-                      {/* Price visualization */}
-                      <div className="relative h-8 mt-4 mb-6">
-                        {/* Price range background bar */}
-                        <div className="absolute w-full h-2 bg-gray-100 rounded-full top-1">
-                          {/* Buy zone indicator */}
-                          <div 
-                            className="absolute h-full bg-green-200 rounded-sm z-0"
-                            style={{
-                              left: `${((alert.buyZoneMin - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%`,
-                              width: `${((alert.buyZoneMax - alert.buyZoneMin) / fullRange) * 100}%`
-                            }}
-                          />
-                          
-                          {/* Target markers */}
-                          <div 
-                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
-                            style={{ left: `${((alert.target1 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
-                          />
-                          <div 
-                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
-                            style={{ left: `${((alert.target2 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
-                          />
-                          <div 
-                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
-                            style={{ left: `${((alert.target3 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
-                          />
-                          
-                          {/* Current price indicator */}
-                          <div 
-                            className="absolute w-1 h-6 bg-black -top-2 rounded-full z-20"
-                            style={{ left: `${clampedPosition}%` }}
-                          >
-                            <div className="absolute w-24 text-center -top-6 -left-12 text-xs font-medium">
-                              Current Price
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div className="text-sm bg-gray-50 p-2 rounded">
                           <p className="text-xs font-medium text-muted-foreground">Buy Zone</p>
