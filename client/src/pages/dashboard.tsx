@@ -632,11 +632,12 @@ export default function Dashboard() {
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div className="text-sm bg-gray-50 p-2 rounded">
                           <p className="text-xs font-medium text-muted-foreground">Buy Zone</p>
-                          <p className="font-medium text-green-600">${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}</p>
+                          <p className="font-mono font-medium text-green-600">${alert.buyZoneMin.toFixed(2)}</p>
+                          <p className="font-mono font-medium text-green-600">${alert.buyZoneMax.toFixed(2)}</p>
                         </div>
                         <div className="text-sm bg-gray-50 p-2 rounded">
                           <p className="text-xs font-medium text-muted-foreground">Date Added</p>
-                          <p className="font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
+                          <p className="font-mono font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                       
