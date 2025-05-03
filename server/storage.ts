@@ -376,6 +376,7 @@ export class MemStorage implements IStorage {
           canEditArticles: true,
           canDeleteArticles: true,
           canManageCoaching: true,
+          canManageGroupSessions: true,
           canScheduleSessions: true,
           canViewSessionDetails: true,
           canViewAnalytics: true
@@ -410,6 +411,7 @@ export class MemStorage implements IStorage {
       defaultPermissions.canEditArticles = true;
     } else if (user.adminRole === 'coaching_admin') {
       defaultPermissions.canManageCoaching = true;
+      defaultPermissions.canManageGroupSessions = true;
       defaultPermissions.canScheduleSessions = true;
       defaultPermissions.canViewSessionDetails = true;
     }
@@ -449,6 +451,7 @@ export class MemStorage implements IStorage {
         canEditArticles: false,
         canDeleteArticles: false,
         canManageCoaching: false,
+        canManageGroupSessions: false,
         canScheduleSessions: false,
         canViewSessionDetails: false,
         canViewAnalytics: false

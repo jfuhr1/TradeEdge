@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { User } from "@shared/schema";
-import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { AdminStatusToggle } from "@/components/admin/AdminStatusToggle";
-import { RoleSelector } from "@/components/admin/RoleSelector";
-import { PermissionsManager } from "@/components/admin/PermissionsManager";
+import { PlusCircle, Search, UserCog, Shield, Mail, RefreshCw, ArrowUpDown } from "lucide-react";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -14,333 +14,299 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Loader2, Search, Settings, User as UserIcon } from "lucide-react";
-import AdminLayout from "@/components/admin/AdminLayout";
+import { useToast } from "@/hooks/use-toast";
 
-export default function AdminUsersPage() {
-  const { currentUserPermissions, isLoadingPermissions } = useAdminPermissions();
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all-users");
-
-  // Fetch all users
-  const {
-    data: users,
-    isLoading: isLoadingUsers,
-    error: usersError,
-  } = useQuery<User[]>({
-    queryKey: ['/api/admin/users'],
-    enabled: !!currentUserPermissions?.canManageUsers,
+export default function AdminUsers() {
+  const { toast } = useToast();
+  const [search, setSearch] = useState("");
+  const [tierFilter, setTierFilter] = useState("all");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof User;
+    direction: "ascending" | "descending";
+  }>({
+    key: "createdAt",
+    direction: "descending",
   });
 
-  // Fetch admin users
-  const {
-    data: adminUsers,
-    isLoading: isLoadingAdminUsers,
-    error: adminUsersError,
-  } = useQuery<User[]>({
-    queryKey: ['/api/admin/users/admins'],
-    enabled: !!currentUserPermissions?.canManageAdmins || !!currentUserPermissions?.canManageUsers,
+  // Fetch users
+  const { data: users, isLoading, refetch } = useQuery<User[]>({
+    queryKey: ["/api/admin/users"],
   });
 
-  if (isLoadingPermissions) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-96">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (!currentUserPermissions?.canManageUsers && !currentUserPermissions?.canManageAdmins) {
-    return (
-      <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-96">
-          <h2 className="text-2xl font-bold">Access Denied</h2>
-          <p className="text-muted-foreground mt-2">
-            You don't have permission to manage users or admins.
-          </p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  const filterUsers = (userList: User[] | undefined) => {
-    if (!userList) return [];
-    
-    return userList.filter(user => {
-      if (!searchQuery) return true;
-      
-      const query = searchQuery.toLowerCase();
-      return (
-        user.username.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.name.toLowerCase().includes(query) ||
-        (user.adminRole && user.adminRole.toLowerCase().includes(query))
-      );
+  const handleSort = (key: keyof User) => {
+    setSortConfig({
+      key,
+      direction:
+        sortConfig.key === key && sortConfig.direction === "ascending"
+          ? "descending"
+          : "ascending",
     });
   };
 
-  const filteredUsers = filterUsers(users);
-  const filteredAdminUsers = filterUsers(adminUsers);
+  const filteredUsers = users
+    ? users
+        .filter((user) => {
+          const matchesSearch =
+            search === "" ||
+            user.username.toLowerCase().includes(search.toLowerCase()) ||
+            user.email.toLowerCase().includes(search.toLowerCase()) ||
+            (user.name && user.name.toLowerCase().includes(search.toLowerCase()));
 
-  const isUserSuperAdmin = (user: User) => user.adminRole === 'super_admin';
+          const matchesTier = tierFilter === "all" || user.tier === tierFilter;
+
+          return matchesSearch && matchesTier;
+        })
+        .sort((a, b) => {
+          // Handle different types of columns for sorting
+          if (sortConfig.key === "createdAt") {
+            const aDate = new Date(a.createdAt).getTime();
+            const bDate = new Date(b.createdAt).getTime();
+            return sortConfig.direction === "ascending" ? aDate - bDate : bDate - aDate;
+          }
+
+          if (typeof a[sortConfig.key] === "string" && typeof b[sortConfig.key] === "string") {
+            const aValue = (a[sortConfig.key] as string).toLowerCase();
+            const bValue = (b[sortConfig.key] as string).toLowerCase();
+            return sortConfig.direction === "ascending"
+              ? aValue.localeCompare(bValue)
+              : bValue.localeCompare(aValue);
+          }
+
+          return 0;
+        })
+    : [];
+
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Refreshed",
+      description: "User list has been refreshed",
+    });
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case "free":
+        return "bg-gray-200 hover:bg-gray-300 text-gray-800";
+      case "paid":
+        return "bg-blue-100 hover:bg-blue-200 text-blue-800";
+      case "premium":
+        return "bg-purple-100 hover:bg-purple-200 text-purple-800";
+      case "mentorship":
+        return "bg-amber-100 hover:bg-amber-200 text-amber-800";
+      default:
+        return "bg-gray-100 hover:bg-gray-200 text-gray-800";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  };
 
   return (
     <AdminLayout>
-      <Card className="shadow-sm">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                Manage users and admin permissions
-              </CardDescription>
-            </div>
-            <div className="relative w-full md:w-auto">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 w-full md:w-[250px]"
-              />
-            </div>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">User Management</h1>
+            <p className="text-muted-foreground">
+              Manage user accounts, permissions and memberships
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-              <TabsTrigger value="all-users">All Users</TabsTrigger>
-              <TabsTrigger value="admin-users">Admin Users</TabsTrigger>
-            </TabsList>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </div>
+        </div>
 
-            <TabsContent value="all-users" className="space-y-4">
-              {isLoadingUsers ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : usersError ? (
-                <div className="text-red-500 py-4">
-                  Error loading users: {usersError.message}
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Membership</TableHead>
-                      <TableHead>Admin Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          {searchQuery
-                            ? "No users match your search query"
-                            : "No users found"}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
-                                <UserIcon className="h-4 w-4 text-primary" />
-                              </div>
-                              {user.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.tier === 'Premium' ? 'default' : 'secondary'}>
-                              {user.tier || 'Free'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {currentUserPermissions.canManageAdmins ? (
-                              <AdminStatusToggle user={user} disabled={isUserSuperAdmin(user)} />
-                            ) : (
-                              <Badge variant={user.isAdmin ? 'default' : 'outline'}>
-                                {user.isAdmin ? (
-                                  <>
-                                    Admin
-                                    {user.adminRole && ` (${user.adminRole})`}
-                                  </>
-                                ) : (
-                                  "User"
-                                )}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {user.isAdmin && (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setSelectedUserId(user.id)}
-                                  >
-                                    <Settings className="h-4 w-4 mr-1" />
-                                    Manage
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      Manage Admin: {user.name}
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Configure role and permissions for this admin user
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  
-                                  <div className="py-4">
-                                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start mb-6">
-                                      <div>
-                                        <h3 className="text-lg font-semibold mb-1">Admin Role</h3>
-                                        <p className="text-sm text-muted-foreground mb-2">
-                                          Assign a role to this admin user
-                                        </p>
-                                        <RoleSelector user={user} disabled={isUserSuperAdmin(user)} />
-                                      </div>
-                                      
-                                      <div>
-                                        <h3 className="text-lg font-semibold mb-1">Admin Status</h3>
-                                        <p className="text-sm text-muted-foreground mb-2">
-                                          Toggle admin status for this user
-                                        </p>
-                                        <AdminStatusToggle user={user} disabled={isUserSuperAdmin(user)} />
-                                      </div>
-                                    </div>
-                                    
-                                    {selectedUserId && (
-                                      <PermissionsManager userId={selectedUserId} />
-                                    )}
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </TabsContent>
+        {/* Filter controls */}
+        <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 mb-6">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by username or email"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex space-x-2 items-center">
+            <span className="text-sm font-medium whitespace-nowrap">Filter by tier:</span>
+            <Select value={tierFilter} onValueChange={setTierFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Tiers" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="mentorship">Mentorship</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-            <TabsContent value="admin-users" className="space-y-4">
-              {isLoadingAdminUsers ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : adminUsersError ? (
-                <div className="text-red-500 py-4">
-                  Error loading admin users: {adminUsersError.message}
-                </div>
+        {/* Users table */}
+        <div className="bg-card rounded-md border shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12 text-center">Admin</TableHead>
+                <TableHead className="w-[250px]">
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSort("username")}
+                  >
+                    User
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="w-[120px]">
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSort("tier")}
+                  >
+                    Tier
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
+                <TableHead className="w-[130px]">
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSort("createdAt")}
+                  >
+                    Joined
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="flex justify-center">
+                      <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                    <div className="mt-2 text-muted-foreground">Loading users...</div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="text-muted-foreground">No users found</div>
+                  </TableCell>
+                </TableRow>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Admin</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAdminUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          {searchQuery
-                            ? "No admin users match your search query"
-                            : "No admin users found"}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredAdminUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
-                                <UserIcon className="h-4 w-4 text-primary" />
-                              </div>
-                              {user.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            {currentUserPermissions.canManageAdmins ? (
-                              <RoleSelector user={user} disabled={isUserSuperAdmin(user) && user.id !== currentUserPermissions.userId} />
-                            ) : (
-                              <Badge variant="default">
-                                {user.adminRole || 'Admin'}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedUserId(user.id)}
-                                >
-                                  <Settings className="h-4 w-4 mr-1" />
-                                  Permissions
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-3xl">
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    Admin Permissions: {user.name}
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    Configure permissions for this admin user
-                                  </DialogDescription>
-                                </DialogHeader>
-                                
-                                {selectedUserId && (
-                                  <PermissionsManager userId={selectedUserId} />
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="text-center">
+                      {user.isAdmin && (
+                        <div className="inline-flex items-center justify-center w-6 h-6">
+                          <Shield className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground mr-2">
+                          {user.name?.charAt(0) || user.username.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.username}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {user.name || "No name provided"}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getTierColor(user.tier)}>{user.tier}</Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(user.createdAt.toString())}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <UserCog className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <Link href={`/admin/users/${user.id}`}>
+                            <DropdownMenuItem>Edit Profile</DropdownMenuItem>
+                          </Link>
+                          <Link href={`/admin/users/${user.id}/permissions`}>
+                            <DropdownMenuItem>Edit Permissions</DropdownMenuItem>
+                          </Link>
+                          <DropdownMenuItem>Change Tier</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            Disable Account
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination placeholder */}
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{filteredUsers.length}</span> of{" "}
+            <span className="font-medium">{users?.length || 0}</span> users
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
     </AdminLayout>
   );
 }
