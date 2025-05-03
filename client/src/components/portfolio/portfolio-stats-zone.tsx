@@ -29,7 +29,7 @@ interface StatsZoneProps {
 // Define tooltips for metrics
 const tooltips = {
   avgProfitPerTrade: "The average profit gained on each closed trade. Calculated as total closed profit divided by number of closed positions.",
-  winRate: "Percentage of closed trades that were profitable. Calculated as (winning trades ÷ total trades) × 100.",
+  winRate: "Percentage of all-time closed trades that were profitable. Calculated as (winning trades ÷ total trades) × 100.",
   profitFactor: "Ratio of gross profits to gross losses. A value above 1.0 indicates a profitable strategy. Calculated as (sum of all profits ÷ sum of all losses).",
   annualizedReturn: "Your portfolio's return adjusted to represent a one-year period. Accounts for compounding effect based on average holding period.",
   expectedValue: "The amount you can expect to win (or lose) per trade on average. Calculated as (win rate × average win) - ((1 - win rate) × average loss).",
@@ -271,7 +271,7 @@ export default function PortfolioStatsZone({ portfolioStats, purchaseMetrics }: 
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <MetricWithTooltip label="Win Rate" tooltip={tooltips.winRate} />
+                    <MetricWithTooltip label="Win Rate (All Time)" tooltip={tooltips.winRate} />
                     <span className={`font-bold ${portfolioStats.winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
                       {portfolioStats.winRate.toFixed(1)}%
                     </span>

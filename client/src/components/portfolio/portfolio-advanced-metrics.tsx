@@ -160,7 +160,7 @@ export default function PortfolioAdvancedMetrics({ stats }: PortfolioAdvancedMet
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span>Win Rate</span>
+                  <span>Win Rate (All Time)</span>
                   <span className="font-bold">{successRate.toFixed(1)}%</span>
                 </div>
               </div>

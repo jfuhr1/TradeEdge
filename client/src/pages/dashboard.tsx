@@ -725,9 +725,9 @@ export default function Dashboard() {
                   <TableHead>Date Added</TableHead>
                   <TableHead>Current Price</TableHead>
                   <TableHead>Buy Zone</TableHead>
-                  <TableHead>Target 1</TableHead>
-                  <TableHead>Target 2</TableHead>
-                  <TableHead>Target 3</TableHead>
+                  <TableHead className="text-center">Target 1</TableHead>
+                  <TableHead className="text-center">Target 2</TableHead>
+                  <TableHead className="text-center">Target 3</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -758,20 +758,24 @@ export default function Dashboard() {
                         <TableCell>{stock.companyName}</TableCell>
                         <TableCell>{new Date(stock.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>${stock.currentPrice.toFixed(2)}</TableCell>
-                        <TableCell>${stock.buyZoneMin.toFixed(2)} - ${stock.buyZoneMax.toFixed(2)}</TableCell>
-                        <TableCell className="text-green-600">
+                        <TableCell>
+                          <span className="font-mono">${stock.buyZoneMin.toFixed(2)} -</span>
+                          <br />
+                          <span className="font-mono">${stock.buyZoneMax.toFixed(2)}</span>
+                        </TableCell>
+                        <TableCell className="text-center text-green-600">
                           ${stock.target1.toFixed(2)}
                           <span className="text-xs block">
                             (+{calculatePotentialGain(stock, stock.target1).toFixed(1)}%)
                           </span>
                         </TableCell>
-                        <TableCell className="text-green-600">
+                        <TableCell className="text-center text-green-600">
                           ${stock.target2.toFixed(2)}
                           <span className="text-xs block">
                             (+{calculatePotentialGain(stock, stock.target2).toFixed(1)}%)
                           </span>
                         </TableCell>
-                        <TableCell className="text-green-600">
+                        <TableCell className="text-center text-green-600">
                           ${stock.target3.toFixed(2)}
                           <span className="text-xs block">
                             (+{calculatePotentialGain(stock, stock.target3).toFixed(1)}%)
