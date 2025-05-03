@@ -551,80 +551,179 @@ export default function Dashboard() {
               </Card>
             </>
           ) : (
-            displayAlerts.map((alert) => (
-              <Card key={alert.id} className="overflow-hidden">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Link href={`/stock-detail/${alert.symbol}`}>
-                          <span className="text-xl font-bold hover:text-primary hover:underline cursor-pointer">{alert.symbol}</span>
-                        </Link>
-                        {alert.status === "in-buy-zone" ? (
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                            In Buy Zone
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            Above Buy Zone
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{alert.companyName}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center justify-end mb-1">
-                        <p className="text-lg font-semibold mr-2">${alert.currentPrice.toFixed(2)}</p>
-                        <Link href={`/stock-detail/${alert.symbol}`}>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 py-1">
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                            View
-                          </Button>
-                        </Link>
-                      </div>
-                      {connected && 
-                        <div className="flex items-center justify-end text-xs text-green-600">
-                          <Wifi className="h-3 w-3 mr-1" /> Live
+            displayAlerts.map((alert) => {
+              // Calculate price position as % relative to the full range
+              const fullRange = alert.target3 - (alert.buyZoneMin * 0.9);
+              const currentPosition = ((alert.currentPrice - (alert.buyZoneMin * 0.9)) / fullRange) * 100;
+              const clampedPosition = Math.min(Math.max(currentPosition, 0), 100);
+              
+              // Determine status and color scheme
+              const isPriceInBuyZone = alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax;
+              const isPriceBelowBuyZone = alert.currentPrice < alert.buyZoneMin;
+              
+              // Calculate target percentages
+              const target1Percent = ((alert.target1 / alert.currentPrice) - 1) * 100;
+              const target2Percent = ((alert.target2 / alert.currentPrice) - 1) * 100;
+              const target3Percent = ((alert.target3 / alert.currentPrice) - 1) * 100;
+              
+              // Date display
+              const alertDate = new Date(alert.createdAt);
+              const isNew = Date.now() - alertDate.getTime() < 24 * 60 * 60 * 1000;
+              
+              return (
+                <Card 
+                  key={alert.id} 
+                  className={`overflow-hidden transition-all duration-200 hover:shadow-md ${
+                    isPriceInBuyZone 
+                      ? 'border-green-500 hover:-translate-y-1' 
+                      : isPriceBelowBuyZone 
+                        ? 'border-amber-500 hover:-translate-y-1'
+                        : 'border-gray-200'
+                  }`}
+                >
+                  <div className="relative">
+                    {/* Top colored banner based on status */}
+                    <div 
+                      className={`h-1.5 w-full ${
+                        isPriceInBuyZone 
+                          ? 'bg-green-500' 
+                          : isPriceBelowBuyZone 
+                            ? 'bg-amber-500'
+                            : 'bg-blue-500'
+                      }`}
+                    />
+                    
+                    <CardHeader className="p-4 pb-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Link href={`/stock-detail/${alert.symbol}`}>
+                              <span className="text-xl font-bold hover:text-primary hover:underline cursor-pointer">{alert.symbol}</span>
+                            </Link>
+                            {isPriceInBuyZone ? (
+                              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                                Buy Zone
+                              </Badge>
+                            ) : isPriceBelowBuyZone ? (
+                              <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                                High R/R
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">
+                                Above Buy Zone
+                              </Badge>
+                            )}
+                            {isNew && (
+                              <Badge variant="outline" className="bg-blue-100 text-blue-800 text-xs">
+                                New
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{alert.companyName}</p>
                         </div>
-                      }
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <div className="grid grid-cols-2 gap-2 my-2">
-                    <div className="text-sm">
-                      <p className="text-muted-foreground">Buy Zone</p>
-                      <p className="font-medium">${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}</p>
-                    </div>
-                    <div className="text-sm">
-                      <p className="text-muted-foreground">Date Added</p>
-                      <p className="font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-2 mt-2">
-                    <p className="text-sm text-muted-foreground mb-1">Price Targets</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                        <p className="text-xs text-muted-foreground">Target 1</p>
-                        <p className="font-semibold">${alert.target1.toFixed(2)}</p>
-                        <p className="text-xs text-green-600">+{(((alert.target1 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                        <div className="text-right">
+                          <div className="flex items-center justify-end mb-1">
+                            <p className={`text-lg font-mono font-semibold mr-2 ${
+                              isPriceInBuyZone 
+                                ? 'text-green-600' 
+                                : isPriceBelowBuyZone 
+                                  ? 'text-amber-600'
+                                  : ''
+                            }`}>
+                              ${alert.currentPrice.toFixed(2)}
+                            </p>
+                            <Link href={`/stock-detail/${alert.symbol}`}>
+                              <Button variant="ghost" size="sm" className="h-7 px-2 py-1">
+                                <Eye className="h-3.5 w-3.5 mr-1" />
+                                View
+                              </Button>
+                            </Link>
+                          </div>
+                          {connected && 
+                            <div className="flex items-center justify-end text-xs text-green-600">
+                              <Wifi className="h-3 w-3 mr-1" /> Live
+                            </div>
+                          }
+                        </div>
                       </div>
-                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                        <p className="text-xs text-muted-foreground">Target 2</p>
-                        <p className="font-semibold">${alert.target2.toFixed(2)}</p>
-                        <p className="text-xs text-green-600">+{(((alert.target2 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                    </CardHeader>
+                    
+                    <CardContent className="p-4">
+                      {/* Price visualization */}
+                      <div className="relative h-8 mt-4 mb-6">
+                        {/* Price range background bar */}
+                        <div className="absolute w-full h-2 bg-gray-100 rounded-full top-1">
+                          {/* Buy zone indicator */}
+                          <div 
+                            className="absolute h-full bg-green-200 rounded-sm z-0"
+                            style={{
+                              left: `${((alert.buyZoneMin - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%`,
+                              width: `${((alert.buyZoneMax - alert.buyZoneMin) / fullRange) * 100}%`
+                            }}
+                          />
+                          
+                          {/* Target markers */}
+                          <div 
+                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
+                            style={{ left: `${((alert.target1 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
+                          />
+                          <div 
+                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
+                            style={{ left: `${((alert.target2 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
+                          />
+                          <div 
+                            className="absolute w-0.5 h-4 bg-blue-500 -top-1 z-10"
+                            style={{ left: `${((alert.target3 - (alert.buyZoneMin * 0.9)) / fullRange) * 100}%` }}
+                          />
+                          
+                          {/* Current price indicator */}
+                          <div 
+                            className="absolute w-1 h-6 bg-black -top-2 rounded-full z-20"
+                            style={{ left: `${clampedPosition}%` }}
+                          >
+                            <div className="absolute w-24 text-center -top-6 -left-12 text-xs font-medium">
+                              Current Price
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-green-50 border border-green-100 rounded p-2 text-center">
-                        <p className="text-xs text-muted-foreground">Target 3</p>
-                        <p className="font-semibold">${alert.target3.toFixed(2)}</p>
-                        <p className="text-xs text-green-600">+{(((alert.target3 / alert.currentPrice) - 1) * 100).toFixed(1)}%</p>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="text-sm bg-gray-50 p-2 rounded">
+                          <p className="text-xs font-medium text-muted-foreground">Buy Zone</p>
+                          <p className="font-medium text-green-600">${alert.buyZoneMin.toFixed(2)} - ${alert.buyZoneMax.toFixed(2)}</p>
+                        </div>
+                        <div className="text-sm bg-gray-50 p-2 rounded">
+                          <p className="text-xs font-medium text-muted-foreground">Date Added</p>
+                          <p className="font-medium">{new Date(alert.createdAt).toLocaleDateString()}</p>
+                        </div>
                       </div>
-                    </div>
+                      
+                      <div>
+                        <p className="text-xs font-semibold mb-2">Price Targets</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200 rounded p-2 text-center">
+                            <p className="text-xs font-medium text-blue-800">Target 1</p>
+                            <p className="font-mono font-semibold">${alert.target1.toFixed(2)}</p>
+                            <p className="text-xs text-green-600 font-medium">+{target1Percent.toFixed(1)}%</p>
+                          </div>
+                          <div className="bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200 rounded p-2 text-center">
+                            <p className="text-xs font-medium text-blue-800">Target 2</p>
+                            <p className="font-mono font-semibold">${alert.target2.toFixed(2)}</p>
+                            <p className="text-xs text-green-600 font-medium">+{target2Percent.toFixed(1)}%</p>
+                          </div>
+                          <div className="bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200 rounded p-2 text-center">
+                            <p className="text-xs font-medium text-blue-800">Target 3</p>
+                            <p className="font-mono font-semibold">${alert.target3.toFixed(2)}</p>
+                            <p className="text-xs text-green-600 font-medium">+{target3Percent.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
                   </div>
-                </CardContent>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
