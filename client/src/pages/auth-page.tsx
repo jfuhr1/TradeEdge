@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 // Login form schema
 const loginSchema = z.object({
@@ -52,9 +53,23 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const { loginMutation, registerMutation, user } = useAuth();
+  const [location, setLocation] = useLocation();
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      // If user is admin, redirect to admin dashboard
+      if (user.isAdmin) {
+        setLocation("/admin");
+      } else {
+        // Otherwise, redirect to user dashboard
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
+  
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -78,22 +93,33 @@ export default function AuthPage() {
 
   // Handle login form submission
   function onLoginSubmit(data: LoginFormValues) {
-    setIsLoggingIn(true);
-    // Simulate login - would be replaced with real authentication
-    setTimeout(() => {
-      setIsLoggingIn(false);
-      window.location.href = "/";
-    }, 800);
+    loginMutation.mutate(data, {
+      onSuccess: (user) => {
+        // Navigate to appropriate page based on admin status
+        if (user.isAdmin) {
+          setLocation("/admin");
+        } else {
+          setLocation("/dashboard");
+        }
+      }
+    });
   }
 
   // Handle register form submission
   function onRegisterSubmit(data: RegisterFormValues) {
-    setIsRegistering(true);
-    // Simulate registration - would be replaced with real authentication
-    setTimeout(() => {
-      setIsRegistering(false);
-      window.location.href = "/";
-    }, 800);
+    // Extract data without confirmPassword which isn't part of our API schema
+    const { confirmPassword, ...registerData } = data;
+    
+    registerMutation.mutate(registerData, {
+      onSuccess: (user) => {
+        // Navigate to appropriate page based on admin status
+        if (user.isAdmin) {
+          setLocation("/admin");
+        } else {
+          setLocation("/dashboard");
+        }
+      }
+    });
   }
 
   return (
@@ -220,9 +246,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={isLoggingIn}
+                        disabled={loginMutation.isPending}
                       >
-                        {isLoggingIn ? (
+                        {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Logging in...
@@ -251,11 +277,12 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       variant="outline"
+                      disabled={isDemoLoading}
                       onClick={() => {
                         // Simulate successful login for demo purposes
-                        setIsLoggingIn(true);
+                        setIsDemoLoading(true);
                         setTimeout(() => {
-                          setIsLoggingIn(false);
+                          setIsDemoLoading(false);
                           // Set demo mode in localStorage
                           localStorage.setItem('demoMode', 'true');
                           // Use full page refresh to reload the app with demo login
@@ -263,7 +290,14 @@ export default function AuthPage() {
                         }, 800);
                       }}
                     >
-                      Skip Login (Demo Mode)
+                      {isDemoLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading demo...
+                        </>
+                      ) : (
+                        "Skip Login (Demo Mode)"
+                      )}
                     </Button>
                   </div>
                 </TabsContent>
@@ -345,9 +379,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={isRegistering}
+                        disabled={registerMutation.isPending}
                       >
-                        {isRegistering ? (
+                        {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Creating account...
@@ -376,11 +410,12 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       variant="outline"
+                      disabled={isDemoLoading}
                       onClick={() => {
                         // Simulate successful registration for demo purposes
-                        setIsRegistering(true);
+                        setIsDemoLoading(true);
                         setTimeout(() => {
-                          setIsRegistering(false);
+                          setIsDemoLoading(false);
                           // Set demo mode in localStorage
                           localStorage.setItem('demoMode', 'true');
                           // Use full page refresh to reload the app with demo login
@@ -388,7 +423,14 @@ export default function AuthPage() {
                         }, 800);
                       }}
                     >
-                      Skip Registration (Demo Mode)
+                      {isDemoLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading demo...
+                        </>
+                      ) : (
+                        "Skip Registration (Demo Mode)"
+                      )}
                     </Button>
                   </div>
                 </TabsContent>
