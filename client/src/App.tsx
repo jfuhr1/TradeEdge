@@ -8,7 +8,14 @@ import SampleStockPick from "./pages/sample-stock-pick";
 import Portfolio from "./pages/portfolio";
 import Education from "./pages/education";
 import Coaching from "./pages/coaching";
+
+// Admin pages
 import CreateAlert from "./pages/admin/create-alert";
+import AdminDashboard from "./pages/admin/dashboard";
+import AdminEducation from "./pages/admin/education";
+import AdminArticles from "./pages/admin/articles";
+import AdminCoaching from "./pages/admin/coaching";
+import AlertPerformance from "./pages/admin/performance";
 
 import AccountSettings from "./pages/account-settings";
 import NotificationSettings from "./pages/notification-settings";
@@ -51,7 +58,15 @@ function App() {
           <ProtectedRoute path="/notifications" component={Notifications} />
           <ProtectedRoute path="/notification-settings" component={NotificationSettings} />
           <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
+          
+          {/* Admin routes */}
+          <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
+          <ProtectedRoute path="/admin/education" component={AdminEducation} />
+          <ProtectedRoute path="/admin/articles" component={AdminArticles} />
+          <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
+          <ProtectedRoute path="/admin/performance" component={AlertPerformance} />
+          
           <Route component={NotFound} />
         </Switch>
       </AppLayout>

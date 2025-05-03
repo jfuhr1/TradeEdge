@@ -127,9 +127,9 @@ export function Navbar() {
                 asChild
                 onClick={() => setIsOpen(false)}
               >
-                <Link href="/admin/create-alert">
+                <Link href="/admin/dashboard">
                   <Settings className="h-4 w-4 mr-2" />
-                  Admin
+                  Admin Dashboard
                 </Link>
               </Button>
             )}
@@ -189,6 +189,9 @@ export function Navbar() {
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/admin/dashboard">Admin Dashboard</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/admin/create-alert">Create Alert</Link>
               </DropdownMenuItem>
