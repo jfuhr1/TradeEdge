@@ -759,9 +759,8 @@ export default function Dashboard() {
                         <TableCell>{new Date(stock.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>${stock.currentPrice.toFixed(2)}</TableCell>
                         <TableCell>
-                          <span className="font-mono">${stock.buyZoneMin.toFixed(2)} -</span>
-                          <br />
-                          <span className="font-mono">${stock.buyZoneMax.toFixed(2)}</span>
+                          <div className="font-mono whitespace-nowrap">${stock.buyZoneMin.toFixed(2)} -</div>
+                          <div className="font-mono">${stock.buyZoneMax.toFixed(2)}</div>
                         </TableCell>
                         <TableCell className="text-center text-green-600">
                           ${stock.target1.toFixed(2)}
@@ -962,7 +961,10 @@ export default function Dashboard() {
                       <TableCell className="font-medium">{target.symbol}</TableCell>
                       <TableCell>{target.companyName}</TableCell>
                       <TableCell>{target.alertDate.toLocaleDateString()}</TableCell>
-                      <TableCell>${target.buyZoneMin.toFixed(2)} - ${target.buyZoneMax.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="font-mono whitespace-nowrap">${target.buyZoneMin.toFixed(2)} -</div>
+                        <div className="font-mono">${target.buyZoneMax.toFixed(2)}</div>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-green-50 text-green-700">
                           {target.targetName}
