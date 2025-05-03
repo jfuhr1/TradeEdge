@@ -38,13 +38,35 @@ export const stockAlerts = pgTable("stock_alerts", {
   target1: doublePrecision("target1").notNull(),
   target2: doublePrecision("target2").notNull(),
   target3: doublePrecision("target3").notNull(),
+  
+  // New fields for target reasoning
+  target1Reasoning: text("target1_reasoning"),
+  target2Reasoning: text("target2_reasoning"),
+  target3Reasoning: text("target3_reasoning"),
+  
   stopLoss: doublePrecision("stop_loss"),
   sector: text("sector"),
   industry: text("industry"),
-  narrative: text("narrative"),
-  chartImageUrl: text("chart_image_url"),
+  
+  // Main narrative and risk assessment
+  narrative: text("narrative"), // Overall investment thesis
+  risks: text("risks"), // Potential risks or concerns
+  
+  // Chart images - separate fields for daily and weekly charts
+  dailyChartImageUrl: text("daily_chart_image_url"),
+  weeklyChartImageUrl: text("weekly_chart_image_url"),
+  mainChartType: text("main_chart_type").default("daily"), // "daily" or "weekly" - which chart to show as main
+  
+  // Technical and fundamental analysis
   technicalReasons: json("technical_reasons").notNull(),
   fundamentalReasons: json("fundamental_reasons").default([]),
+  
+  // Tags for categorization
+  tags: json("tags").default([]), // Array of string tags
+  
+  // Confluences - key supporting factors
+  confluences: json("confluences").default([]), // Array of confluence factors
+  
   riskRating: integer("risk_rating"), // 1-5 scale
   timeFrame: text("time_frame"), // short, medium, long term
   potentialReturns: json("potential_returns").default([]), // array of {target, percentage} objects

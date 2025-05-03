@@ -286,7 +286,30 @@ export class MemStorage implements IStorage {
   async createStockAlert(alert: InsertStockAlert): Promise<StockAlert> {
     const id = this.stockAlertId++;
     const now = new Date();
-    const stockAlert: StockAlert = { ...alert, id, createdAt: now };
+    
+    // Handle backward compatibility with existing chartImageUrl field
+    // If the new chart URL fields aren't provided but the old one is, use it
+    if (alert.chartImageUrl && (!alert.dailyChartImageUrl || !alert.weeklyChartImageUrl)) {
+      alert.dailyChartImageUrl = alert.dailyChartImageUrl || alert.chartImageUrl;
+      alert.weeklyChartImageUrl = alert.weeklyChartImageUrl || alert.chartImageUrl;
+    }
+    
+    // Set default for mainChartType if not provided
+    if (!alert.mainChartType) {
+      alert.mainChartType = "daily";
+    }
+    
+    // Create default empty arrays for new JSON fields if not provided
+    alert.tags = alert.tags || [];
+    alert.confluences = alert.confluences || [];
+    
+    const stockAlert: StockAlert = { 
+      ...alert, 
+      id, 
+      createdAt: now,
+      updatedAt: now
+    };
+    
     this.stockAlerts.set(id, stockAlert);
     return stockAlert;
   }
