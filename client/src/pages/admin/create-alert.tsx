@@ -26,6 +26,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 // Available tags for stock alerts
 const STOCK_TAGS = [
@@ -118,6 +120,7 @@ const stockAlertFormSchema = z.object({
   narrative: z.string().min(10, "Narrative is required and should provide context"),
   dailyChartUrl: z.string().optional(),
   weeklyChartUrl: z.string().optional(),
+  mainChartType: z.enum(["daily", "weekly"]).default("daily"),
   technicalReasons: z.array(z.string()),
   priceConfluences: z.array(z.string()),
   volumeConfluences: z.array(z.string()),
@@ -216,6 +219,7 @@ export default function CreateAlert() {
       narrative: '',
       dailyChartUrl: '',
       weeklyChartUrl: '',
+      mainChartType: 'daily',
       technicalReasons: [],
       priceConfluences: [],
       volumeConfluences: [],
@@ -450,10 +454,14 @@ export default function CreateAlert() {
       ...selectedSentimentConfluences
     ];
     
-    // Set the main chart type (defaulting to daily if both are present)
-    const mainChartType = data.dailyChartUrl && data.weeklyChartUrl ? 'daily' : 
-                          data.dailyChartUrl ? 'daily' : 
-                          data.weeklyChartUrl ? 'weekly' : 'daily';
+    // Set the main chart type based on user selection
+    // (If only one chart exists, we'll override with that one regardless of selection)
+    let mainChartType = data.mainChartType;
+    if (!data.dailyChartUrl && data.weeklyChartUrl) {
+      mainChartType = 'weekly';
+    } else if (data.dailyChartUrl && !data.weeklyChartUrl) {
+      mainChartType = 'daily';
+    }
     
     // Make sure all selected data is properly set
     const formData = {
@@ -1392,6 +1400,39 @@ export default function CreateAlert() {
                     )}
                   />
                 </div>
+                
+                {/* Main Chart Type Selection */}
+                <FormField
+                  control={form.control}
+                  name="mainChartType"
+                  render={({ field }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel>Main Chart Display</FormLabel>
+                      <div className="flex flex-col space-y-2">
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="daily" id="chart-daily" />
+                              <Label htmlFor="chart-daily">Use Daily Chart as Main Display</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="weekly" id="chart-weekly" />
+                              <Label htmlFor="chart-weekly">Use Weekly Chart as Main Display</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                      </div>
+                      <FormDescription>
+                        Select which chart should be displayed as the main chart on the alert details page
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               
               {/* Notes Section */}
