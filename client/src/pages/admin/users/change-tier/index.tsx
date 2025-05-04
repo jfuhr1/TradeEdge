@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { User } from "@shared/schema";
 import { ArrowLeft, Loader2, CreditCard, CheckCircle2 } from "lucide-react";
+import { useRoute, useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,16 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Link } from "wouter";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { useLocation } from "wouter";
-
-// Helper to get URL query parameters
-function useQueryParams() {
-  const [location] = useLocation();
-  const params = new URLSearchParams(location.split('?')[1]);
-  return params;
-}
 
 // Schema for the change tier form
 const changeTierSchema = z.object({
@@ -109,8 +101,9 @@ const tierInfo = {
 };
 
 export default function ChangeTier() {
-  const params = useQueryParams();
-  const id = params.get('id');
+  const [match, routeParams] = useRoute("/admin/users/change-tier");
+  // Check both route params and query params for the ID
+  const id = routeParams?.id || new URLSearchParams(window.location.search).get("id");
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const [success, setSuccess] = useState(false);

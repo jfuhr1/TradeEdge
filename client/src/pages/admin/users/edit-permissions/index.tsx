@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { User, AdminPermission } from "@shared/schema";
 import { ArrowLeft, Loader2, Save, Shield } from "lucide-react";
+import { useRoute, useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +30,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Link } from "wouter";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { useLocation } from "wouter";
 
 // Schema for the edit permissions form
 const editPermissionsSchema = z.object({
@@ -70,16 +69,11 @@ const editPermissionsSchema = z.object({
 
 type EditPermissionsFormValues = z.infer<typeof editPermissionsSchema>;
 
-// Helper to get URL query parameters
-function useQueryParams() {
-  const [location] = useLocation();
-  const params = new URLSearchParams(location.split('?')[1]);
-  return params;
-}
-
 export default function EditUserPermissions() {
-  const params = useQueryParams();
-  const id = params.get('id');
+  const [match, routeParams] = useRoute("/admin/users/edit-permissions");
+  const queryParams = useQueryParams();
+  // Check both route params and query params for the ID
+  const id = routeParams?.id || queryParams.get('id');
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const [initialLoading, setInitialLoading] = useState(true);
