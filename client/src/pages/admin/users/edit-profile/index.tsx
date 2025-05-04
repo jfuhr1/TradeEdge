@@ -405,10 +405,15 @@ export default function EditUserProfile() {
                 <div>
                   <h3 className="font-semibold text-sm text-muted-foreground">Admin Status</h3>
                   <p>{user.isAdmin ? 'Admin' : 'Regular User'}</p>
-                  {user.isAdmin && user.adminRole && (
-                    <p className="text-sm text-muted-foreground mt-1 capitalize">
-                      Role: {user.adminRole.replace('_', ' ')}
-                    </p>
+                  {user.isAdmin && user.adminRoles && Array.isArray(user.adminRoles) && user.adminRoles.length > 0 && (
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <p>Roles:</p>
+                      <ul className="list-disc pl-5 mt-1">
+                        {user.adminRoles.map((role, index) => (
+                          <li key={index} className="capitalize">{role.replace('_', ' ')}</li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
 

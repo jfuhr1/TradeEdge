@@ -427,17 +427,17 @@ export class MemStorage implements IStorage {
       throw new Error("User not found");
     }
     
-    // Set default admin role if making user an admin
-    let adminRole = user.adminRole;
-    if (isAdmin && !adminRole) {
-      adminRole = "admin"; // Default role
+    // Set default admin roles if making user an admin
+    let adminRoles = user.adminRoles;
+    if (isAdmin && (!adminRoles || (Array.isArray(adminRoles) && adminRoles.length === 0))) {
+      adminRoles = ["admin"]; // Default role array
     } else if (!isAdmin) {
-      adminRole = null; // Remove role if no longer admin
+      adminRoles = []; // Empty array if no longer admin
     }
     
     const updatedUser = await this.updateUser(userId, { 
       isAdmin: isAdmin, 
-      adminRole 
+      adminRoles 
     });
     
     if (!updatedUser) {
