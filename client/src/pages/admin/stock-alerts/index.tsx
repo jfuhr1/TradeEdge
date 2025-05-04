@@ -76,12 +76,20 @@ type CreateAlertValues = z.infer<typeof createAlertSchema>;
 
 export default function AdminStockAlertsPage() {
   const { toast } = useToast();
-  const { hasAccess } = useAdminPermissions();
+  const { hasPermission } = useAdminPermissions();
   const [techReason, setTechReason] = useState("");
   const [activeTab, setActiveTab] = useState("new");
   
-  const canCreateAlerts = hasAccess("canCreateAlerts");
-  const canEditAlerts = hasAccess("canEditAlerts");
+  // Fetch all stock alerts for analytics
+  const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery({
+    queryKey: ["/api/stock-alerts"],
+  });
+  
+  // Ensure allAlerts is an array before using array methods
+  const alertsArray = Array.isArray(allAlerts) ? allAlerts : [];
+  
+  const canCreateAlerts = hasPermission("canCreateAlerts");
+  const canEditAlerts = hasPermission("canEditAlerts");
   
   // Form for creating a new stock alert
   const form = useForm<CreateAlertValues>({
@@ -100,11 +108,6 @@ export default function AdminStockAlertsPage() {
       requiredTier: "free",
       status: "active",
     }
-  });
-
-  // Fetch all stock alerts for analytics
-  const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery({
-    queryKey: ["/api/stock-alerts"],
   });
 
   // Create a new stock alert mutation
@@ -153,7 +156,7 @@ export default function AdminStockAlertsPage() {
 
   // Handle form submission
   const onSubmit = (values: CreateAlertValues) => {
-    if (!canCreateAlerts) {
+    if (!hasPermission("canCreateAlerts")) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to create alerts.",
@@ -167,7 +170,9 @@ export default function AdminStockAlertsPage() {
 
   // Prepare chart data for analytics
   const prepareChartData = () => {
-    if (!allAlerts || allAlerts.length === 0) {
+    // Using the alertsArray from component level
+    
+    if (alertsArray.length === 0) {
       return {
         labels: [],
         tierData: { labels: [], data: [] },
@@ -178,7 +183,7 @@ export default function AdminStockAlertsPage() {
     }
 
     // Get labels (stock symbols)
-    const labels = allAlerts.map((alert: any) => alert.symbol);
+    const labels = alertsArray.map((alert: any) => alert.symbol);
     
     // Tier distribution
     const tierCounts: Record<string, number> = {
@@ -188,7 +193,7 @@ export default function AdminStockAlertsPage() {
       mentorship: 0
     };
     
-    allAlerts.forEach((alert: any) => {
+    alertsArray.forEach((alert: any) => {
       const tier = alert.requiredTier || "free";
       tierCounts[tier] = (tierCounts[tier] || 0) + 1;
     });
@@ -200,7 +205,7 @@ export default function AdminStockAlertsPage() {
       cancelled: 0
     };
     
-    allAlerts.forEach((alert: any) => {
+    alertsArray.forEach((alert: any) => {
       const status = alert.status || "active";
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
@@ -211,19 +216,19 @@ export default function AdminStockAlertsPage() {
       datasets: [
         {
           label: 'Current Price',
-          data: allAlerts.map((alert: any) => alert.currentPrice),
+          data: alertsArray.map((alert: any) => alert.currentPrice),
           borderColor: 'rgba(53, 162, 235, 0.8)',
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
         },
         {
           label: 'Target 1',
-          data: allAlerts.map((alert: any) => alert.target1),
+          data: alertsArray.map((alert: any) => alert.target1),
           borderColor: 'rgba(75, 192, 192, 0.8)',
           backgroundColor: 'rgba(75, 192, 192, 0.5)',
         },
         {
           label: 'Target 3',
-          data: allAlerts.map((alert: any) => alert.target3),
+          data: alertsArray.map((alert: any) => alert.target3),
           borderColor: 'rgba(255, 159, 64, 0.8)',
           backgroundColor: 'rgba(255, 159, 64, 0.5)',
         }
@@ -236,7 +241,7 @@ export default function AdminStockAlertsPage() {
       datasets: [
         {
           label: 'Buy Zone Range',
-          data: allAlerts.map((alert: any) => alert.buyZoneMax - alert.buyZoneMin),
+          data: alertsArray.map((alert: any) => alert.buyZoneMax - alert.buyZoneMin),
           backgroundColor: 'rgba(153, 102, 255, 0.6)',
         }
       ]
@@ -676,7 +681,7 @@ export default function AdminStockAlertsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">{allAlerts?.length || 0}</div>
+                    <div className="text-2xl font-bold">{alertsArray.length}</div>
                     <AlertTriangle className="h-6 w-6 text-muted-foreground" />
                   </div>
                 </CardContent>
@@ -689,7 +694,7 @@ export default function AdminStockAlertsPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="text-2xl font-bold">
-                      {allAlerts?.filter((a: any) => a.status === "closed").length || 0}
+                      {alertsArray.filter((a: any) => a.status === "closed").length}
                     </div>
                     <Target className="h-6 w-6 text-muted-foreground" />
                   </div>
@@ -703,7 +708,7 @@ export default function AdminStockAlertsPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="text-2xl font-bold">
-                      {allAlerts?.filter((a: any) => a.status === "active").length || 0}
+                      {alertsArray.filter((a: any) => a.status === "active").length}
                     </div>
                     <TrendingUp className="h-6 w-6 text-muted-foreground" />
                   </div>
