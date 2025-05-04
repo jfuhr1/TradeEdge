@@ -1,128 +1,160 @@
 import { useAuth } from "@/hooks/use-auth";
 
+// All possible feature permissions in the system
 export type FeaturePermission = 
-  // Stock Alerts Permissions
-  | "view_all_alerts" 
+  // Free tier permissions
   | "view_monthly_free_alert"
-  | "custom_notifications" 
+  | "view_basic_education"
+  | "attend_weekly_intro"
   
-  // Education Permissions
-  | "view_basic_education" 
-  | "view_full_education" 
-  
-  // Coaching Permissions
-  | "attend_weekly_intro" 
-  | "attend_weekly_new_alerts"
-  | "attend_weekly_qa_sessions"
-  | "book_annual_consultation"
-  | "book_coaching_sessions"
-  | "request_portfolio_review"
-  
-  // Portfolio Permissions
+  // Paid tier permissions
+  | "view_all_alerts"
   | "use_portfolio_tracking"
-  | "access_priority_notifications"
+  | "view_full_education"
+  | "custom_notifications"
+  | "attend_weekly_new_alerts"
   
-  // Coaching Discounts
-  | "coaching_discount";
+  // Premium tier permissions
+  | "access_priority_notifications" 
+  | "view_advanced_education"
+  | "attend_qa_sessions"
+  | "annual_portfolio_review"
 
-type TierPermissionsMap = {
-  [key: string]: FeaturePermission[];
-};
+  // Mentorship tier permissions
+  | "coaching_sessions";
 
-// Define permissions for each tier
-// Higher tiers inherit all permissions from lower tiers
-const tierPermissions: TierPermissionsMap = {
-  // Free tier
+// Define permission sets for each tier
+const tierPermissions: Record<string, FeaturePermission[]> = {
   free: [
     "view_monthly_free_alert",
     "view_basic_education",
     "attend_weekly_intro"
   ],
   
-  // Paid tier ($29.99/month)
   paid: [
+    // Free tier permissions
+    "view_monthly_free_alert",
+    "view_basic_education",
+    "attend_weekly_intro",
+    
+    // Paid tier permissions
     "view_all_alerts",
-    "view_full_education",
     "use_portfolio_tracking",
+    "view_full_education",
     "custom_notifications",
     "attend_weekly_new_alerts"
   ],
   
-  // Premium tier ($999/year)
   premium: [
+    // Free tier permissions
+    "view_monthly_free_alert",
+    "view_basic_education", 
+    "attend_weekly_intro",
+    
+    // Paid tier permissions
+    "view_all_alerts",
+    "use_portfolio_tracking",
+    "view_full_education",
+    "custom_notifications",
+    "attend_weekly_new_alerts",
+    
+    // Premium tier permissions
     "access_priority_notifications",
-    "attend_weekly_qa_sessions",
-    "request_portfolio_review",
-    "book_annual_consultation",
-    "coaching_discount"
+    "view_advanced_education",
+    "attend_qa_sessions",
+    "annual_portfolio_review"
   ],
   
-  // Mentorship tier ($5,000 one-time)
   mentorship: [
-    "book_coaching_sessions"
+    // Free tier permissions
+    "view_monthly_free_alert",
+    "view_basic_education",
+    "attend_weekly_intro",
+    
+    // Paid tier permissions
+    "view_all_alerts", 
+    "use_portfolio_tracking",
+    "view_full_education",
+    "custom_notifications",
+    "attend_weekly_new_alerts",
+    
+    // Premium tier permissions
+    "access_priority_notifications",
+    "view_advanced_education",
+    "attend_qa_sessions",
+    "annual_portfolio_review",
+    
+    // Mentorship tier permissions
+    "coaching_sessions"
   ],
   
-  // Employee tier (internal use)
   employee: [
-    // Employees have access to everything
+    // All permissions
+    "view_monthly_free_alert",
+    "view_basic_education",
+    "attend_weekly_intro",
+    "view_all_alerts", 
+    "use_portfolio_tracking",
+    "view_full_education",
+    "custom_notifications",
+    "attend_weekly_new_alerts",
+    "access_priority_notifications",
+    "view_advanced_education",
+    "attend_qa_sessions",
+    "annual_portfolio_review",
+    "coaching_sessions"
   ]
 };
 
+// Define a comparable hierarchy for tiers
+const tierHierarchy: Record<string, number> = {
+  free: 0,
+  paid: 1,
+  premium: 2,
+  mentorship: 3,
+  employee: 4
+};
+
+/**
+ * Hook that provides utility functions for checking user permissions based on tier
+ */
 export function useTierPermissions() {
   const { user } = useAuth();
   
   /**
-   * Check if the user has permission for a specific feature
-   * @param permission The permission to check
-   * @returns Boolean indicating if user has permission
+   * Check if the user has a specific feature permission based on their tier
    */
-  const hasPermission = (permission: FeaturePermission): boolean => {
+  const hasPermission = (permission: FeaturePermission) => {
     if (!user) return false;
     
     const userTier = user.tier || "free";
+    const permissions = tierPermissions[userTier];
     
-    // Employee tier has access to all features
-    if (userTier === "employee") return true;
-    
-    // Get ordered tiers by access level
-    const tierOrder = ["free", "paid", "premium", "mentorship"];
-    const userTierIndex = tierOrder.indexOf(userTier);
-    
-    // Check if user's tier or any lower tier has the permission
-    for (let i = 0; i <= userTierIndex; i++) {
-      const tier = tierOrder[i];
-      if (tierPermissions[tier]?.includes(permission)) {
-        return true;
-      }
-    }
-    
-    return false;
+    return permissions ? permissions.includes(permission) : false;
   };
   
   /**
-   * Check if the user has a specific tier or higher
-   * @param requiredTier The tier to check for
-   * @returns Boolean indicating if user has the required tier or higher
+   * Check if the user has access to a specific tier's features
    */
-  const hasTierAccess = (requiredTier: string): boolean => {
+  const hasTierAccess = (requiredTier: string) => {
     if (!user) return false;
     
     const userTier = user.tier || "free";
+    const userLevel = tierHierarchy[userTier] ?? -1;
+    const requiredLevel = tierHierarchy[requiredTier] ?? 999;
     
-    // Employee tier has access to all tiers
-    if (userTier === "employee") return true;
-    
-    // Get ordered tiers by access level
-    const tierOrder = ["free", "paid", "premium", "mentorship"];
-    const userTierIndex = tierOrder.indexOf(userTier);
-    const requiredTierIndex = tierOrder.indexOf(requiredTier);
-    
-    // User has access if their tier index is >= required tier index
-    return userTierIndex >= requiredTierIndex;
+    return userLevel >= requiredLevel;
   };
   
-  return {
-    hasPermission,
-    hasTierAccess
+  /**
+   * Get all permissions available for the current user
+   */
+  const getUserPermissions = (): FeaturePermission[] => {
+    if (!user) return [];
+    
+    const userTier = user.tier || "free";
+    return tierPermissions[userTier] || [];
   };
+  
+  return { hasPermission, hasTierAccess, getUserPermissions };
 }
