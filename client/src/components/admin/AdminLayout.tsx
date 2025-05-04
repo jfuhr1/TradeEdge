@@ -13,6 +13,9 @@ import {
   X,
   Home,
   LogOut,
+  Ticket,
+  Tags,
+  Percent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -71,6 +74,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/content",
       icon: FileText,
       requiredPermission: "canCreateContent",
+    },
+    {
+      name: "Coupons",
+      href: "/admin/coupons",
+      icon: Ticket,
+      requiredPermission: "canManageUsers", // Using user management permission
+    },
+    {
+      name: "Discounts",
+      href: "/admin/discounts",
+      icon: Percent,
+      requiredPermission: "canManageUsers", // Using user management permission
     },
     {
       name: "Settings",
