@@ -14,7 +14,10 @@ import {
   userAchievementProgress, UserAchievementProgress, InsertUserAchievementProgress,
   successCards, SuccessCard, InsertSuccessCard,
   userNotifications, UserNotification, InsertUserNotification,
-  adminPermissions, AdminPermission, InsertAdminPermission
+  adminPermissions, AdminPermission, InsertAdminPermission,
+  coupons, Coupon, InsertCoupon,
+  userDiscounts, UserDiscount, InsertUserDiscount,
+  couponUsage, CouponUsage, InsertCouponUsage
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -204,6 +207,9 @@ export class MemStorage implements IStorage {
   private userAchievementProgressId: number;
   private notificationId: number;
   private adminPermissionId: number;
+  private couponId: number;
+  private userDiscountId: number;
+  private couponUsageId: number;
 
   constructor() {
     this.users = new Map();
@@ -242,6 +248,9 @@ export class MemStorage implements IStorage {
     this.userAchievementProgressId = 1;
     this.notificationId = 1;
     this.adminPermissionId = 1;
+    this.couponId = 1;
+    this.userDiscountId = 1;
+    this.couponUsageId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -2165,6 +2174,196 @@ export class MemStorage implements IStorage {
 
     // Set next notification ID after seed data
     this.notificationId = 6;
+  }
+  
+  // Coupon operations
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const id = this.couponId++;
+    const now = new Date();
+    
+    const newCoupon: Coupon = {
+      ...coupon,
+      id,
+      currentUses: 0,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.coupons.set(id, newCoupon);
+    return newCoupon;
+  }
+  
+  async getCoupon(id: number): Promise<Coupon | undefined> {
+    return this.coupons.get(id);
+  }
+  
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    return Array.from(this.coupons.values()).find(
+      coupon => coupon.code.toUpperCase() === code.toUpperCase()
+    );
+  }
+  
+  async getActiveCoupons(): Promise<Coupon[]> {
+    const now = new Date();
+    
+    return Array.from(this.coupons.values())
+      .filter(coupon => {
+        // Check if coupon is active
+        if (!coupon.isActive) return false;
+        
+        // Check if coupon is within valid date range
+        if (coupon.validUntil && new Date(coupon.validUntil) < now) return false;
+        
+        // Check if coupon hasn't exceeded max uses (if set)
+        if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) return false;
+        
+        return true;
+      })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async updateCoupon(id: number, updates: Partial<Coupon>): Promise<Coupon | undefined> {
+    const coupon = await this.getCoupon(id);
+    if (!coupon) return undefined;
+    
+    const now = new Date();
+    const updatedCoupon = { 
+      ...coupon, 
+      ...updates, 
+      updatedAt: now 
+    };
+    
+    this.coupons.set(id, updatedCoupon);
+    return updatedCoupon;
+  }
+  
+  async incrementCouponUses(id: number): Promise<Coupon | undefined> {
+    const coupon = await this.getCoupon(id);
+    if (!coupon) return undefined;
+    
+    const updatedCoupon = { 
+      ...coupon,
+      currentUses: coupon.currentUses + 1,
+      updatedAt: new Date()
+    };
+    
+    this.coupons.set(id, updatedCoupon);
+    return updatedCoupon;
+  }
+  
+  async deactivateCoupon(id: number): Promise<Coupon | undefined> {
+    return this.updateCoupon(id, { isActive: false });
+  }
+  
+  async validateCoupon(code: string): Promise<{ valid: boolean; coupon?: Coupon; message?: string }> {
+    const coupon = await this.getCouponByCode(code);
+    
+    if (!coupon) {
+      return { valid: false, message: 'Invalid coupon code' };
+    }
+    
+    const now = new Date();
+    
+    // Check if coupon is active
+    if (!coupon.isActive) {
+      return { valid: false, message: 'This coupon is no longer active' };
+    }
+    
+    // Check if coupon has expired
+    if (coupon.validUntil && new Date(coupon.validUntil) < now) {
+      return { valid: false, message: 'This coupon has expired' };
+    }
+    
+    // Check if coupon hasn't exceeded max uses (if set)
+    if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+      return { valid: false, message: 'This coupon has reached its usage limit' };
+    }
+    
+    return { valid: true, coupon };
+  }
+  
+  // User discount operations
+  async createUserDiscount(discount: InsertUserDiscount): Promise<UserDiscount> {
+    const id = this.userDiscountId++;
+    const now = new Date();
+    
+    const newDiscount: UserDiscount = {
+      ...discount,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.userDiscounts.set(id, newDiscount);
+    return newDiscount;
+  }
+  
+  async getUserDiscount(id: number): Promise<UserDiscount | undefined> {
+    return this.userDiscounts.get(id);
+  }
+  
+  async getUserDiscountsByUser(userId: number): Promise<UserDiscount[]> {
+    return Array.from(this.userDiscounts.values())
+      .filter(discount => discount.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getActiveUserDiscount(userId: number): Promise<UserDiscount | undefined> {
+    const now = new Date();
+    
+    return Array.from(this.userDiscounts.values())
+      .find(discount => 
+        discount.userId === userId &&
+        discount.isActive &&
+        (!discount.validUntil || new Date(discount.validUntil) >= now)
+      );
+  }
+  
+  async updateUserDiscount(id: number, updates: Partial<UserDiscount>): Promise<UserDiscount | undefined> {
+    const discount = await this.getUserDiscount(id);
+    if (!discount) return undefined;
+    
+    const updatedDiscount = { 
+      ...discount, 
+      ...updates, 
+      updatedAt: new Date() 
+    };
+    
+    this.userDiscounts.set(id, updatedDiscount);
+    return updatedDiscount;
+  }
+  
+  async deactivateUserDiscount(id: number): Promise<UserDiscount | undefined> {
+    return this.updateUserDiscount(id, { isActive: false });
+  }
+  
+  // Coupon usage operations
+  async recordCouponUsage(usage: InsertCouponUsage): Promise<CouponUsage> {
+    const id = this.couponUsageId++;
+    
+    const couponUsage: CouponUsage = {
+      ...usage,
+      id
+    };
+    
+    this.couponUsages.set(id, couponUsage);
+    
+    // Increment the coupon use count
+    await this.incrementCouponUses(usage.couponId);
+    
+    return couponUsage;
+  }
+  
+  async getCouponUsageByUser(userId: number): Promise<CouponUsage[]> {
+    return Array.from(this.couponUsages.values())
+      .filter(usage => usage.userId === userId)
+      .sort((a, b) => new Date(b.usedAt).getTime() - new Date(a.usedAt).getTime());
+  }
+  
+  async getCouponUsageByCoupon(couponId: number): Promise<CouponUsage[]> {
+    return Array.from(this.couponUsages.values())
+      .filter(usage => usage.couponId === couponId)
+      .sort((a, b) => new Date(b.usedAt).getTime() - new Date(a.usedAt).getTime());
   }
 }
 
