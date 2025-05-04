@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
 import { ProtectedRoute } from "./lib/protected-route";
-import { TierProtectedRoute } from "./lib/tier-protected-route";
 import AuthPage from "./pages/auth-page";
 import Dashboard from "./pages/dashboard";
 import StockAlerts from "./pages/stock-alerts";
@@ -39,7 +38,6 @@ import SignupPage from "./pages/signup";
 import WelcomePage from "./pages/welcome";
 import Notifications from "./pages/notifications";
 import Settings from "./pages/settings";
-import TierFeaturesDemo from "./pages/tier-features-demo";
 import { AppLayout } from "./components/layout/app-layout";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -55,74 +53,39 @@ function App() {
           <Route path="/welcome" component={WelcomePage} />
           <Route path="/sample-stock-pick" component={SampleStockPick} />
           <Route path="/ws-test" component={WebSocketTest} />
-          <Route path="/tier-features" component={TierFeaturesDemo} />
           
-          {/* Basic protected routes - require login only */}
+          {/* Protected routes - require login */}
           <ProtectedRoute path="/dashboard" component={Dashboard} />
           <ProtectedRoute path="/success-center" component={SuccessCenter} />
+          <ProtectedRoute path="/stock-alerts" component={StockAlerts} />
+          <ProtectedRoute path="/stock-detail/:id" component={StockDetail} />
+          <ProtectedRoute path="/portfolio" component={Portfolio} />
+          <ProtectedRoute path="/education" component={Education} />
+          <ProtectedRoute path="/coaching" component={Coaching} />
+
+          <ProtectedRoute path="/account-settings" component={AccountSettings} />
           <ProtectedRoute path="/settings" component={Settings} />
           <ProtectedRoute path="/notifications" component={Notifications} />
-          <ProtectedRoute path="/account-settings" component={AccountSettings} />
+          <ProtectedRoute path="/notification-settings" component={NotificationSettings} />
+          <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
           
-          {/* Tier-protected routes with permission requirements */}
-          {/* Free tier features */}
-          <TierProtectedRoute 
-            path="/stock-alerts" 
-            component={StockAlerts} 
-            requiredPermission="view_monthly_free_alert"
-          />
-          <TierProtectedRoute 
-            path="/stock-detail/:id" 
-            component={StockDetail} 
-            requiredPermission="view_monthly_free_alert"
-          />
-          <TierProtectedRoute 
-            path="/education" 
-            component={Education} 
-            requiredPermission="view_basic_education"
-          />
-          
-          {/* Paid tier features */}
-          <TierProtectedRoute 
-            path="/portfolio" 
-            component={Portfolio} 
-            requiredPermission="use_portfolio_tracking" 
-          />
-          <TierProtectedRoute 
-            path="/notification-settings" 
-            component={NotificationSettings} 
-            requiredPermission="custom_notifications" 
-          />
-          <TierProtectedRoute 
-            path="/notification-settings/stock/:id" 
-            component={StockNotificationSettings} 
-            requiredPermission="custom_notifications" 
-          />
-          
-          {/* Premium and Mentorship tier features */}
-          <TierProtectedRoute 
-            path="/coaching" 
-            component={Coaching} 
-            requiredTier="premium"
-          />
-          
-          {/* Admin routes - require employee tier */}
-          <TierProtectedRoute path="/admin" component={AdminIndex} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/dashboard" component={AdminDashboard} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/users" component={AdminUsers} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/create-alert" component={CreateAlert} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/education" component={AdminEducation} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/articles" component={AdminArticles} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/coaching" component={AdminCoaching} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/performance" component={AlertPerformance} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/promotions" component={AdminPromotions} requiredTier="employee" />
+          {/* Admin routes */}
+          <ProtectedRoute path="/admin" component={AdminIndex} />
+          <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
+          <ProtectedRoute path="/admin/users" component={AdminUsers} />
+          <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
+          <ProtectedRoute path="/admin/education" component={AdminEducation} />
+          <ProtectedRoute path="/admin/articles" component={AdminArticles} />
+          <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
+          <ProtectedRoute path="/admin/performance" component={AlertPerformance} />
+          <ProtectedRoute path="/admin/promotions" component={AdminPromotions} />
           
           {/* User Management Routes */}
-          <TierProtectedRoute path="/admin/users/edit-profile" component={EditUserProfile} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/users/edit-permissions" component={EditUserPermissions} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/users/change-tier" component={ChangeTier} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/users/disable-account" component={DisableAccount} requiredTier="employee" />
-          <TierProtectedRoute path="/admin/users/add-user" component={AddUser} requiredTier="employee" />
+          <ProtectedRoute path="/admin/users/edit-profile" component={EditUserProfile} />
+          <ProtectedRoute path="/admin/users/edit-permissions" component={EditUserPermissions} />
+          <ProtectedRoute path="/admin/users/change-tier" component={ChangeTier} />
+          <ProtectedRoute path="/admin/users/disable-account" component={DisableAccount} />
+          <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
           
           <Route component={NotFound} />
         </Switch>
