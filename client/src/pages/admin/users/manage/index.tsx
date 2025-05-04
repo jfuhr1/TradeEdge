@@ -925,6 +925,18 @@ export default function ManageUser() {
                                         <p className="text-sm text-muted-foreground">All features plus one-on-one coaching and direct support</p>
                                       </FormLabel>
                                     </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0 border p-4 rounded-md bg-amber-50">
+                                      <FormControl>
+                                        <RadioGroupItem value="employee" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer flex-1">
+                                        <div className="flex justify-between items-center">
+                                          <span className="font-semibold">Employee</span>
+                                          <span className="text-muted-foreground text-sm">Internal</span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">Full platform access with optional admin capabilities</p>
+                                      </FormLabel>
+                                    </FormItem>
                                   </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
@@ -1020,7 +1032,7 @@ export default function ManageUser() {
                 <div>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Tier Features</CardTitle>
+                      <CardTitle>Tier Information</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -1028,6 +1040,46 @@ export default function ManageUser() {
                           <h3 className="font-medium mb-2">Current Tier</h3>
                           <div className="bg-muted p-3 rounded-md">
                             <span className="font-semibold capitalize">{user.tier}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-medium mb-2">Payment Information</h3>
+                          <div className="text-sm space-y-2">
+                            <div className="flex justify-between">
+                              <span>Last billing date:</span>
+                              <span>{user.lastBillingDate ? new Date(user.lastBillingDate).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Last billing amount:</span>
+                              <span>${user.lastBillingAmount || '0.00'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Next billing date:</span>
+                              <span>{user.nextBillingDate ? new Date(user.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Next billing amount:</span>
+                              <span>${user.nextBillingAmount || '0.00'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-medium mb-2">Membership History</h3>
+                          <div className="text-sm space-y-2 max-h-40 overflow-y-auto">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Initial</span>
+                              <span>{new Date(user.createdAt).toLocaleDateString()}: Joined as {user.initialTier || 'free'}</span>
+                            </div>
+                            {user.tierChanges && user.tierChanges.map((change, index) => (
+                              <div key={index} className="flex items-center gap-2 text-xs">
+                                <span className={`${change.type === 'upgrade' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'} px-2 py-0.5 rounded-full`}>
+                                  {change.type === 'upgrade' ? 'Upgrade' : 'Downgrade'}
+                                </span>
+                                <span>{new Date(change.date).toLocaleDateString()}: {change.from} → {change.to}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -1071,6 +1123,15 @@ export default function ManageUser() {
                                 <li>Direct messaging with analysts</li>
                                 <li>VIP support channel</li>
                                 <li>Early access to new features</li>
+                              </ul>
+                            )}
+                            {tierForm.watch("tier") === "employee" && (
+                              <ul className="list-disc pl-5 space-y-1">
+                                <li>All platform features</li>
+                                <li>Internal admin tools access</li>
+                                <li>Optional admin permissions</li>
+                                <li>System configuration access</li>
+                                <li>Support role capabilities</li>
                               </ul>
                             )}
                           </div>

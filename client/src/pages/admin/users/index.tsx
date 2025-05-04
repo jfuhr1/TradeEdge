@@ -292,31 +292,12 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell>{formatDate(user.createdAt.toString())}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-1">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/admin/users/manage/${user.id}`}>
-                            <UserCog className="h-4 w-4 mr-1" />
-                            Manage
-                          </Link>
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <UserCog className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <Link href={`/admin/users/manage/${user.id}`}>
-                              <DropdownMenuItem>
-                                <UserCog className="h-4 w-4 mr-2" />
-                                Manage User
-                              </DropdownMenuItem>
-                            </Link>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/users/manage/${user.id}`}>
+                          <UserCog className="h-4 w-4 mr-1" />
+                          Manage
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
