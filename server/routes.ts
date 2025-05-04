@@ -192,12 +192,134 @@ async function createAdminUser() {
   }
 }
 
+// Function to create sample test users at different tiers
+async function createSampleUsers() {
+  try {
+    const users = [
+      {
+        username: "freemember",
+        email: "free@example.com",
+        firstName: "Free",
+        lastName: "Member",
+        password: "Password123!",
+        tier: "free",
+        phone: "555-123-4567",
+        profilePicture: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+        username: "paiduser",
+        email: "paid@example.com",
+        firstName: "Paid",
+        lastName: "Subscriber",
+        password: "Password123!",
+        tier: "paid",
+        phone: "555-234-5678",
+        profilePicture: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        lastPaymentDate: new Date(),
+        nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        totalSpent: "59.98"
+      },
+      {
+        username: "premiumuser",
+        email: "premium@example.com",
+        firstName: "Premium",
+        lastName: "Customer",
+        password: "Password123!",
+        tier: "premium",
+        phone: "555-345-6789",
+        profilePicture: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        lastPaymentDate: new Date(),
+        nextPaymentDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+        totalSpent: "999.00"
+      },
+      {
+        username: "mentorshipclient",
+        email: "mentorship@example.com",
+        firstName: "Mentorship",
+        lastName: "Client",
+        password: "Password123!",
+        tier: "mentorship",
+        phone: "555-456-7890",
+        profilePicture: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        lastPaymentDate: new Date(),
+        totalSpent: "5000.00"
+      },
+      {
+        username: "contentadmin",
+        email: "content@example.com",
+        firstName: "Content",
+        lastName: "Administrator",
+        password: "Password123!",
+        tier: "employee",
+        phone: "555-567-8901",
+        profilePicture: "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        isAdmin: true,
+        adminRoles: ["content_admin", "alerts_admin"]
+      }
+    ];
+
+    for (const userData of users) {
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        console.log(`User ${userData.username} already exists.`);
+        continue;
+      }
+
+      // Hash password
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(userData.password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+
+      // Create the user
+      const userToCreate = {
+        ...userData,
+        password: hashedPassword
+      };
+
+      const newUser = await storage.createUser(userToCreate);
+      console.log(`Created test user: ${userData.username}`);
+
+      // If this is an admin user, add permissions
+      if (userData.isAdmin) {
+        await storage.createAdminPermissions({
+          userId: newUser.id,
+          canManageUsers: false,
+          canManageAdmins: false,
+          canCreateAlerts: userData.adminRoles.includes("alerts_admin"),
+          canEditAlerts: userData.adminRoles.includes("alerts_admin"),
+          canDeleteAlerts: userData.adminRoles.includes("alerts_admin"),
+          canCreateEducation: userData.adminRoles.includes("content_admin"),
+          canEditEducation: userData.adminRoles.includes("content_admin"),
+          canDeleteEducation: userData.adminRoles.includes("content_admin"),
+          canCreateArticles: userData.adminRoles.includes("content_admin"),
+          canEditArticles: userData.adminRoles.includes("content_admin"),
+          canDeleteArticles: userData.adminRoles.includes("content_admin"),
+          canManageCoaching: userData.adminRoles.includes("coaching_admin"),
+          canManageGroupSessions: userData.adminRoles.includes("coaching_admin"),
+          canScheduleSessions: userData.adminRoles.includes("coaching_admin"),
+          canViewSessionDetails: userData.adminRoles.includes("coaching_admin") || userData.adminRoles.includes("customer_support"),
+          canViewAnalytics: userData.adminRoles.includes("analytics_admin")
+        });
+        console.log(`Created permissions for admin user: ${userData.username}`);
+      }
+    }
+
+    console.log("Sample users creation complete");
+  } catch (error) {
+    console.error("Error creating sample users:", error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
   
   // Create admin user
   await createAdminUser();
+  
+  // Create sample test users
+  await createSampleUsers();
   
   // Initialize sample notifications
   await createSampleNotifications();

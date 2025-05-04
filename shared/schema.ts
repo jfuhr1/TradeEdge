@@ -93,6 +93,13 @@ export const users = pgTable("users", {
   activeDiscountId: integer("active_discount_id"), // Reference to active user discount
   isAdmin: boolean("is_admin").default(false),
   adminRoles: json("admin_roles").default([]), // Array of roles: ['super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin']
+  lastPaymentDate: timestamp("last_payment_date"), // Date of the most recent payment
+  nextPaymentDate: timestamp("next_payment_date"), // Date of the next scheduled payment
+  totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0"), // Simplified alias for totalLifetimeSpend
+  lastLoginDate: timestamp("last_login_date"), // Track when the user last logged in
+  isActive: boolean("is_active").default(true), // Account status
+  isSuspended: boolean("is_suspended").default(false), // Whether the account is suspended
+  mfaEnabled: boolean("mfa_enabled").default(false), // Multi-factor authentication status
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -103,6 +110,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   tier: true,
+  phone: true,
+  profilePicture: true,
+  adminRoles: true,
+  lastPaymentDate: true,
+  nextPaymentDate: true,
+  totalSpent: true,
+  isAdmin: true,
 });
 
 // Stock Alert Model
