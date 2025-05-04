@@ -307,7 +307,7 @@ export default function ManageUser() {
   const profileUpdateMutation = useMutation({
     mutationFn: async (data: EditUserFormValues) => {
       try {
-        const res = await fetch(`/api/admin/users/${id}`, {
+        const res = await fetch(`/api/admin/users/${actualUserId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -348,7 +348,7 @@ export default function ManageUser() {
   const resetPasswordMutation = useMutation({
     mutationFn: async () => {
       try {
-        const res = await fetch(`/api/admin/users/${id}/reset-password`, {
+        const res = await fetch(`/api/admin/users/${actualUserId}/reset-password`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -387,7 +387,7 @@ export default function ManageUser() {
   const tierUpdateMutation = useMutation({
     mutationFn: async (data: ChangeTierFormValues) => {
       try {
-        const res = await fetch(`/api/admin/users/${id}/change-tier`, {
+        const res = await fetch(`/api/admin/users/${actualUserId}/change-tier`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -413,7 +413,7 @@ export default function ManageUser() {
         description: "User's membership tier has been updated successfully",
       });
       // Invalidate queries to fetch updated data
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/users/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/users/${actualUserId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: (error: any) => {
@@ -431,7 +431,7 @@ export default function ManageUser() {
     mutationFn: async (data: EditPermissionsFormValues) => {
       try {
         // First update admin status and roles on user
-        const userUpdateRes = await fetch(`/api/admin/users/${id}`, {
+        const userUpdateRes = await fetch(`/api/admin/users/${actualUserId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -448,7 +448,7 @@ export default function ManageUser() {
         }
 
         // Then update specific permissions
-        const permissionsRes = await fetch(`/api/admin/permissions/${id}`, {
+        const permissionsRes = await fetch(`/api/admin/permissions/${actualUserId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -476,8 +476,8 @@ export default function ManageUser() {
         description: "User permissions have been updated successfully",
       });
       // Invalidate queries to fetch updated data
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/users/${id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/permissions/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/users/${actualUserId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/permissions/${actualUserId}`] });
       setTimeout(() => setPermissionsUpdateSuccess(false), 3000);
     },
     onError: (error: any) => {
