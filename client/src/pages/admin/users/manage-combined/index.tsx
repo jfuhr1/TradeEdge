@@ -108,7 +108,11 @@ type AccountStatusFormValues = z.infer<typeof accountStatusSchema>;
 
 export default function ManageUser() {
   const [match, params] = useRoute<{ id: string }>("/admin/users/manage-combined/:id");
-  const id = match ? params.id : new URLSearchParams(window.location.search).get("id") || "";
+  const idParam = match ? params.id : new URLSearchParams(window.location.search).get("id") || "";
+  
+  // Handle special case for demouser
+  const [actualUserId, setActualUserId] = useState<string | number>(idParam);
+  const [isResolvingUsername, setIsResolvingUsername] = useState(idParam === "demouser");
   
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
   const [tierUpdateSuccess, setTierUpdateSuccess] = useState(false);
@@ -117,13 +121,44 @@ export default function ManageUser() {
   
   const { hasPermission } = useAdminPermissions();
 
+  // Resolve username to ID if needed
+  useEffect(() => {
+    const resolveUsername = async () => {
+      if (idParam === "demouser" && isResolvingUsername) {
+        try {
+          console.log("Resolving demouser ID...");
+          // Fetch all users and find the one with username "demouser"
+          const res = await fetch("/api/admin/users");
+          if (!res.ok) {
+            throw new Error(`Failed to fetch users: ${res.statusText}`);
+          }
+          const users = await res.json();
+          const demoUser = users.find((u: any) => u.username === "demouser");
+          
+          if (demoUser && demoUser.id) {
+            console.log("Found demouser with ID:", demoUser.id);
+            setActualUserId(demoUser.id);
+          } else {
+            console.error("Demouser not found in users list");
+          }
+        } catch (error) {
+          console.error("Error resolving username:", error);
+        } finally {
+          setIsResolvingUsername(false);
+        }
+      }
+    };
+    
+    resolveUsername();
+  }, [idParam, isResolvingUsername]);
+
   // Fetch user data
   const { data: user, isLoading, refetch } = useQuery<UserType>({
-    queryKey: [`/api/admin/users/${id}`],
+    queryKey: [`/api/admin/users/${actualUserId}`],
     queryFn: async () => {
       try {
         // The server expects userId, not id in the URL
-        const res = await fetch(`/api/admin/users/${id}`);
+        const res = await fetch(`/api/admin/users/${actualUserId}`);
         if (!res.ok) {
           throw new Error(`Failed to fetch user data: ${res.statusText}`);
         }
@@ -133,7 +168,7 @@ export default function ManageUser() {
         throw error;
       }
     },
-    enabled: !!id,
+    enabled: !isResolvingUsername,
     onError: (error) => {
       console.error("Error fetching user data:", error);
       toast({
@@ -146,10 +181,10 @@ export default function ManageUser() {
 
   // Fetch user permissions if they are an employee/admin
   const { data: permissions } = useQuery<AdminPermission>({
-    queryKey: [`/api/admin/permissions/${id}`],
+    queryKey: [`/api/admin/permissions/${actualUserId}`],
     queryFn: async () => {
       try {
-        const res = await fetch(`/api/admin/permissions/${id}`);
+        const res = await fetch(`/api/admin/permissions/${actualUserId}`);
         if (!res.ok) {
           throw new Error(`Failed to fetch permissions: ${res.statusText}`);
         }
@@ -159,7 +194,7 @@ export default function ManageUser() {
         throw error;
       }
     },
-    enabled: !!id && !!user?.isAdmin,
+    enabled: !isResolvingUsername && !!user?.isAdmin,
     onError: (error) => {
       console.error("Error fetching permissions:", error);
     }
