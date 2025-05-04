@@ -1,6 +1,61 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, json, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Discount Reason enumeration
+export const discountReasons = [
+  "friends_family",
+  "team_member",
+  "podcast_promotion",
+  "early_adopter",
+  "special_event",
+  "loyalty_reward",
+  "referral",
+  "other"
+] as const;
+
+// Coupon model for site-wide discounts
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  discountPercentage: integer("discount_percentage").notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }),
+  description: text("description"),
+  validFrom: timestamp("valid_from").notNull().defaultNow(),
+  validUntil: timestamp("valid_until"),
+  maxUses: integer("max_uses"),
+  currentUses: integer("current_uses").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").notNull(), // Admin user ID
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// User discount model for admin-assigned discounts
+export const userDiscounts = pgTable("user_discounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  discountPercentage: integer("discount_percentage").notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }),
+  reason: text("reason").notNull(), // One of discountReasons
+  notes: text("notes"),
+  validFrom: timestamp("valid_from").notNull().defaultNow(),
+  validUntil: timestamp("valid_until"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").notNull(), // Admin user ID
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Coupon usage tracking
+export const couponUsage = pgTable("coupon_usage", {
+  id: serial("id").primaryKey(),
+  couponId: integer("coupon_id").notNull(),
+  userId: integer("user_id").notNull(),
+  usedAt: timestamp("used_at").notNull().defaultNow(),
+  orderAmount: decimal("order_amount", { precision: 10, scale: 2 }).notNull(),
+  discountApplied: decimal("discount_applied", { precision: 10, scale: 2 }).notNull(),
+});
 
 // User model with membership tier
 export const users = pgTable("users", {
@@ -15,6 +70,8 @@ export const users = pgTable("users", {
   completedLessons: json("completed_lessons").default([]),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  appliedCouponId: integer("applied_coupon_id"), // Reference to coupon used during signup
+  activeDiscountId: integer("active_discount_id"), // Reference to active user discount
   isAdmin: boolean("is_admin").default(false),
   adminRole: text("admin_role"), // 'super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin'
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -226,6 +283,24 @@ export const insertUserAchievementSchema = createInsertSchema(userAchievements).
   id: true,
 });
 
+// Insert schemas for discount-related models
+export const insertCouponSchema = createInsertSchema(coupons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentUses: true,
+});
+
+export const insertUserDiscountSchema = createInsertSchema(userDiscounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCouponUsageSchema = createInsertSchema(couponUsage).omit({
+  id: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -234,6 +309,15 @@ export type StockAlert = typeof stockAlerts.$inferSelect;
 export type InsertStockAlert = z.infer<typeof insertStockAlertSchema>;
 
 export type PortfolioItem = typeof portfolioItems.$inferSelect;
+
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+
+export type UserDiscount = typeof userDiscounts.$inferSelect;
+export type InsertUserDiscount = z.infer<typeof insertUserDiscountSchema>;
+
+export type CouponUsage = typeof couponUsage.$inferSelect;
+export type InsertCouponUsage = z.infer<typeof insertCouponUsageSchema>;
 export type InsertPortfolioItem = z.infer<typeof insertPortfolioItemSchema>;
 
 export type EducationContent = typeof educationContent.$inferSelect;

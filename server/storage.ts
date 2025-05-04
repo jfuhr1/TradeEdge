@@ -32,6 +32,29 @@ export interface IStorage {
   getUsersByTier(tier: string): Promise<User[]>;
   checkIfAdmin(userId: number): Promise<boolean>;
   
+  // Coupon operations
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  getCoupon(id: number): Promise<Coupon | undefined>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  getActiveCoupons(): Promise<Coupon[]>;
+  updateCoupon(id: number, updates: Partial<Coupon>): Promise<Coupon | undefined>;
+  incrementCouponUses(id: number): Promise<Coupon | undefined>;
+  deactivateCoupon(id: number): Promise<Coupon | undefined>;
+  validateCoupon(code: string): Promise<{ valid: boolean; coupon?: Coupon; message?: string }>;
+  
+  // User discount operations
+  createUserDiscount(discount: InsertUserDiscount): Promise<UserDiscount>;
+  getUserDiscount(id: number): Promise<UserDiscount | undefined>;
+  getUserDiscountsByUser(userId: number): Promise<UserDiscount[]>;
+  getActiveUserDiscount(userId: number): Promise<UserDiscount | undefined>;
+  updateUserDiscount(id: number, updates: Partial<UserDiscount>): Promise<UserDiscount | undefined>;
+  deactivateUserDiscount(id: number): Promise<UserDiscount | undefined>;
+  
+  // Coupon usage operations
+  recordCouponUsage(usage: InsertCouponUsage): Promise<CouponUsage>;
+  getCouponUsageByUser(userId: number): Promise<CouponUsage[]>;
+  getCouponUsageByCoupon(couponId: number): Promise<CouponUsage[]>;
+  
   // Stock alert operations
   createStockAlert(alert: InsertStockAlert): Promise<StockAlert>;
   getStockAlerts(): Promise<StockAlert[]>;
@@ -159,6 +182,9 @@ export class MemStorage implements IStorage {
   private userAchievementProgressList: Map<number, UserAchievementProgress>;
   private userNotifications: Map<number, UserNotification>; // Add notifications map
   private adminPermissionsList: Map<number, AdminPermission>; // Add admin permissions map
+  private coupons: Map<number, Coupon>; // Coupons map
+  private userDiscounts: Map<number, UserDiscount>; // User discounts map
+  private couponUsages: Map<number, CouponUsage>; // Coupon usage map
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -196,6 +222,9 @@ export class MemStorage implements IStorage {
     this.userAchievementProgressList = new Map();
     this.userNotifications = new Map();
     this.adminPermissionsList = new Map();
+    this.coupons = new Map();
+    this.userDiscounts = new Map();
+    this.couponUsages = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;

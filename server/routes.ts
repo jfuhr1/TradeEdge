@@ -1441,6 +1441,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update a specific user (admin only)
+  app.patch("/api/admin/users/:userId", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRole !== 'super_admin') {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageUsers) {
+          return res.status(403).json({ message: "You don't have permission to manage users" });
+        }
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).send("Invalid user ID");
+      }
+      
+      // Get the user to update
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+      
+      // Don't allow changing super admin data by non-super admins
+      if (user.adminRole === 'super_admin' && req.user.adminRole !== 'super_admin') {
+        return res.status(403).json({ message: "You don't have permission to edit a super admin" });
+      }
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(userId, req.body);
+      res.status(200).json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      res.status(500).send(`Error updating user: ${error.message}`);
+    }
+  });
+  
   // Get admin users only (admin only)
   app.get("/api/admin/users/admins", async (req, res) => {
     try {
