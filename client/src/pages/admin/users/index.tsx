@@ -117,6 +117,8 @@ export default function AdminUsers() {
         return "bg-purple-100 hover:bg-purple-200 text-purple-800";
       case "mentorship":
         return "bg-amber-100 hover:bg-amber-200 text-amber-800";
+      case "employee":
+        return "bg-green-100 hover:bg-green-200 text-green-800";
       default:
         return "bg-gray-100 hover:bg-gray-200 text-gray-800";
     }
@@ -178,6 +180,7 @@ export default function AdminUsers() {
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="premium">Premium</SelectItem>
                 <SelectItem value="mentorship">Mentorship</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
               </SelectContent>
             </Select>
           </div>

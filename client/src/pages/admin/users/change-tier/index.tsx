@@ -40,7 +40,7 @@ import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 
 // Schema for the change tier form
 const changeTierSchema = z.object({
-  tier: z.enum(["free", "paid", "premium", "mentorship"], {
+  tier: z.enum(["free", "paid", "premium", "mentorship", "employee"], {
     required_error: "Please select a membership tier",
   }),
   reason: z.enum(["upgrade", "downgrade", "retention", "promotion", "other"], {
@@ -96,6 +96,18 @@ const tierInfo = {
       "Direct message support",
       "Custom alert setup",
       "Lifetime updates",
+    ]
+  },
+  employee: {
+    price: "$0",
+    billing: "Internal",
+    features: [
+      "All Premium features",
+      "Admin access capability",
+      "Content management",
+      "User management",
+      "System configuration",
+      "Analytics dashboard",
     ]
   }
 };
