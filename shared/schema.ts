@@ -72,9 +72,10 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
-  name: text("name").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   phone: text("phone"),
-  tier: text("tier").notNull().default("free"), // 'free', 'paid', 'premium'
+  tier: text("tier").notNull().default("free"), // 'free', 'paid', 'premium', 'mentorship', 'employee'
   profilePicture: text("profile_picture"),
   completedLessons: json("completed_lessons").default([]),
   stripeCustomerId: text("stripe_customer_id"),
@@ -82,7 +83,7 @@ export const users = pgTable("users", {
   appliedCouponId: integer("applied_coupon_id"), // Reference to coupon used during signup
   activeDiscountId: integer("active_discount_id"), // Reference to active user discount
   isAdmin: boolean("is_admin").default(false),
-  adminRole: text("admin_role"), // 'super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin'
+  adminRoles: json("admin_roles").default([]), // Array of roles: ['super_admin', 'content_admin', 'alerts_admin', 'education_admin', 'coaching_admin']
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -90,7 +91,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
-  name: true,
+  firstName: true,
+  lastName: true,
   tier: true,
 });
 

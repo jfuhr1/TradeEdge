@@ -48,13 +48,17 @@ const addUserSchema = insertUserSchema.extend({
   email: z
     .string()
     .email("Please enter a valid email address"),
-  name: z
+  firstName: z
     .string()
-    .min(2, "Name must be at least 2 characters"),
+    .min(2, "First name must be at least 2 characters"),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters"),
   phone: z.string().optional(),
   profilePicture: z.string().optional(),
   isAdmin: z.boolean().default(false),
-  adminRole: z.string().optional(),
+  isEmployee: z.boolean().default(false),
+  adminRoles: z.array(z.string()).default([]),
   sendWelcomeEmail: z.boolean().default(true),
 });
 

@@ -1840,6 +1840,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get subscription statistics" });
     }
   });
+  
+  // Create a payment transaction
+  app.post("/api/admin/revenue/transactions", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check if the admin has analytics permission
+      const permissions = await storage.getAdminPermissions(req.user.id);
+      if (!permissions || !permissions.canViewAnalytics) {
+        return res.status(403).json({ message: "You don't have permission to manage transactions" });
+      }
+      
+      // Create the new transaction
+      const transaction = await storage.createPaymentTransaction(req.body);
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Error creating payment transaction:", error);
+      res.status(500).json({ message: "Failed to create payment transaction" });
+    }
+  });
 
   // ======= COUPON MANAGEMENT API ENDPOINTS =======
   

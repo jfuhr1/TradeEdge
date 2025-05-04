@@ -286,6 +286,75 @@ export class MemStorage implements IStorage {
     this.seedGroupCoachingSessions();
     // Initialize with some notifications
     this.seedNotifications();
+    
+    // Initialize with some payment transactions
+    this.seedPaymentTransactions();
+  }
+  
+  private seedPaymentTransactions() {
+    // Create some sample payment transactions for testing
+    const transactions: InsertPaymentTransaction[] = [
+      {
+        userId: 1,
+        amount: 29.99,
+        type: "subscription_created",
+        status: "succeeded",
+        subscriptionId: "sub_123456",
+        planType: "paid",
+        currency: "usd",
+        paymentMethod: "card",
+        description: "Monthly subscription"
+      },
+      {
+        userId: 2,
+        amount: 29.99,
+        type: "subscription_renewed",
+        status: "succeeded",
+        subscriptionId: "sub_234567",
+        planType: "paid",
+        currency: "usd",
+        paymentMethod: "card",
+        description: "Monthly subscription renewal"
+      },
+      {
+        userId: 3,
+        amount: 999.00,
+        type: "subscription_created",
+        status: "succeeded",
+        subscriptionId: "sub_345678",
+        planType: "premium",
+        currency: "usd",
+        paymentMethod: "card",
+        description: "Annual premium subscription"
+      },
+      {
+        userId: 4,
+        amount: 29.99,
+        type: "subscription_canceled",
+        status: "canceled",
+        subscriptionId: "sub_456789",
+        planType: "paid",
+        currency: "usd",
+        paymentMethod: "card",
+        description: "Monthly subscription cancellation"
+      },
+      {
+        userId: 5,
+        amount: 5000.00,
+        type: "one_time",
+        status: "succeeded",
+        subscriptionId: null,
+        planType: "mentorship",
+        currency: "usd",
+        paymentMethod: "bank_transfer",
+        description: "Mentorship program payment"
+      }
+    ];
+    
+    // Insert the payment transactions into the database
+    for (const transaction of transactions) {
+      this.createPaymentTransaction(transaction);
+    }
   }
 
   // User operations
