@@ -364,7 +364,7 @@ export default function DiscountsPage() {
                             <SelectContent>
                               {users && users.map((user) => (
                                 <SelectItem key={user.id} value={user.id.toString()}>
-                                  {user.name} ({user.email})
+                                  {user.firstName} {user.lastName} ({user.email})
                                 </SelectItem>
                               ))}
                             </SelectContent>

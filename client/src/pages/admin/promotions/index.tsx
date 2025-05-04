@@ -413,7 +413,7 @@ export default function PromotionsPage() {
   const getUserName = (userId: number) => {
     if (!users) return "Loading...";
     const user = users.find(u => u.id === userId);
-    return user ? user.name : `User #${userId}`;
+    return user ? `${user.firstName} ${user.lastName}` : `User #${userId}`;
   };
 
   // Get formatted reason text
@@ -744,7 +744,7 @@ export default function PromotionsPage() {
                               <SelectContent>
                                 {users && users.map((user) => (
                                   <SelectItem key={user.id} value={user.id.toString()}>
-                                    {user.name} ({user.email})
+                                    {user.firstName} {user.lastName} ({user.email})
                                   </SelectItem>
                                 ))}
                               </SelectContent>
