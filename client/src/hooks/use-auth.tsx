@@ -18,7 +18,7 @@ type AuthContextType = {
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
-type RegisterData = Pick<InsertUser, "username" | "password" | "email" | "name">;
+type RegisterData = Pick<InsertUser, "username" | "password" | "email" | "firstName" | "lastName">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -34,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username: "demo_user",
     password: "",
     email: "demo@tradeedgepro.com",
-    name: "Jane Smith",
+    firstName: "Jane",
+    lastName: "Smith",
     phone: null,
     tier: "standard",
     profilePicture: null,
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.name}!`,
+        description: `Welcome back, ${user.firstName} ${user.lastName}!`,
       });
       
       // Redirect based on admin status
@@ -96,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: `Welcome, ${user.name}!`,
+        description: `Welcome, ${user.firstName} ${user.lastName}!`,
       });
 
       // Redirect based on admin status

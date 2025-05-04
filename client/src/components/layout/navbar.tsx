@@ -214,7 +214,7 @@ export function Navbar() {
           <div className="space-y-2">
             <div className="flex items-center">
               <User className="h-4 w-4 mr-2" />
-              <span>{user.name} ({user.email})</span>
+              <span>{user.firstName} {user.lastName} ({user.email})</span>
             </div>
             <div className="flex items-center">
               <span className="text-sm text-muted-foreground">
@@ -309,7 +309,7 @@ export function Navbar() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm">
-          {user.name}
+          {user.firstName} {user.lastName}
           <ChevronDown className="ml-1 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
