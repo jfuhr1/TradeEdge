@@ -139,9 +139,11 @@ export default function AdminUsers() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add User
+            <Button asChild>
+              <Link href="/admin/users/add-user">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add User
+              </Link>
             </Button>
           </div>
         </div>
@@ -270,17 +272,21 @@ export default function AdminUsers() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <Link href={`/admin/users/${user.id}`}>
+                          <Link href={`/admin/users/edit-profile?id=${user.id}`}>
                             <DropdownMenuItem>Edit Profile</DropdownMenuItem>
                           </Link>
-                          <Link href={`/admin/users/${user.id}/permissions`}>
+                          <Link href={`/admin/users/edit-permissions?id=${user.id}`}>
                             <DropdownMenuItem>Edit Permissions</DropdownMenuItem>
                           </Link>
-                          <DropdownMenuItem>Change Tier</DropdownMenuItem>
+                          <Link href={`/admin/users/change-tier?id=${user.id}`}>
+                            <DropdownMenuItem>Change Tier</DropdownMenuItem>
+                          </Link>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            Disable Account
-                          </DropdownMenuItem>
+                          <Link href={`/admin/users/disable-account?id=${user.id}`}>
+                            <DropdownMenuItem className="text-destructive">
+                              Disable Account
+                            </DropdownMenuItem>
+                          </Link>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -128,25 +128,25 @@ export default function EditUserPermissions() {
   useEffect(() => {
     if (user && permissions && initialLoading) {
       form.reset({
-        isAdmin: user.isAdmin,
+        isAdmin: user.isAdmin === true, // Convert to boolean to avoid null
         adminRole: user.adminRole || "",
         permissions: {
-          canManageUsers: permissions.canManageUsers,
-          canManageAdmins: permissions.canManageAdmins,
-          canCreateAlerts: permissions.canCreateAlerts,
-          canEditAlerts: permissions.canEditAlerts,
-          canDeleteAlerts: permissions.canDeleteAlerts,
-          canCreateEducation: permissions.canCreateEducation,
-          canEditEducation: permissions.canEditEducation,
-          canDeleteEducation: permissions.canDeleteEducation,
-          canCreateArticles: permissions.canCreateArticles,
-          canEditArticles: permissions.canEditArticles,
-          canDeleteArticles: permissions.canDeleteArticles,
-          canManageCoaching: permissions.canManageCoaching,
-          canManageGroupSessions: permissions.canManageGroupSessions,
-          canScheduleSessions: permissions.canScheduleSessions,
-          canViewSessionDetails: permissions.canViewSessionDetails,
-          canViewAnalytics: permissions.canViewAnalytics,
+          canManageUsers: permissions.canManageUsers === true,
+          canManageAdmins: permissions.canManageAdmins === true,
+          canCreateAlerts: permissions.canCreateAlerts === true,
+          canEditAlerts: permissions.canEditAlerts === true,
+          canDeleteAlerts: permissions.canDeleteAlerts === true,
+          canCreateEducation: permissions.canCreateEducation === true,
+          canEditEducation: permissions.canEditEducation === true,
+          canDeleteEducation: permissions.canDeleteEducation === true,
+          canCreateArticles: permissions.canCreateArticles === true,
+          canEditArticles: permissions.canEditArticles === true,
+          canDeleteArticles: permissions.canDeleteArticles === true,
+          canManageCoaching: permissions.canManageCoaching === true,
+          canManageGroupSessions: permissions.canManageGroupSessions === true,
+          canScheduleSessions: permissions.canScheduleSessions === true,
+          canViewSessionDetails: permissions.canViewSessionDetails === true,
+          canViewAnalytics: permissions.canViewAnalytics === true,
         }
       });
       setInitialLoading(false);
