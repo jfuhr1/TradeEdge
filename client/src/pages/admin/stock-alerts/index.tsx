@@ -39,9 +39,11 @@ export default function AdminStockAlertsPage() {
   const { hasPermission } = useAdminPermissions();
   const [activeTab, setActiveTab] = useState("new");
   
-  // Fetch all stock alerts for analytics
+  // Fetch all stock alerts for analytics with demo mode
   const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery({
-    queryKey: ["/api/stock-alerts"],
+    queryKey: ["/api/stock-alerts?demo=true"],
+    staleTime: 60000, // 1 minute
+    retry: 1,
   });
   
   // Ensure allAlerts is an array before using array methods
@@ -261,7 +263,9 @@ export default function AdminStockAlertsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AdminStockAlertForm />
+                    <AdminStockAlertForm
+                      demoMode={true} 
+                    />
                   </CardContent>
                 </Card>
               </div>

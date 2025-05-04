@@ -80,7 +80,13 @@ const stockAlertFormSchema = z.object({
 
 type StockAlertFormValues = z.infer<typeof stockAlertFormSchema>;
 
-export default function AdminStockAlertForm() {
+interface AdminStockAlertFormProps {
+  demoMode?: boolean; // Optional flag to use demo mode
+}
+
+export default function AdminStockAlertForm({ 
+  demoMode = false 
+}: AdminStockAlertFormProps) {
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const canCreateAlerts = hasPermission("canCreateAlerts");
@@ -91,9 +97,9 @@ export default function AdminStockAlertForm() {
 
   // Get technical reasons from the API
   const { data: technicalReasons } = useQuery<TechnicalReason[]>({
-    queryKey: ["/api/technical-reasons?demo=true"], // Use demo mode for reliable data
-    staleTime: Infinity, // Only fetch once
-    retry: false // Don't retry on failure
+    queryKey: [`/api/technical-reasons${demoMode ? '?demo=true' : ''}`], 
+    staleTime: 60000, // 1 minute
+    retry: 1, // Only retry once
   });
 
   // Form setup
@@ -182,7 +188,8 @@ export default function AdminStockAlertForm() {
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
       };
       
-      const res = await apiRequest("POST", "/api/stock-alerts", payload);
+      const endpoint = demoMode ? "/api/stock-alerts?demo=true" : "/api/stock-alerts";
+      const res = await apiRequest("POST", endpoint, payload);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Failed to create stock alert");
