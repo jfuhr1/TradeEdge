@@ -1,6 +1,15 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, json, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, json, decimal, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Payment status enum
+export const paymentStatusEnum = pgEnum('payment_status_enum', [
+  'succeeded',
+  'pending',
+  'failed',
+  'refunded',
+  'canceled'
+]);
 
 // Discount Reason enumeration
 export const discountReasons = [
@@ -236,8 +245,27 @@ export const groupSessionRegistrations = pgTable("group_session_registrations", 
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   sessionId: integer("session_id").notNull(),
-  paymentStatus: text("payment_status").notNull().default("pending"), // 'pending', 'paid', 'refunded'
+  paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
   paymentIntentId: text("payment_intent_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Payment transactions - minimal record keeping for analytics
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  stripeCustomerId: text("stripe_customer_id").notNull(),
+  stripePaymentIntentId: text("stripe_payment_intent_id").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("usd"),
+  paymentStatus: paymentStatusEnum("payment_status").notNull(),
+  paymentType: text("payment_type").notNull(), // 'subscription', 'coaching', 'group_session', 'one_time'
+  planTier: text("plan_tier"), // 'paid', 'premium', 'mentorship'
+  couponId: integer("coupon_id"),
+  discountId: integer("discount_id"),
+  description: text("description"),
+  billingPeriodStart: timestamp("billing_period_start"),
+  billingPeriodEnd: timestamp("billing_period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -485,6 +513,15 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
 
 export type UserNotification = typeof userNotifications.$inferSelect;
 export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
+
+// Payment Transaction schema and types
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
 
 // Admin Permission Model
 export const adminPermissions = pgTable("admin_permissions", {
