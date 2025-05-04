@@ -194,7 +194,7 @@ export default function EditUserPermissions() {
   useEffect(() => {
     // If admin status is turned off, reset permissions
     if (!watchIsAdmin) {
-      form.setValue("adminRole", "");
+      form.setValue("adminRoles", []);
     }
   }, [watchIsAdmin, form]);
 
@@ -328,7 +328,7 @@ export default function EditUserPermissions() {
   const canManageAdminPermissions = hasPermission("canManageAdmins");
 
   // Check if trying to edit a super admin (only super admins can edit other super admins)
-  const isSuperAdmin = user?.adminRole === "super_admin";
+  const isSuperAdmin = user?.adminRoles && Array.isArray(user.adminRoles) && user.adminRoles.includes("super_admin");
   const canEditThisUser = canManageAdminPermissions || !isSuperAdmin;
 
   if (isLoading) {
@@ -475,39 +475,151 @@ export default function EditUserPermissions() {
                   />
 
                   {watchIsAdmin && (
-                    <FormField
-                      control={form.control}
-                      name="adminRole"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Admin Role</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {canManageAdminPermissions && (
-                                <SelectItem value="super_admin">Super Admin</SelectItem>
-                              )}
-                              <SelectItem value="content_admin">Content Admin</SelectItem>
-                              <SelectItem value="alerts_admin">Alerts Admin</SelectItem>
-                              <SelectItem value="education_admin">Education Admin</SelectItem>
-                              <SelectItem value="coaching_admin">Coaching Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Defines the admin's primary role in the system
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-3">
+                      <FormLabel className="text-base">Admin Roles</FormLabel>
+                      <FormDescription>
+                        Select one or more roles for this admin user
+                      </FormDescription>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        {canManageAdminPermissions && (
+                          <FormField
+                            control={form.control}
+                            name="adminRoles"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes("super_admin")}
+                                    onCheckedChange={(checked) => {
+                                      const updatedRoles = checked 
+                                        ? [...field.value, "super_admin"] 
+                                        : field.value.filter(role => role !== "super_admin");
+                                      field.onChange(updatedRoles);
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="font-medium">
+                                    Super Admin
+                                  </FormLabel>
+                                  <FormDescription>
+                                    Full access to all system features
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes("content_admin")}
+                                  onCheckedChange={(checked) => {
+                                    const updatedRoles = checked 
+                                      ? [...field.value, "content_admin"] 
+                                      : field.value.filter(role => role !== "content_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium">
+                                  Content Admin
+                                </FormLabel>
+                                <FormDescription>
+                                  Manage educational content and articles
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes("alerts_admin")}
+                                  onCheckedChange={(checked) => {
+                                    const updatedRoles = checked 
+                                      ? [...field.value, "alerts_admin"] 
+                                      : field.value.filter(role => role !== "alerts_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium">
+                                  Alerts Admin
+                                </FormLabel>
+                                <FormDescription>
+                                  Manage stock alerts and notifications
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes("education_admin")}
+                                  onCheckedChange={(checked) => {
+                                    const updatedRoles = checked 
+                                      ? [...field.value, "education_admin"] 
+                                      : field.value.filter(role => role !== "education_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium">
+                                  Education Admin
+                                </FormLabel>
+                                <FormDescription>
+                                  Manage educational courses and lessons
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes("coaching_admin")}
+                                  onCheckedChange={(checked) => {
+                                    const updatedRoles = checked 
+                                      ? [...field.value, "coaching_admin"] 
+                                      : field.value.filter(role => role !== "coaching_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium">
+                                  Coaching Admin
+                                </FormLabel>
+                                <FormDescription>
+                                  Manage coaching sessions and scheduling
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </CardContent>
