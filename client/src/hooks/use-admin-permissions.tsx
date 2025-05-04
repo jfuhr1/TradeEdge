@@ -16,7 +16,7 @@ export function useAdminPermissions() {
     enabled: !!user?.isAdmin,
   });
 
-  const isSuperAdmin = !!user?.adminRole && user.adminRole === 'super_admin';
+  const isSuperAdmin = !!user?.adminRoles && user.adminRoles.includes('super_admin');
 
   /**
    * Checks if the current user has a specific permission
@@ -43,7 +43,7 @@ export function useAdminPermissions() {
    * Only super_admin can manage other admins
    */
   const canManageAdmins = (): boolean => {
-    return isSuperAdmin;
+    return !!user?.adminRoles && user.adminRoles.includes('super_admin');
   };
 
   return {
