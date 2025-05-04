@@ -17,6 +17,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { insertStockAlertSchema } from "@shared/schema";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
+import StockAlertForm from "@/components/forms/stock-alert-form";
 import {
   Chart as ChartJS,
   CategoryScale,
