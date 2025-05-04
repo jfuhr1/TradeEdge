@@ -1,23 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Loader2, AlertTriangle, TrendingUp, Target, CheckCircle2, PieChart } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Loader2, AlertTriangle, TrendingUp, Target, PieChart, CheckCircle2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { insertStockAlertSchema } from "@shared/schema";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import StockAlertForm from "@/components/forms/stock-alert-form";
+import AdminStockAlertForm from "@/components/admin/stock-alerts/AdminStockAlertForm";
+import { useToast } from "@/hooks/use-toast";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -45,40 +34,9 @@ ChartJS.register(
   ArcElement
 );
 
-// Custom schema for stock alert creation with improved validation
-const createAlertSchema = insertStockAlertSchema.extend({
-  symbol: z.string().min(1, "Symbol is required").max(5, "Symbol should be 5 characters or less").toUpperCase(),
-  companyName: z.string().min(1, "Company name is required"),
-  currentPrice: z.coerce.number().positive("Price must be positive"),
-  buyZoneMin: z.coerce.number().positive("Min buy zone must be positive"),
-  buyZoneMax: z.coerce.number().positive("Max buy zone must be positive"),
-  target1: z.coerce.number().positive("Target 1 must be positive"),
-  target2: z.coerce.number().positive("Target 2 must be positive"),
-  target3: z.coerce.number().positive("Target 3 must be positive"),
-  technicalReasons: z.array(z.string()).min(1, "At least one technical reason is required"),
-  mainChartType: z.enum(["daily", "weekly"]),
-  requiredTier: z.enum(["free", "paid", "premium", "mentorship"]),
-  status: z.enum(["active", "closed", "cancelled"]).default("active"),
-}).refine(data => data.buyZoneMax > data.buyZoneMin, {
-  message: "Buy zone max must be greater than buy zone min",
-  path: ["buyZoneMax"]
-}).refine(data => data.target1 > data.buyZoneMax, {
-  message: "Target 1 must be greater than buy zone max",
-  path: ["target1"]
-}).refine(data => data.target2 > data.target1, {
-  message: "Target 2 must be greater than target 1",
-  path: ["target2"]
-}).refine(data => data.target3 > data.target2, {
-  message: "Target 3 must be greater than target 2",
-  path: ["target3"]
-});
-
-type CreateAlertValues = z.infer<typeof createAlertSchema>;
-
 export default function AdminStockAlertsPage() {
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
-  const [techReason, setTechReason] = useState("");
   const [activeTab, setActiveTab] = useState("new");
   
   // Fetch all stock alerts for analytics
@@ -91,83 +49,6 @@ export default function AdminStockAlertsPage() {
   
   const canCreateAlerts = hasPermission("canCreateAlerts");
   const canEditAlerts = hasPermission("canEditAlerts");
-  
-  // Form for creating a new stock alert
-  const form = useForm<CreateAlertValues>({
-    resolver: zodResolver(createAlertSchema),
-    defaultValues: {
-      symbol: "",
-      companyName: "",
-      currentPrice: 0,
-      buyZoneMin: 0,
-      buyZoneMax: 0,
-      target1: 0,
-      target2: 0,
-      target3: 0,
-      technicalReasons: [],
-      mainChartType: "daily",
-      requiredTier: "free",
-      status: "active",
-    }
-  });
-
-  // Create a new stock alert mutation
-  const createAlertMutation = useMutation({
-    mutationFn: async (values: CreateAlertValues) => {
-      const response = await apiRequest("POST", "/api/stock-alerts", values);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create stock alert");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
-      toast({
-        title: "Stock Alert Created",
-        description: "New stock alert has been created successfully.",
-      });
-      form.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to Create Alert",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Add a technical reason to the list
-  const addTechnicalReason = () => {
-    if (!techReason.trim()) return;
-    
-    const currentReasons = form.getValues("technicalReasons") || [];
-    if (!currentReasons.includes(techReason)) {
-      form.setValue("technicalReasons", [...currentReasons, techReason]);
-      setTechReason("");
-    }
-  };
-
-  // Remove a technical reason from the list
-  const removeTechnicalReason = (reason: string) => {
-    const currentReasons = form.getValues("technicalReasons") || [];
-    form.setValue("technicalReasons", currentReasons.filter(r => r !== reason));
-  };
-
-  // Handle form submission
-  const onSubmit = (values: CreateAlertValues) => {
-    if (!hasPermission("canCreateAlerts")) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to create alerts.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    createAlertMutation.mutate(values);
-  };
 
   // Prepare chart data for analytics
   const prepareChartData = () => {
@@ -380,7 +261,7 @@ export default function AdminStockAlertsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <StockAlertForm />
+                    <AdminStockAlertForm />
                   </CardContent>
                 </Card>
               </div>
