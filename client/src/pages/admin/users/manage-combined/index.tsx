@@ -120,6 +120,19 @@ export default function ManageUser() {
   // Fetch user data
   const { data: user, isLoading, refetch } = useQuery<UserType>({
     queryKey: [`/api/admin/users/${id}`],
+    queryFn: async () => {
+      try {
+        // The server expects userId, not id in the URL
+        const res = await fetch(`/api/admin/users/${id}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch user data: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        throw error;
+      }
+    },
     enabled: !!id,
     onError: (error) => {
       console.error("Error fetching user data:", error);
@@ -134,6 +147,18 @@ export default function ManageUser() {
   // Fetch user permissions if they are an employee/admin
   const { data: permissions } = useQuery<AdminPermission>({
     queryKey: [`/api/admin/permissions/${id}`],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/admin/permissions/${id}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch permissions: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+        throw error;
+      }
+    },
     enabled: !!id && !!user?.isAdmin,
     onError: (error) => {
       console.error("Error fetching permissions:", error);
@@ -246,8 +271,25 @@ export default function ManageUser() {
   // Mutation for updating profile
   const profileUpdateMutation = useMutation({
     mutationFn: async (data: EditUserFormValues) => {
-      const res = await apiRequest("PATCH", `/api/admin/users/${id}`, data);
-      return await res.json();
+      try {
+        const res = await fetch(`/api/admin/users/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error: ${res.statusText}`);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Profile update error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       setProfileUpdateSuccess(true);
@@ -270,8 +312,25 @@ export default function ManageUser() {
   // Mutation for resetting password
   const resetPasswordMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/admin/users/${id}/reset-password`, {});
-      return await res.json();
+      try {
+        const res = await fetch(`/api/admin/users/${id}/reset-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error: ${res.statusText}`);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Password reset error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       setIsPasswordReset(true);
@@ -293,11 +352,19 @@ export default function ManageUser() {
   const tierUpdateMutation = useMutation({
     mutationFn: async (data: ChangeTierFormValues) => {
       try {
-        const res = await apiRequest("PATCH", `/api/admin/users/${id}/change-tier`, data);
+        const res = await fetch(`/api/admin/users/${id}/change-tier`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "Failed to update membership tier");
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error: ${res.statusText}`);
         }
+        
         return await res.json();
       } catch (error: any) {
         console.error("Tier update error:", error);
@@ -327,28 +394,45 @@ export default function ManageUser() {
   // Mutation to update user permissions
   const permissionsUpdateMutation = useMutation({
     mutationFn: async (data: EditPermissionsFormValues) => {
-      // First update admin status and roles on user
-      const userUpdateRes = await apiRequest("PATCH", `/api/admin/users/${id}`, {
-        isAdmin: data.isAdmin,
-        adminRoles: data.adminRoles,
-      });
+      try {
+        // First update admin status and roles on user
+        const userUpdateRes = await fetch(`/api/admin/users/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isAdmin: data.isAdmin,
+            adminRoles: data.adminRoles,
+          }),
+        });
 
-      if (!userUpdateRes.ok) {
-        const errorData = await userUpdateRes.json();
-        throw new Error(errorData.message || "Failed to update admin status");
+        if (!userUpdateRes.ok) {
+          const errorData = await userUpdateRes.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error updating admin status: ${userUpdateRes.statusText}`);
+        }
+
+        // Then update specific permissions
+        const permissionsRes = await fetch(`/api/admin/permissions/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...data.permissions,
+          }),
+        });
+
+        if (!permissionsRes.ok) {
+          const errorData = await permissionsRes.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error updating permissions: ${permissionsRes.statusText}`);
+        }
+
+        return await permissionsRes.json();
+      } catch (error) {
+        console.error("Permissions update error:", error);
+        throw error;
       }
-
-      // Then update specific permissions
-      const permissionsRes = await apiRequest("PUT", `/api/admin/permissions/${id}`, {
-        ...data.permissions,
-      });
-
-      if (!permissionsRes.ok) {
-        const errorData = await permissionsRes.json();
-        throw new Error(errorData.message || "Failed to update permissions");
-      }
-
-      return await permissionsRes.json();
     },
     onSuccess: () => {
       setPermissionsUpdateSuccess(true);
