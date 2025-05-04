@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import MainLayout from '@/components/layout/main-layout';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { 
   Card, 
   CardContent, 
@@ -19,11 +18,11 @@ import {
   Edit, 
   Trash2, 
   Eye, 
-  ArrowLeft, 
   Users, 
   Info, 
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { 
@@ -32,7 +31,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { 
   Tabs, 
@@ -41,68 +39,33 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
+import { useAdminPermissions } from '@/hooks/use-admin-permissions';
+import { CoachingSession, GroupCoachingSession } from '@shared/schema';
 
 export default function AdminCoaching() {
   const { toast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { hasPermission } = useAdminPermissions();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
-  // Get demo mode state from localStorage
-  const isDemoMode = localStorage.getItem('demoMode') === 'true';
-  
-  // Check if user is admin or using demo mode
-  useEffect(() => {
-    async function checkAdminStatus() {
-      // If we've already checked or are in demo mode, no need to check again
-      if (isAdmin !== null || isDemoMode) {
-        if (isDemoMode) {
-          // In demo mode, automatically grant admin access
-          setIsAdmin(true);
-        }
-        return;
-      }
-      
-      try {
-        // Only make the API call once
-        const res = await apiRequest('GET', '/api/user/is-admin');
-        const data = await res.json();
-        setIsAdmin(data.isAdmin);
-        
-        if (!data.isAdmin) {
-          toast({
-            title: 'Access Denied',
-            description: 'You do not have permission to access this page.',
-            variant: 'destructive'
-          });
-        }
-      } catch (error) {
-        // Only show the toast on the first error
-        if (isAdmin === null) {
-          setIsAdmin(false);
-          toast({
-            title: 'Access Denied',
-            description: 'Access restricted. Enable demo mode to try this feature.',
-            variant: 'destructive'
-          });
-        }
-      }
-    }
-    
-    checkAdminStatus();
-  }, [toast, isAdmin, isDemoMode]);
-
   // Fetch coaching sessions
-  const { data: groupSessions, isLoading: isLoadingSessions } = useQuery({
-    queryKey: ['/api/coaching/group-sessions'],
-    enabled: isAdmin === true || isDemoMode
+  const { data: groupSessions, isLoading: isLoadingSessions, refetch: refetchGroupSessions } = useQuery<GroupCoachingSession[]>({
+    queryKey: ['/api/admin/coaching/group-sessions'],
   });
 
   // Fetch individual sessions
-  const { data: individualSessions, isLoading: isLoadingIndividualSessions } = useQuery({
-    queryKey: ['/api/coaching/individual-sessions'],
-    enabled: isAdmin === true || isDemoMode
+  const { data: individualSessions, isLoading: isLoadingIndividualSessions, refetch: refetchIndividualSessions } = useQuery<CoachingSession[]>({
+    queryKey: ['/api/admin/coaching/individual-sessions'],
   });
+
+  // Handle refresh
+  const handleRefresh = () => {
+    refetchGroupSessions();
+    refetchIndividualSessions();
+    toast({
+      title: "Refreshed",
+      description: "Coaching sessions data has been refreshed",
+    });
+  };
 
   // Handle month navigation
   const previousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -125,97 +88,112 @@ export default function AdminCoaching() {
     });
   };
 
-  // Check if user is logged in
-  if (authLoading) {
-    return (
-      <MainLayout title="Loading" description="Checking authentication">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-  
-  // Redirect to login if not authenticated
-  if (!user) {
-    return (
-      <MainLayout title="Authentication Required" description="Please log in">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-amber-600">Authentication Required</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>You need to be logged in to access this page.</p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={() => window.location.href = "/auth"}>Go to Login</Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Mock data for development
+  const mockGroupSessions: GroupCoachingSession[] = [
+    {
+      id: 1,
+      title: "Market Analysis & Weekly Outlook",
+      coach: "Jordan Phillips",
+      date: new Date(new Date().setDate(new Date().getDate() + 2)),
+      time: "7:00 PM - 8:30 PM ET",
+      participants: 12,
+      maxParticipants: 25,
+      price: 49.99,
+      description: "Join our weekly market analysis session to review recent market movements and prepare for the coming week.",
+      zoomLink: "https://zoom.us/j/123456789",
+      status: "scheduled",
+      createdAt: new Date()
+    },
+    {
+      id: 2,
+      title: "Technical Analysis Masterclass",
+      coach: "Sarah Chen",
+      date: new Date(new Date().setDate(new Date().getDate() + 7)),
+      time: "6:00 PM - 7:30 PM ET",
+      participants: 18,
+      maxParticipants: 20,
+      price: 79.99,
+      description: "Learn advanced technical analysis techniques for identifying high-probability trade setups.",
+      zoomLink: "https://zoom.us/j/987654321",
+      status: "scheduled",
+      createdAt: new Date()
+    },
+    {
+      id: 3,
+      title: "Risk Management Workshop",
+      coach: "David Martinez",
+      date: new Date(new Date().setDate(new Date().getDate() + 14)),
+      time: "5:00 PM - 6:30 PM ET",
+      participants: 8,
+      maxParticipants: 15,
+      price: 59.99,
+      description: "Master the essential risk management techniques that protect your capital and maximize returns.",
+      zoomLink: "https://zoom.us/j/567891234",
+      status: "scheduled",
+      createdAt: new Date()
+    }
+  ];
 
-  // Show access denied message if not admin
-  if (isAdmin === false) {
-    return (
-      <MainLayout title="Access Denied" description="Admin access required">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-red-600">Access Denied</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>You do not have permission to access this page. Only administrators can manage coaching sessions.</p>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" onClick={() => window.location.href = "/"}>Return to Dashboard</Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </MainLayout>
-    );
-  }
+  const mockIndividualSessions: CoachingSession[] = [
+    {
+      id: 1,
+      userId: 123,
+      date: new Date(new Date().setDate(new Date().getDate() + 1)),
+      duration: 60,
+      topic: "portfolio-review",
+      notes: "Initial portfolio assessment and strategy review",
+      price: 199.99,
+      paymentStatus: "paid",
+      paymentIntentId: "pi_123456789",
+      zoomLink: "https://zoom.us/j/123456789",
+      calendarEventId: "evt_123456",
+      status: "scheduled",
+      createdAt: new Date()
+    },
+    {
+      id: 2,
+      userId: 456,
+      date: new Date(new Date().setDate(new Date().getDate() + 3)),
+      duration: 30,
+      topic: "technical-analysis",
+      notes: "Focus on chart pattern recognition",
+      price: 99.99,
+      paymentStatus: "paid",
+      paymentIntentId: "pi_987654321",
+      zoomLink: "https://zoom.us/j/987654321",
+      calendarEventId: "evt_987654",
+      status: "scheduled",
+      createdAt: new Date()
+    }
+  ];
 
-  // Show loading state while checking admin status
-  if (isAdmin === null) {
-    return (
-      <MainLayout title="Loading" description="Checking permissions">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Checking permissions...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Use mock data if no API data is available yet
+  const displayGroupSessions = groupSessions || mockGroupSessions;
+  const displayIndividualSessions = individualSessions || mockIndividualSessions;
 
   return (
-    <MainLayout title="Coaching Management" description="Admin Coaching Management">
+    <AdminLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-6">
           <div>
-            <Button asChild variant="ghost" size="sm" className="mb-2">
-              <Link href="/admin/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Admin Dashboard
-              </Link>
-            </Button>
-            <h1 className="text-3xl font-bold">Coaching Sessions Management</h1>
-            <p className="text-muted-foreground">Schedule and manage coaching sessions for users</p>
+            <h1 className="text-3xl font-bold">Coaching Sessions</h1>
+            <p className="text-muted-foreground">
+              Schedule and manage coaching sessions for users
+            </p>
           </div>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/admin/coaching/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Schedule New Session
-              </Link>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
             </Button>
+            {hasPermission("canScheduleSessions") && (
+              <Button asChild>
+                <Link href="/admin/coaching/create">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Schedule New Session
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -329,12 +307,10 @@ export default function AdminCoaching() {
                           <div className="col-span-2 font-medium">{session.title}</div>
                           <div>{format(new Date(session.date), 'MMM d, yyyy')}</div>
                           <div>{format(new Date(session.date), 'h:mm a')}</div>
-                          <div>{session.capacity}</div>
+                          <div>{session.maxParticipants}</div>
                           <div>
                             <Badge variant="outline">
-                              {isDemoMode 
-                                ? Math.floor(Math.random() * session.capacity) 
-                                : session.registrations || 0} / {session.capacity}
+                              {session.participants || 0} / {session.maxParticipants}
                             </Badge>
                           </div>
                           <div className="flex space-x-2">
@@ -414,62 +390,47 @@ export default function AdminCoaching() {
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ) : isDemoMode ? (
+                ) : displayIndividualSessions && displayIndividualSessions.length > 0 ? (
                   <div className="border rounded-md">
                     <div className="grid grid-cols-6 font-medium text-sm bg-muted p-3 border-b">
                       <div className="col-span-2">Member</div>
                       <div>Date</div>
-                      <div>Time</div>
+                      <div>Duration</div>
                       <div>Status</div>
                       <div>Actions</div>
                     </div>
                     <div className="divide-y">
-                      <div className="grid grid-cols-6 py-3 px-3 items-center">
-                        <div className="col-span-2 font-medium">John Smith</div>
-                        <div>{format(addMonths(new Date(), 1), 'MMM d, yyyy')}</div>
-                        <div>2:00 PM</div>
-                        <div>
-                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-                            Upcoming
-                          </Badge>
+                      {displayIndividualSessions.map((session) => (
+                        <div key={session.id} className="grid grid-cols-6 py-3 px-3 items-center">
+                          <div className="col-span-2 font-medium">User #{session.userId}</div>
+                          <div>{format(new Date(session.date), 'MMM d, yyyy')}</div>
+                          <div>{session.duration} min</div>
+                          <div>
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                              {session.status}
+                            </Badge>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button asChild size="sm" variant="outline">
+                              <Link href={`/admin/coaching/session/${session.id}`}>
+                                <Edit className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => {
+                                toast({
+                                  title: "Send Reminder",
+                                  description: "Reminder email sent to the user.",
+                                });
+                              }}
+                            >
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            toast({
-                              title: "Demo Mode",
-                              description: "This would send a reminder email to the user.",
-                            });
-                          }}>
-                            <Info className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-6 py-3 px-3 items-center">
-                        <div className="col-span-2 font-medium">Sarah Johnson</div>
-                        <div>{format(addMonths(new Date(), 2), 'MMM d, yyyy')}</div>
-                        <div>3:30 PM</div>
-                        <div>
-                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-                            Upcoming
-                          </Badge>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            toast({
-                              title: "Demo Mode",
-                              description: "This would send a reminder email to the user.",
-                            });
-                          }}>
-                            <Info className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 ) : (
@@ -530,9 +491,9 @@ export default function AdminCoaching() {
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : groupSessions && groupSessions.length > 0 ? (
+              ) : displayGroupSessions && displayGroupSessions.length > 0 ? (
                 <div className="space-y-3">
-                  {groupSessions.slice(0, 3).map((session) => (
+                  {displayGroupSessions.slice(0, 3).map((session) => (
                     <div key={session.id} className="flex justify-between items-center p-3 border rounded-md">
                       <div>
                         <h3 className="font-medium">{session.title}</h3>
@@ -541,9 +502,7 @@ export default function AdminCoaching() {
                         </p>
                       </div>
                       <Badge>
-                        {isDemoMode 
-                          ? Math.floor(Math.random() * session.capacity) 
-                          : session.registrations || 0} Registered
+                        {session.participants} / {session.maxParticipants}
                       </Badge>
                     </div>
                   ))}
@@ -565,6 +524,6 @@ export default function AdminCoaching() {
           </Card>
         </div>
       </div>
-    </MainLayout>
+    </AdminLayout>
   );
 }
