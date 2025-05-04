@@ -234,9 +234,27 @@ export default function AdminUsers() {
                   <TableRow key={user.id}>
                     <TableCell className="text-center">
                       {user.isAdmin && (
-                        <div className="inline-flex items-center justify-center w-6 h-6">
-                          <Shield className="h-4 w-4 text-primary" />
-                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="inline-flex items-center justify-center w-6 h-6 cursor-help">
+                              <Shield className="h-4 w-4 text-primary" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs">
+                              <p className="font-medium">Admin Roles:</p>
+                              {user.adminRoles && Array.isArray(user.adminRoles) && user.adminRoles.length > 0 ? (
+                                <ul className="list-disc pl-4 mt-1">
+                                  {user.adminRoles.map((role, index) => (
+                                    <li key={index} className="capitalize">{role.replace('_', ' ')}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p>No specific roles</p>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </TableCell>
                     <TableCell>

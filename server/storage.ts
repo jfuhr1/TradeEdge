@@ -458,9 +458,25 @@ export class MemStorage implements IStorage {
       user.isAdmin = true;
     }
     
+    // Get current roles or initialize empty array
+    let currentRoles: string[] = [];
+    if (user.adminRoles) {
+      if (Array.isArray(user.adminRoles)) {
+        currentRoles = [...user.adminRoles];
+      } else if (typeof user.adminRoles === 'string') {
+        // Handle legacy format
+        currentRoles = [user.adminRoles];
+      }
+    }
+    
+    // Add the new role if it doesn't already exist
+    if (!currentRoles.includes(role)) {
+      currentRoles.push(role);
+    }
+    
     const updatedUser = await this.updateUser(userId, { 
       isAdmin: true, 
-      adminRoles: [role] 
+      adminRoles: currentRoles 
     });
     
     if (!updatedUser) {
