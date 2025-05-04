@@ -378,6 +378,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch stock alerts that hit targets" });
     }
   });
+  
+  // Technical reasons for stock alerts
+  app.get("/api/technical-reasons", (req, res) => {
+    // Check if demo mode is enabled via query param
+    const isDemoMode = req.query.demo === "true";
+    
+    if (isDemoMode) {
+      const demoTechnicalReasons = [
+        { id: 1, name: "Support Level", description: "Price has reached a historical support level" },
+        { id: 2, name: "Resistance Breakout", description: "Price has broken through a significant resistance level" },
+        { id: 3, name: "Oversold RSI", description: "Relative Strength Index indicates the stock is oversold" },
+        { id: 4, name: "Bullish Pattern", description: "Formation of a bullish chart pattern (e.g., cup and handle)" },
+        { id: 5, name: "Sector Momentum", description: "The entire sector is showing strong momentum" },
+        { id: 6, name: "Volume Increase", description: "Significant increase in trading volume" },
+        { id: 7, name: "Earnings Beat", description: "Company has reported better than expected earnings" },
+        { id: 8, name: "Analyst Upgrade", description: "Stock has received upgrades from analysts" },
+        { id: 9, name: "Dividend Increase", description: "Company has announced an increase in dividends" },
+        { id: 10, name: "Institutional Buying", description: "Increased institutional ownership detected" },
+        { id: 11, name: "Moving Average Crossover", description: "Bullish moving average crossover has occurred" },
+        { id: 12, name: "Revenue Growth", description: "Company shows strong revenue growth" },
+        { id: 13, name: "Technical Support", description: "Price finding support at technical levels" },
+        { id: 14, name: "AI Integration", description: "Company integrating AI into products or services" },
+        { id: 15, name: "Growth Potential", description: "Strong growth potential identified in business model" }
+      ];
+      return res.json(demoTechnicalReasons);
+    } else {
+      try {
+        // In non-demo mode, fetch from database (would need to be implemented)
+        // For now, we'll just return a simpler set
+        const technicalReasons = [
+          { id: 1, name: "Support Level" },
+          { id: 2, name: "Resistance Breakout" },
+          { id: 3, name: "Oversold RSI" },
+          { id: 4, name: "Bullish Pattern" },
+          { id: 5, name: "Sector Momentum" }
+        ];
+        res.json(technicalReasons);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch technical reasons" });
+      }
+    }
+  });
 
   app.get("/api/stock-alerts/:id", async (req, res) => {
     try {

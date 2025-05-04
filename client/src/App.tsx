@@ -21,6 +21,7 @@ import AlertPerformance from "./pages/admin/performance";
 import AdminPromotions from "./pages/admin/promotions";
 import AdminAnalytics from "./pages/admin/analytics/index";
 import AdminStockAlerts from "./pages/admin/stock-alerts/index";
+import CreateStockAlert from "./pages/admin/stock-alerts/create";
 
 // User Management Pages
 import ManageUser from "./pages/admin/users/manage/index";
@@ -76,6 +77,7 @@ function App() {
           <ProtectedRoute path="/admin/users" component={AdminUsers} />
           <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
           <ProtectedRoute path="/admin/stock-alerts" component={AdminStockAlerts} />
+          <ProtectedRoute path="/admin/stock-alerts/create" component={CreateStockAlert} />
           <ProtectedRoute path="/admin/education" component={AdminEducation} />
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />
           <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
