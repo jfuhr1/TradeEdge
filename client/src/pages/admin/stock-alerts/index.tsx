@@ -370,308 +370,38 @@ export default function AdminStockAlertsPage() {
           </TabsList>
 
           <TabsContent value="new">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create New Stock Alert</CardTitle>
-                <CardDescription>
-                  Add a new stock alert to recommend to members. All fields are required.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Left column */}
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="symbol"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Stock Symbol</FormLabel>
-                              <FormControl>
-                                <Input placeholder="AAPL" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="companyName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Company Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Apple Inc." {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="currentPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Current Price ($)</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.01" 
-                                  min="0" 
-                                  placeholder="175.50" 
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="buyZoneMin"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Buy Zone Min ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0" 
-                                    placeholder="170.00" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="buyZoneMax"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Buy Zone Max ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0" 
-                                    placeholder="175.00" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="target1"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 1 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0" 
-                                    placeholder="185.00" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="target2"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 2 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0" 
-                                    placeholder="195.00" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="target3"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 3 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0" 
-                                    placeholder="205.00" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Right column */}
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="technicalReasons"
-                          render={() => (
-                            <FormItem>
-                              <FormLabel>Technical Reasons</FormLabel>
-                              <div className="flex space-x-2">
-                                <Input
-                                  placeholder="Add a technical reason"
-                                  value={techReason}
-                                  onChange={(e) => setTechReason(e.target.value)}
-                                />
-                                <Button type="button" onClick={addTechnicalReason}>
-                                  Add
-                                </Button>
-                              </div>
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {form.watch("technicalReasons")?.map((reason, index) => (
-                                  <div
-                                    key={index}
-                                    className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md flex items-center space-x-1"
-                                  >
-                                    <span>{reason}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeTechnicalReason(reason)}
-                                      className="text-secondary-foreground/70 hover:text-secondary-foreground"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="mainChartType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Main Chart Type</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select chart type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="daily">Daily</SelectItem>
-                                  <SelectItem value="weekly">Weekly</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="requiredTier"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Required Membership Tier</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select required tier" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="free">Free</SelectItem>
-                                  <SelectItem value="paid">Paid</SelectItem>
-                                  <SelectItem value="premium">Premium</SelectItem>
-                                  <SelectItem value="mentorship">Mentorship</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                Members with this tier level or higher will see this alert
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center space-x-2">
-                                <FormLabel>Active Alert</FormLabel>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value === "active"}
-                                    onCheckedChange={(checked) =>
-                                      field.onChange(checked ? "active" : "closed")
-                                    }
-                                  />
-                                </FormControl>
-                              </div>
-                              <FormDescription>
-                                Only active alerts are visible to members
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button 
-                        type="submit" 
-                        disabled={!canCreateAlerts || createAlertMutation.isPending}
-                        className="min-w-[120px]"
-                      >
-                        {createAlertMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : "Create Alert"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+            {canCreateAlerts ? (
+              <div className="mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create New Stock Alert</CardTitle>
+                    <CardDescription>
+                      Add a new stock alert to recommend to members. All fields are required.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <StockAlertForm />
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Permission Required</CardTitle>
+                  <CardDescription>
+                    You don't have permission to create stock alerts. Contact an administrator for access.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-center py-6">
+                    <AlertTriangle className="h-12 w-12 text-amber-500" />
+                    <p className="ml-4 text-muted-foreground">
+                      Only users with stock alert creation permissions can access this feature.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="analytics">
