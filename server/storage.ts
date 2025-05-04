@@ -460,7 +460,7 @@ export class MemStorage implements IStorage {
     
     const updatedUser = await this.updateUser(userId, { 
       isAdmin: true, 
-      adminRole: role 
+      adminRoles: [role] 
     });
     
     if (!updatedUser) {
@@ -482,7 +482,7 @@ export class MemStorage implements IStorage {
       .find(p => p.userId === userId);
     
     // If user is super admin, return full permissions
-    if (user.adminRole === 'super_admin') {
+    if (user.adminRoles && user.adminRoles.includes('super_admin')) {
       // If super admin has no permissions record yet, create one with all permissions
       if (!permissions) {
         return this.createAdminPermissions({
@@ -523,20 +523,33 @@ export class MemStorage implements IStorage {
       canViewAnalytics: true,
     };
     
-    // Assign specific permissions based on admin role
-    if (user.adminRole === 'alerts_admin') {
-      defaultPermissions.canCreateAlerts = true;
-      defaultPermissions.canEditAlerts = true;
-    } else if (user.adminRole === 'education_admin') {
-      defaultPermissions.canCreateEducation = true;
-      defaultPermissions.canEditEducation = true;
-      defaultPermissions.canCreateArticles = true;
-      defaultPermissions.canEditArticles = true;
-    } else if (user.adminRole === 'coaching_admin') {
-      defaultPermissions.canManageCoaching = true;
-      defaultPermissions.canManageGroupSessions = true;
-      defaultPermissions.canScheduleSessions = true;
-      defaultPermissions.canViewSessionDetails = true;
+    // Assign specific permissions based on admin roles
+    if (user.adminRoles) {
+      // Check each role and add permissions accordingly
+      if (user.adminRoles.includes('alerts_admin')) {
+        defaultPermissions.canCreateAlerts = true;
+        defaultPermissions.canEditAlerts = true;
+      }
+      
+      if (user.adminRoles.includes('education_admin')) {
+        defaultPermissions.canCreateEducation = true;
+        defaultPermissions.canEditEducation = true;
+        defaultPermissions.canCreateArticles = true;
+        defaultPermissions.canEditArticles = true;
+      }
+      
+      if (user.adminRoles.includes('coaching_admin')) {
+        defaultPermissions.canManageCoaching = true;
+        defaultPermissions.canManageGroupSessions = true;
+        defaultPermissions.canScheduleSessions = true;
+        defaultPermissions.canViewSessionDetails = true;
+      }
+      
+      if (user.adminRoles.includes('content_admin')) {
+        defaultPermissions.canCreateArticles = true;
+        defaultPermissions.canEditArticles = true;
+        defaultPermissions.canDeleteArticles = true;
+      }
     }
     
     return this.createAdminPermissions(defaultPermissions as AdminPermission);

@@ -36,7 +36,7 @@ import { useLocation } from "wouter";
 // Schema for the edit permissions form
 const editPermissionsSchema = z.object({
   isAdmin: z.boolean().default(false),
-  adminRole: z.string().optional(),
+  adminRoles: z.array(z.string()).default([]),
   permissions: z.object({
     // User management
     canManageUsers: z.boolean().default(false),
@@ -100,7 +100,7 @@ export default function EditUserPermissions() {
     resolver: zodResolver(editPermissionsSchema),
     defaultValues: {
       isAdmin: false,
-      adminRole: "",
+      adminRoles: [],
       permissions: {
         canManageUsers: false,
         canManageAdmins: false,
@@ -129,7 +129,7 @@ export default function EditUserPermissions() {
     if (user && permissions && initialLoading) {
       form.reset({
         isAdmin: user.isAdmin === true, // Convert to boolean to avoid null
-        adminRole: user.adminRole || "",
+        adminRoles: user.adminRoles && Array.isArray(user.adminRoles) ? user.adminRoles : [],
         permissions: {
           canManageUsers: permissions.canManageUsers === true,
           canManageAdmins: permissions.canManageAdmins === true,
@@ -159,7 +159,7 @@ export default function EditUserPermissions() {
       // Update user admin status
       await apiRequest("PATCH", `/api/admin/users/${id}`, {
         isAdmin: data.isAdmin,
-        adminRole: data.isAdmin ? data.adminRole : null
+        adminRoles: data.isAdmin ? data.adminRoles : []
       });
       
       // Update permissions
