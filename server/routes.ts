@@ -12,7 +12,11 @@ import {
   insertCoachingSessionSchema,
   insertAlertPreferenceSchema,
   insertSuccessCardSchema,
-  insertUserNotificationSchema
+  insertUserNotificationSchema,
+  insertCouponSchema,
+  insertUserDiscountSchema,
+  insertCouponUsageSchema,
+  discountReasons
 } from "@shared/schema";
 
 const scryptAsync = promisify(scrypt);
