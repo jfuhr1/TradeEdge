@@ -44,8 +44,8 @@ const editUserSchema = insertUserSchema.extend({
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 export default function EditUserProfile() {
-  const params = useParams<{ id: string }>();
-  const id = params?.id;
+  const [match, params] = useRoute("/admin/users/edit-profile");
+  const id = params?.id || new URLSearchParams(window.location.search).get("id");
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const [isPasswordReset, setIsPasswordReset] = useState(false);
