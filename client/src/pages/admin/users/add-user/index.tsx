@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -76,27 +77,43 @@ export default function AddUser() {
       username: "",
       password: "",
       email: "",
-      name: "",
+      firstName: "",
+      lastName: "",
       tier: "free",
       phone: "",
       profilePicture: "",
+      isEmployee: false,
       isAdmin: false,
-      adminRole: "",
+      adminRoles: [],
       sendWelcomeEmail: true,
     },
   });
 
-  // Watch admin status to conditionally show admin role field
+  // Watch employee and admin status to conditionally show fields
+  const watchIsEmployee = form.watch("isEmployee");
   const watchIsAdmin = form.watch("isAdmin");
+  const watchTier = form.watch("tier");
 
   // Mutation to create user
   const createUserMutation = useMutation({
     mutationFn: async (data: AddUserFormValues) => {
-      // Only include adminRole if isAdmin is true
-      const userData = {
-        ...data,
-        adminRole: data.isAdmin ? data.adminRole : undefined
-      };
+      // Set tier to employee if employee status is confirmed
+      // Reset employee-specific values if not an employee
+      let userData = { ...data };
+      
+      if (userData.tier === "employee" && userData.isEmployee) {
+        // If employee with admin privileges, include admin roles
+        if (userData.isAdmin) {
+          // Keep adminRoles array as is
+        } else {
+          userData.adminRoles = []; // Empty admin roles if not an admin
+        }
+      } else {
+        // Reset employee-specific fields for non-employees
+        userData.isEmployee = false;
+        userData.isAdmin = false;
+        userData.adminRoles = [];
+      }
       
       const res = await apiRequest("POST", "/api/admin/users", userData);
       return await res.json();
@@ -285,10 +302,24 @@ export default function AddUser() {
 
                     <FormField
                       control={form.control}
-                      name="name"
+                      name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -334,6 +365,7 @@ export default function AddUser() {
                               <SelectItem value="paid">Paid ($29.99/month)</SelectItem>
                               <SelectItem value="premium">Premium ($999/year)</SelectItem>
                               <SelectItem value="mentorship">Mentorship ($5,000 one-time)</SelectItem>
+                              <SelectItem value="employee">Employee</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormDescription>
@@ -364,61 +396,191 @@ export default function AddUser() {
 
                   <Separator />
 
-                  <FormField
-                    control={form.control}
-                    name="isAdmin"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Administrator Account</FormLabel>
-                          <FormDescription>
-                            Grant admin privileges to this user
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={!canManageAdmins}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {watchIsAdmin && (
+                  {/* Only show the isEmployee toggle when tier is set to "employee" */}
+                  {watchTier === "employee" && (
                     <FormField
                       control={form.control}
-                      name="adminRole"
+                      name="isEmployee"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Admin Role</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select admin role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {canManageAdmins && (
-                                <SelectItem value="super_admin">Super Admin</SelectItem>
-                              )}
-                              <SelectItem value="content_admin">Content Admin</SelectItem>
-                              <SelectItem value="alerts_admin">Alerts Admin</SelectItem>
-                              <SelectItem value="education_admin">Education Admin</SelectItem>
-                              <SelectItem value="coaching_admin">Coaching Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Defines the admin's primary role and permissions in the system
-                          </FormDescription>
-                          <FormMessage />
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Employee Status</FormLabel>
+                            <FormDescription>
+                              Confirm this user is an employee of TradeEdge Pro
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                // Reset admin status if employee status is toggled off
+                                if (!checked) {
+                                  form.setValue("isAdmin", false);
+                                }
+                              }}
+                              disabled={!canManageAdmins}
+                            />
+                          </FormControl>
                         </FormItem>
                       )}
                     />
+                  )}
+
+                  {/* Only show the isAdmin toggle for employees */}
+                  {watchIsEmployee && watchTier === "employee" && (
+                    <FormField
+                      control={form.control}
+                      name="isAdmin"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Administrator Account</FormLabel>
+                            <FormDescription>
+                              Grant admin privileges to this employee
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={!canManageAdmins}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Show admin roles UI when isAdmin is enabled */}
+                  {watchIsAdmin && watchIsEmployee && (
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <div>
+                        <h3 className="text-base font-medium mb-1">Admin Roles</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select one or more administrative roles for this user
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {canManageAdmins && (
+                          <FormField
+                            control={form.control}
+                            name="adminRoles"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value.includes("super_admin")}
+                                    onCheckedChange={(checked: boolean | "indeterminate") => {
+                                      const updatedRoles = checked === true
+                                        ? [...field.value, "super_admin"]
+                                        : field.value.filter(role => role !== "super_admin");
+                                      field.onChange(updatedRoles);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Super Admin <span className="text-muted-foreground">(All permissions)</span>
+                                </FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value.includes("content_admin")}
+                                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                                    const updatedRoles = checked === true
+                                      ? [...field.value, "content_admin"]
+                                      : field.value.filter(role => role !== "content_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Content Admin <span className="text-muted-foreground">(Manage site content)</span>
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value.includes("alerts_admin")}
+                                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                                    const updatedRoles = checked === true
+                                      ? [...field.value, "alerts_admin"]
+                                      : field.value.filter(role => role !== "alerts_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Alerts Admin <span className="text-muted-foreground">(Manage stock alerts)</span>
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value.includes("education_admin")}
+                                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                                    const updatedRoles = checked === true
+                                      ? [...field.value, "education_admin"]
+                                      : field.value.filter(role => role !== "education_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Education Admin <span className="text-muted-foreground">(Manage educational content)</span>
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="adminRoles"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value.includes("coaching_admin")}
+                                  onCheckedChange={(checked) => {
+                                    const updatedRoles = checked 
+                                      ? [...field.value, "coaching_admin"]
+                                      : field.value.filter(role => role !== "coaching_admin");
+                                    field.onChange(updatedRoles);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Coaching Admin <span className="text-muted-foreground">(Manage coaching sessions)</span>
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   <FormField
