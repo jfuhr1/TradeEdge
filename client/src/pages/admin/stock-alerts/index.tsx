@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, TrendingUp, Target, PieChart, CheckCircle2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import AdminStockAlertForm from "@/components/admin/stock-alerts/AdminStockAlertForm";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -234,60 +235,29 @@ export default function AdminStockAlertsPage() {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Stock Alerts Management</h1>
-          <p className="text-muted-foreground">
-            Create and analyze stock alerts for members
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Stock Alerts Management</h1>
+            <p className="text-muted-foreground">
+              Create and analyze stock alerts for members
+            </p>
+          </div>
+          {canCreateAlerts && (
+            <Button asChild>
+              <Link to="/admin/stock-alerts/create">Create New Alert</Link>
+            </Button>
+          )}
         </div>
 
         <Tabs 
-          defaultValue="new" 
+          defaultValue="analytics" 
           value={activeTab} 
           onValueChange={setActiveTab}
           className="w-full"
         >
           <TabsList className="mb-4">
-            <TabsTrigger value="new">Create New Alert</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="new">
-            {canCreateAlerts ? (
-              <div className="mb-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Create New Stock Alert</CardTitle>
-                    <CardDescription>
-                      Add a new stock alert to recommend to members. All fields are required.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AdminStockAlertForm
-                      demoMode={true} 
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Permission Required</CardTitle>
-                  <CardDescription>
-                    You don't have permission to create stock alerts. Contact an administrator for access.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center py-6">
-                    <AlertTriangle className="h-12 w-12 text-amber-500" />
-                    <p className="ml-4 text-muted-foreground">
-                      Only users with stock alert creation permissions can access this feature.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
 
           <TabsContent value="analytics">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
