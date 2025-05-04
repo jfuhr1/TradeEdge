@@ -612,7 +612,7 @@ export default function ManageUser() {
         </div>
 
         <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${user.tier === 'employee' || (user.isAdmin && user.tier !== 'free') ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="profile" className="flex items-center">
               <User className="w-4 h-4 mr-2" />
               <span>Profile</span>
@@ -621,10 +621,12 @@ export default function ManageUser() {
               <CreditCard className="w-4 h-4 mr-2" />
               <span>Membership</span>
             </TabsTrigger>
-            <TabsTrigger value="permissions" className="flex items-center">
-              <Shield className="w-4 h-4 mr-2" />
-              <span>Permissions</span>
-            </TabsTrigger>
+            {(user.tier === 'employee' || (user.isAdmin && user.tier !== 'free')) && (
+              <TabsTrigger value="permissions" className="flex items-center">
+                <Shield className="w-4 h-4 mr-2" />
+                <span>Permissions</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="account" className="flex items-center">
               <Settings className="w-4 h-4 mr-2" />
               <span>Account</span>
@@ -1146,42 +1148,43 @@ export default function ManageUser() {
 
           {/* Permissions Tab */}
           <TabsContent value="permissions">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Manage Permissions</CardTitle>
-                    <CardDescription>
-                      Set administrative access and specific permissions for this user
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...permissionsForm}>
-                      <form onSubmit={permissionsForm.handleSubmit(onPermissionsSubmit)} className="space-y-8">
-                        {/* Admin Status */}
-                        <FormField
-                          control={permissionsForm.control}
-                          name="isAdmin"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={!hasPermission("canManageAdmins")}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>
-                                  Admin Status
-                                </FormLabel>
-                                <FormDescription>
-                                  Grant this user administrative privileges
-                                </FormDescription>
-                              </div>
-                            </FormItem>
-                          )}
-                        />
+            {(user.tier === 'employee' || (user.isAdmin && user.tier !== 'free')) ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Manage Permissions</CardTitle>
+                      <CardDescription>
+                        Set administrative access and specific permissions for this user
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...permissionsForm}>
+                        <form onSubmit={permissionsForm.handleSubmit(onPermissionsSubmit)} className="space-y-8">
+                          {/* Admin Status */}
+                          <FormField
+                            control={permissionsForm.control}
+                            name="isAdmin"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    disabled={!hasPermission("canManageAdmins")}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>
+                                    Admin Status
+                                  </FormLabel>
+                                  <FormDescription>
+                                    Grant this user administrative privileges
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
 
                         {/* Admin Roles */}
                         {permissionsForm.watch("isAdmin") && (
@@ -1685,6 +1688,18 @@ export default function ManageUser() {
                 </Card>
               </div>
             </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Shield className="h-16 w-16 text-muted-foreground mb-4" />
+                <h2 className="text-2xl font-semibold mb-2">Permissions Restricted</h2>
+                <p className="text-muted-foreground text-center max-w-md mb-6">
+                  Administrative permissions are only available for Employee tier users or for Admin users with Premium or Mentorship tiers.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  To manage permissions, please upgrade this user's tier first.
+                </p>
+              </div>
+            )}
           </TabsContent>
 
           {/* Account Status Tab */}

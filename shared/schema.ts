@@ -76,10 +76,16 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   phone: text("phone"),
   tier: text("tier").notNull().default("free"), // 'free', 'paid', 'premium', 'mentorship', 'employee'
+  initialTier: text("initial_tier"), // Tier at signup
+  tierChanges: json("tier_changes").default([]), // Array of tier change history objects {date, from, to, type}
   profilePicture: text("profile_picture"),
   completedLessons: json("completed_lessons").default([]),
   stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"), 
+  lastBillingDate: timestamp("last_billing_date"),
+  lastBillingAmount: decimal("last_billing_amount", { precision: 10, scale: 2 }),
+  nextBillingDate: timestamp("next_billing_date"),
+  nextBillingAmount: decimal("next_billing_amount", { precision: 10, scale: 2 }),
   appliedCouponId: integer("applied_coupon_id"), // Reference to coupon used during signup
   activeDiscountId: integer("active_discount_id"), // Reference to active user discount
   isAdmin: boolean("is_admin").default(false),
