@@ -292,32 +292,31 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell>{formatDate(user.createdAt.toString())}</TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <UserCog className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <Link href={`/admin/users/edit-profile?id=${user.id}`}>
-                            <DropdownMenuItem>Edit Profile</DropdownMenuItem>
+                      <div className="flex justify-end space-x-1">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/admin/users/manage/${user.id}`}>
+                            <UserCog className="h-4 w-4 mr-1" />
+                            Manage
                           </Link>
-                          <Link href={`/admin/users/edit-permissions?id=${user.id}`}>
-                            <DropdownMenuItem>Edit Permissions</DropdownMenuItem>
-                          </Link>
-                          <Link href={`/admin/users/change-tier?id=${user.id}`}>
-                            <DropdownMenuItem>Change Tier</DropdownMenuItem>
-                          </Link>
-                          <DropdownMenuSeparator />
-                          <Link href={`/admin/users/disable-account?id=${user.id}`}>
-                            <DropdownMenuItem className="text-destructive">
-                              Disable Account
-                            </DropdownMenuItem>
-                          </Link>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <UserCog className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <Link href={`/admin/users/manage/${user.id}`}>
+                              <DropdownMenuItem>
+                                <UserCog className="h-4 w-4 mr-2" />
+                                Manage User
+                              </DropdownMenuItem>
+                            </Link>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

@@ -21,10 +21,7 @@ import AlertPerformance from "./pages/admin/performance";
 import AdminPromotions from "./pages/admin/promotions";
 
 // User Management Pages
-import EditUserProfile from "./pages/admin/users/edit-profile/index";
-import EditUserPermissions from "./pages/admin/users/edit-permissions/index";
-import ChangeTier from "./pages/admin/users/change-tier/index";
-import DisableAccount from "./pages/admin/users/disable-account/index";
+import ManageUser from "./pages/admin/users/manage/index";
 import AddUser from "./pages/admin/users/add-user/index";
 
 import AccountSettings from "./pages/account-settings";
@@ -81,10 +78,7 @@ function App() {
           <ProtectedRoute path="/admin/promotions" component={AdminPromotions} />
           
           {/* User Management Routes */}
-          <ProtectedRoute path="/admin/users/edit-profile" component={EditUserProfile} />
-          <ProtectedRoute path="/admin/users/edit-permissions" component={EditUserPermissions} />
-          <ProtectedRoute path="/admin/users/change-tier" component={ChangeTier} />
-          <ProtectedRoute path="/admin/users/disable-account" component={DisableAccount} />
+          <ProtectedRoute path="/admin/users/manage/:id" component={ManageUser} />
           <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
           
           <Route component={NotFound} />
