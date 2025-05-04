@@ -250,7 +250,7 @@ export default function DiscountsPage() {
   const getUserName = (userId: number) => {
     if (!users) return "Loading...";
     const user = users.find(u => u.id === userId);
-    return user ? user.name : `User #${userId}`;
+    return user ? `${user.firstName} ${user.lastName}` : `User #${userId}`;
   };
 
   // Get formatted reason text
