@@ -106,7 +106,7 @@ async function createAdminUser() {
       if (!existingUser.isAdmin) {
         await storage.updateUser(existingUser.id, {
           isAdmin: true,
-          adminRole: "super_admin"
+          adminRoles: ["super_admin"]
         });
         console.log("User updated to admin successfully");
       }
@@ -151,11 +151,12 @@ async function createAdminUser() {
       const newUser = await storage.createUser({
         username: "PortfolioConsultant",
         email: "josh.fuhr@bisontrading.co",
-        name: "Josh Fuhr",
+        firstName: "Josh",
+        lastName: "Fuhr",
         password: hashedPassword,
         tier: "premium",
         isAdmin: true,
-        adminRole: "super_admin"
+        adminRoles: ["super_admin"]
       });
       
       console.log("New admin user created successfully");
@@ -1391,7 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageUsers) {
           return res.status(403).json({ message: "You don't have permission to view users" });
@@ -1421,7 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageUsers) {
           return res.status(403).json({ message: "You don't have permission to view users" });
@@ -1460,7 +1461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageUsers) {
           return res.status(403).json({ message: "You don't have permission to manage users" });
@@ -1508,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageAdmins) {
           return res.status(403).json({ message: "You don't have permission to manage admins" });
@@ -1639,7 +1640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageAdmins) {
           return res.status(403).json({ message: "You don't have permission to manage admins" });
@@ -1674,7 +1675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageAdmins) {
           return res.status(403).json({ message: "You don't have permission to manage admins" });
@@ -1693,7 +1694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't allow changing super admin permissions
-      if (targetUser.adminRole === 'super_admin' && targetUser.id !== req.user.id) {
+      if (targetUser.adminRoles && targetUser.adminRoles.includes('super_admin') && targetUser.id !== req.user.id) {
         return res.status(403).json({ message: "Cannot modify super admin permissions" });
       }
       
@@ -1720,7 +1721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageAdmins) {
           return res.status(403).json({ message: "You don't have permission to manage admins" });
@@ -1739,7 +1740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't allow changing super admin status
-      if (targetUser.adminRole === 'super_admin' && req.body.isAdmin === false) {
+      if (targetUser.adminRoles && targetUser.adminRoles.includes('super_admin') && req.body.isAdmin === false) {
         return res.status(403).json({ message: "Cannot remove super admin status" });
       }
       
@@ -1766,7 +1767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permission if user is not super admin
-      if (req.user.adminRole !== 'super_admin') {
+      if (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin')) {
         const permissions = await storage.getAdminPermissions(req.user.id);
         if (!permissions || !permissions.canManageAdmins) {
           return res.status(403).json({ message: "You don't have permission to manage admins" });
@@ -1785,7 +1786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't allow changing super admin role
-      if (targetUser.adminRole === 'super_admin') {
+      if (targetUser.adminRoles && targetUser.adminRoles.includes('super_admin')) {
         return res.status(403).json({ message: "Cannot change super admin role" });
       }
       
