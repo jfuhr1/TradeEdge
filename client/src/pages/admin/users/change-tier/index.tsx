@@ -366,6 +366,18 @@ export default function ChangeTier() {
                                   <p className="text-sm text-muted-foreground">All features plus one-on-one coaching and direct support</p>
                                 </FormLabel>
                               </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0 border p-4 rounded-md border-green-200 bg-green-50">
+                                <FormControl>
+                                  <RadioGroupItem value="employee" />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer flex-1">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-semibold">Employee</span>
+                                    <span className="text-muted-foreground text-sm">Internal</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">Internal staff access with admin capabilities</p>
+                                </FormLabel>
+                              </FormItem>
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
