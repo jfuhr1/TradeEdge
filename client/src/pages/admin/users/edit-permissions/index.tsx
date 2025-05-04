@@ -127,9 +127,20 @@ export default function EditUserPermissions() {
   // Update form when data is loaded
   useEffect(() => {
     if (user && permissions && initialLoading) {
+      // Ensure adminRoles is always a string array
+      let adminRolesArray: string[] = [];
+      if (user.adminRoles) {
+        if (Array.isArray(user.adminRoles)) {
+          adminRolesArray = user.adminRoles.map(role => String(role));
+        } else if (typeof user.adminRoles === 'string') {
+          // Handle case where it might be a single string
+          adminRolesArray = [user.adminRoles];
+        }
+      }
+      
       form.reset({
         isAdmin: user.isAdmin === true, // Convert to boolean to avoid null
-        adminRoles: user.adminRoles && Array.isArray(user.adminRoles) ? user.adminRoles : [],
+        adminRoles: adminRolesArray,
         permissions: {
           canManageUsers: permissions.canManageUsers === true,
           canManageAdmins: permissions.canManageAdmins === true,
