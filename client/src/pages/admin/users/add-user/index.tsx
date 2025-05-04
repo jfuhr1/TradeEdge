@@ -565,8 +565,8 @@ export default function AddUser() {
                               <FormControl>
                                 <Checkbox
                                   checked={field.value.includes("coaching_admin")}
-                                  onCheckedChange={(checked) => {
-                                    const updatedRoles = checked 
+                                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                                    const updatedRoles = checked === true
                                       ? [...field.value, "coaching_admin"]
                                       : field.value.filter(role => role !== "coaching_admin");
                                     field.onChange(updatedRoles);
