@@ -17,7 +17,8 @@ import {
   adminPermissions, AdminPermission, InsertAdminPermission,
   coupons, Coupon, InsertCoupon,
   userDiscounts, UserDiscount, InsertUserDiscount,
-  couponUsage, CouponUsage, InsertCouponUsage
+  couponUsage, CouponUsage, InsertCouponUsage,
+  paymentTransactions, PaymentTransaction, InsertPaymentTransaction
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -164,6 +165,17 @@ export interface IStorage {
     categoryCounts: Record<string, number>;
   }>;
   
+  // Payment transactions and analytics
+  getPaymentTransactions(startDate: Date): Promise<PaymentTransaction[]>;
+  createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction>;
+  getSubscriptionStats(startDate: Date): Promise<{
+    total: number;
+    active: number;
+    new: number;
+    churn: number;
+    planBreakdown: { name: string; value: number }[];
+  }>;
+  
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -188,6 +200,7 @@ export class MemStorage implements IStorage {
   private coupons: Map<number, Coupon>; // Coupons map
   private userDiscounts: Map<number, UserDiscount>; // User discounts map
   private couponUsages: Map<number, CouponUsage>; // Coupon usage map
+  private paymentTransactions: Map<number, PaymentTransaction>; // Payment transactions map
   
   sessionStore: any; // Using any to bypass type checking temporarily
   
@@ -210,6 +223,7 @@ export class MemStorage implements IStorage {
   private couponId: number;
   private userDiscountId: number;
   private couponUsageId: number;
+  private paymentTransactionId: number;
 
   constructor() {
     this.users = new Map();
@@ -231,6 +245,7 @@ export class MemStorage implements IStorage {
     this.coupons = new Map();
     this.userDiscounts = new Map();
     this.couponUsages = new Map();
+    this.paymentTransactions = new Map();
     
     this.userId = 1;
     this.stockAlertId = 1;

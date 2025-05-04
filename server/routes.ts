@@ -1738,6 +1738,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).send(`Error fetching user admin permissions: ${error.message}`);
     }
   });
+  
+  // Revenue Analytics API Endpoints
+  
+  // Get payment transactions with filtering options
+  app.get("/api/admin/revenue/transactions", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check if the admin has analytics permission
+      const permissions = await storage.getAdminPermissions(req.user.id);
+      if (!permissions || !permissions.canViewAnalytics) {
+        return res.status(403).json({ message: "You don't have permission to view analytics" });
+      }
+      
+      // Parse date range from query
+      const timeRange = req.query.timeRange as string || '30d';
+      let startDate = new Date();
+      
+      switch (timeRange) {
+        case '7d':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        case '12m':
+          startDate.setMonth(startDate.getMonth() - 12);
+          break;
+        default:
+          startDate.setDate(startDate.getDate() - 30);
+      }
+      
+      // Get transactions from database
+      const transactions = await storage.getPaymentTransactions(startDate);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching payment transactions:", error);
+      res.status(500).json({ message: "Failed to get payment transactions" });
+    }
+  });
+  
+  // Get subscription stats
+  app.get("/api/admin/revenue/subscriptions", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check if the admin has analytics permission
+      const permissions = await storage.getAdminPermissions(req.user.id);
+      if (!permissions || !permissions.canViewAnalytics) {
+        return res.status(403).json({ message: "You don't have permission to view analytics" });
+      }
+      
+      // Parse date range from query
+      const timeRange = req.query.timeRange as string || '30d';
+      let startDate = new Date();
+      
+      switch (timeRange) {
+        case '7d':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        case '12m':
+          startDate.setMonth(startDate.getMonth() - 12);
+          break;
+        default:
+          startDate.setDate(startDate.getDate() - 30);
+      }
+      
+      // Get subscription stats from database
+      const stats = await storage.getSubscriptionStats(startDate);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching subscription stats:", error);
+      res.status(500).json({ message: "Failed to get subscription statistics" });
+    }
+  });
 
   // ======= COUPON MANAGEMENT API ENDPOINTS =======
   
