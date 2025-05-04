@@ -101,7 +101,7 @@ const tierInfo = {
 };
 
 export default function ChangeTier() {
-  const [match, routeParams] = useRoute("/admin/users/change-tier");
+  const [match, routeParams] = useRoute("/admin/users/change-tier/:id");
   // Check both route params and query params for the ID
   const id = routeParams?.id || new URLSearchParams(window.location.search).get("id");
   const { toast } = useToast();

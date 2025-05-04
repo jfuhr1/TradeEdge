@@ -70,10 +70,9 @@ const editPermissionsSchema = z.object({
 type EditPermissionsFormValues = z.infer<typeof editPermissionsSchema>;
 
 export default function EditUserPermissions() {
-  const [match, routeParams] = useRoute("/admin/users/edit-permissions");
-  const queryParams = useQueryParams();
+  const [match, routeParams] = useRoute("/admin/users/edit-permissions/:id");
   // Check both route params and query params for the ID
-  const id = routeParams?.id || queryParams.get('id');
+  const id = routeParams?.id || new URLSearchParams(window.location.search).get("id");
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const [initialLoading, setInitialLoading] = useState(true);
