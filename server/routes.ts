@@ -1738,6 +1738,387 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).send(`Error fetching user admin permissions: ${error.message}`);
     }
   });
+
+  // ======= COUPON MANAGEMENT API ENDPOINTS =======
+  
+  // Get all active coupons (admin only)
+  app.get("/api/coupons", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const coupons = await storage.getActiveCoupons();
+      res.status(200).json(coupons);
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      res.status(500).json({ message: "Failed to fetch coupons" });
+    }
+  });
+  
+  // Get a specific coupon by ID (admin only)
+  app.get("/api/coupons/:id", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const coupon = await storage.getCoupon(id);
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      
+      res.status(200).json(coupon);
+    } catch (error) {
+      console.error("Error fetching coupon:", error);
+      res.status(500).json({ message: "Failed to fetch coupon" });
+    }
+  });
+  
+  // Create a new coupon (admin only)
+  app.post("/api/coupons", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Validate request data
+      const validationResult = insertCouponSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid coupon data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      // Add the current admin as the creator
+      const couponData = {
+        ...validationResult.data,
+        createdBy: req.user.id
+      };
+      
+      const coupon = await storage.createCoupon(couponData);
+      res.status(201).json(coupon);
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      res.status(500).json({ message: "Failed to create coupon" });
+    }
+  });
+  
+  // Update a coupon (admin only)
+  app.patch("/api/coupons/:id", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const coupon = await storage.getCoupon(id);
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      
+      const updatedCoupon = await storage.updateCoupon(id, req.body);
+      res.status(200).json(updatedCoupon);
+    } catch (error) {
+      console.error("Error updating coupon:", error);
+      res.status(500).json({ message: "Failed to update coupon" });
+    }
+  });
+  
+  // Deactivate a coupon (admin only)
+  app.post("/api/coupons/:id/deactivate", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const coupon = await storage.getCoupon(id);
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      
+      const deactivatedCoupon = await storage.deactivateCoupon(id);
+      res.status(200).json(deactivatedCoupon);
+    } catch (error) {
+      console.error("Error deactivating coupon:", error);
+      res.status(500).json({ message: "Failed to deactivate coupon" });
+    }
+  });
+  
+  // Validate a coupon code (public)
+  app.post("/api/coupons/validate", async (req, res) => {
+    try {
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Coupon code is required" });
+      }
+      
+      const result = await storage.validateCoupon(code);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      res.status(500).json({ message: "Failed to validate coupon" });
+    }
+  });
+  
+  // ======= USER DISCOUNT MANAGEMENT API ENDPOINTS =======
+  
+  // Get all discounts for a user (admin only)
+  app.get("/api/users/:userId/discounts", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const discounts = await storage.getUserDiscountsByUser(userId);
+      res.status(200).json(discounts);
+    } catch (error) {
+      console.error("Error fetching user discounts:", error);
+      res.status(500).json({ message: "Failed to fetch user discounts" });
+    }
+  });
+  
+  // Get active discount for a user
+  app.get("/api/users/:userId/active-discount", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Only allow admins or the user themselves to view their active discount
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin && req.user.id !== userId) {
+        return res.status(403).json({ message: "Unauthorized access" });
+      }
+      
+      const discount = await storage.getActiveUserDiscount(userId);
+      res.status(200).json(discount || null);
+    } catch (error) {
+      console.error("Error fetching active user discount:", error);
+      res.status(500).json({ message: "Failed to fetch active user discount" });
+    }
+  });
+  
+  // Create a new user discount (admin only)
+  app.post("/api/users/:userId/discounts", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Validate request data
+      const validationResult = insertUserDiscountSchema.safeParse({
+        ...req.body,
+        userId,
+        createdBy: req.user.id
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid discount data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      // Validate reason is one of the allowed reasons
+      if (!discountReasons.includes(validationResult.data.reason as any)) {
+        return res.status(400).json({ 
+          message: "Invalid discount reason",
+          allowedReasons: discountReasons
+        });
+      }
+      
+      const discount = await storage.createUserDiscount(validationResult.data);
+      
+      // Update user's active discount reference if needed
+      await storage.updateUser(userId, { activeDiscountId: discount.id });
+      
+      res.status(201).json(discount);
+    } catch (error) {
+      console.error("Error creating user discount:", error);
+      res.status(500).json({ message: "Failed to create user discount" });
+    }
+  });
+  
+  // Update a user discount (admin only)
+  app.patch("/api/discounts/:id", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid discount ID format" });
+      }
+      
+      const discount = await storage.getUserDiscount(id);
+      if (!discount) {
+        return res.status(404).json({ message: "Discount not found" });
+      }
+      
+      // If trying to update reason, validate it
+      if (req.body.reason && !discountReasons.includes(req.body.reason as any)) {
+        return res.status(400).json({ 
+          message: "Invalid discount reason",
+          allowedReasons: discountReasons
+        });
+      }
+      
+      const updatedDiscount = await storage.updateUserDiscount(id, req.body);
+      res.status(200).json(updatedDiscount);
+    } catch (error) {
+      console.error("Error updating user discount:", error);
+      res.status(500).json({ message: "Failed to update user discount" });
+    }
+  });
+  
+  // Deactivate a user discount (admin only)
+  app.post("/api/discounts/:id/deactivate", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid discount ID format" });
+      }
+      
+      const discount = await storage.getUserDiscount(id);
+      if (!discount) {
+        return res.status(404).json({ message: "Discount not found" });
+      }
+      
+      const deactivatedDiscount = await storage.deactivateUserDiscount(id);
+      
+      // If this was the user's active discount, remove the reference
+      if (discount.isActive) {
+        const user = await storage.getUser(discount.userId);
+        if (user && user.activeDiscountId === id) {
+          await storage.updateUser(discount.userId, { activeDiscountId: null });
+        }
+      }
+      
+      res.status(200).json(deactivatedDiscount);
+    } catch (error) {
+      console.error("Error deactivating user discount:", error);
+      res.status(500).json({ message: "Failed to deactivate user discount" });
+    }
+  });
+  
+  // Get list of discount reasons (for dropdowns)
+  app.get("/api/discount-reasons", (req, res) => {
+    try {
+      res.status(200).json({
+        reasons: discountReasons
+      });
+    } catch (error) {
+      console.error("Error fetching discount reasons:", error);
+      res.status(500).json({ message: "Failed to fetch discount reasons" });
+    }
+  });
   
   return httpServer;
 }
