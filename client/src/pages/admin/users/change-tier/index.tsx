@@ -145,8 +145,17 @@ export default function ChangeTier() {
   // Mutation to update user tier
   const updateTierMutation = useMutation({
     mutationFn: async (data: ChangeTierFormValues) => {
-      const res = await apiRequest("PATCH", `/api/admin/users/${id}/change-tier`, data);
-      return await res.json();
+      try {
+        const res = await apiRequest("PATCH", `/api/admin/users/${id}/change-tier`, data);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to update membership tier");
+        }
+        return await res.json();
+      } catch (error: any) {
+        console.error("Tier update error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       setSuccess(true);
@@ -159,6 +168,7 @@ export default function ChangeTier() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: (error: any) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update membership tier",

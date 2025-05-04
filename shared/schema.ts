@@ -78,6 +78,8 @@ export const users = pgTable("users", {
   tier: text("tier").notNull().default("free"), // 'free', 'paid', 'premium', 'mentorship', 'employee'
   initialTier: text("initial_tier"), // Tier at signup
   tierChanges: json("tier_changes").default([]), // Array of tier change history objects {date, from, to, type}
+  lastTierChangeDate: timestamp("last_tier_change_date"), // Date of the most recent tier change
+  lastTierChangeReason: text("last_tier_change_reason"), // Reason for last tier change (upgrade, downgrade, etc.)
   profilePicture: text("profile_picture"),
   completedLessons: json("completed_lessons").default([]),
   stripeCustomerId: text("stripe_customer_id"),
