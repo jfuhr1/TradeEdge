@@ -121,12 +121,23 @@ export default function ManageUser() {
   const { data: user, isLoading, refetch } = useQuery<UserType>({
     queryKey: [`/api/admin/users/${id}`],
     enabled: !!id,
+    onError: (error) => {
+      console.error("Error fetching user data:", error);
+      toast({
+        title: "Error Loading User Data",
+        description: "There was a problem loading this user's details. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Fetch user permissions if they are an employee/admin
   const { data: permissions } = useQuery<AdminPermission>({
     queryKey: [`/api/admin/permissions/${id}`],
     enabled: !!id && !!user?.isAdmin,
+    onError: (error) => {
+      console.error("Error fetching permissions:", error);
+    }
   });
 
   // Forms initialization
