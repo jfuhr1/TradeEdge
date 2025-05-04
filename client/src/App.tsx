@@ -22,6 +22,7 @@ import AdminPromotions from "./pages/admin/promotions";
 
 // User Management Pages
 import ManageUser from "./pages/admin/users/manage/index";
+import ManageUserCombined from "./pages/admin/users/manage-combined/index";
 import AddUser from "./pages/admin/users/add-user/index";
 
 import AccountSettings from "./pages/account-settings";
@@ -79,6 +80,7 @@ function App() {
           
           {/* User Management Routes */}
           <ProtectedRoute path="/admin/users/manage/:id" component={ManageUser} />
+          <ProtectedRoute path="/admin/users/manage-combined/:id" component={ManageUserCombined} />
           <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
           
           <Route component={NotFound} />

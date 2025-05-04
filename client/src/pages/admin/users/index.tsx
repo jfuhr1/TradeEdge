@@ -295,12 +295,14 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell>{formatDate(user.createdAt.toString())}</TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/users/manage/${user.id}`}>
-                          <UserCog className="h-4 w-4 mr-1" />
-                          Manage
-                        </Link>
-                      </Button>
+                      <div className="flex justify-end space-x-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/admin/users/manage-combined/${user.id}`}>
+                            <UserCog className="h-4 w-4 mr-1" />
+                            Manage
+                          </Link>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
