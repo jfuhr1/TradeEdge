@@ -53,7 +53,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
     {
       name: "Stock Alerts",
-      href: "/admin/alerts",
+      href: "/admin/stock-alerts",
       icon: BellRing,
       requiredPermission: "canCreateAlerts",
     },
