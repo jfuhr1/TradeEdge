@@ -297,7 +297,7 @@ export default function AdminUsers() {
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/admin/users/manage-combined/${user.id}`}>
+                          <Link href={`/admin/users/manage-combined/${user.id === 1 ? 'demouser' : user.id}`}>
                             <UserCog className="h-4 w-4 mr-1" />
                             Manage
                           </Link>
