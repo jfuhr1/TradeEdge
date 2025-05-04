@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { PlusCircle, Search, UserCog, Shield, Mail, RefreshCw, ArrowUpDown } from "lucide-react";
+import { PlusCircle, Search, UserCog, Shield, Mail, RefreshCw, ArrowUpDown, UserPlus } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,7 +141,7 @@ export default function AdminUsers() {
             </Button>
             <Button asChild>
               <Link href="/admin/users/add-user">
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <UserPlus className="h-4 w-4 mr-2" />
                 Add User
               </Link>
             </Button>

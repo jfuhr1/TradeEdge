@@ -19,6 +19,13 @@ import AdminArticles from "./pages/admin/articles";
 import AdminCoaching from "./pages/admin/coaching";
 import AlertPerformance from "./pages/admin/performance";
 
+// User Management Pages
+import EditUserProfile from "./pages/admin/users/edit-profile/index";
+import EditUserPermissions from "./pages/admin/users/edit-permissions/index";
+import ChangeTier from "./pages/admin/users/change-tier/index";
+import DisableAccount from "./pages/admin/users/disable-account/index";
+import AddUser from "./pages/admin/users/add-user/index";
+
 import AccountSettings from "./pages/account-settings";
 import NotificationSettings from "./pages/notification-settings";
 import StockNotificationSettings from "./pages/notification-settings/stock/[id]";
@@ -70,6 +77,13 @@ function App() {
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />
           <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
           <ProtectedRoute path="/admin/performance" component={AlertPerformance} />
+          
+          {/* User Management Routes */}
+          <ProtectedRoute path="/admin/users/edit-profile" component={EditUserProfile} />
+          <ProtectedRoute path="/admin/users/edit-permissions" component={EditUserPermissions} />
+          <ProtectedRoute path="/admin/users/change-tier" component={ChangeTier} />
+          <ProtectedRoute path="/admin/users/disable-account" component={DisableAccount} />
+          <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
           
           <Route component={NotFound} />
         </Switch>
