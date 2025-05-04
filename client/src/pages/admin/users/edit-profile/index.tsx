@@ -35,7 +35,8 @@ import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 // Extend the schema with additional validation rules
 const editUserSchema = insertUserSchema.extend({
   email: z.string().email("Please enter a valid email address"),
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   phone: z.string().optional(),
   profilePicture: z.string().optional(),
 }).omit({ password: true }); // Remove password from edit form
@@ -60,7 +61,8 @@ export default function EditUserProfile() {
     defaultValues: {
       username: "",
       email: "",
-      name: "",
+      firstName: "",
+      lastName: "",
       tier: "free",
       phone: "",
       profilePicture: "",
@@ -394,11 +396,11 @@ export default function EditUserProfile() {
                     {user.profilePicture ? (
                       <img 
                         src={user.profilePicture} 
-                        alt={user.name || user.username} 
+                        alt={`${user.firstName || ''} ${user.lastName || ''}`} 
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      user.name?.charAt(0) || user.username.charAt(0)
+                      user.firstName?.charAt(0) || user.username.charAt(0)
                     )}
                   </div>
                 </div>
