@@ -1168,27 +1168,37 @@ export default function ManageUser() {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Payment Method:</span>
-                          <span className="text-sm">
-                            {user.stripeCustomerId ? "Credit Card •••• 4242" : "None"}
-                          </span>
-                        </div>
-                        <Separator />
-                        <div className="flex justify-between items-center">
                           <span className="text-sm font-medium">Last Payment:</span>
-                          <span className="text-sm">
-                            {user.lastBillingDate 
-                              ? `${new Date(user.lastBillingDate).toLocaleDateString()} ($${user.lastBillingAmount})`
-                              : "N/A"}
-                          </span>
+                          <div className="text-sm text-right">
+                            {user.lastBillingDate ? (
+                              <>
+                                <div className="font-medium">${user.lastBillingAmount || '0.00'}</div>
+                                <div className="text-xs text-muted-foreground">{new Date(user.lastBillingDate).toLocaleDateString()}</div>
+                              </>
+                            ) : (
+                              <span>None</span>
+                            )}
+                          </div>
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium">Next Payment:</span>
-                          <span className="text-sm">
-                            {user.nextBillingDate 
-                              ? `${new Date(user.nextBillingDate).toLocaleDateString()} ($${user.nextBillingAmount})`
-                              : "N/A"}
+                          <div className="text-sm text-right">
+                            {user.nextBillingDate ? (
+                              <>
+                                <div className="font-medium">${user.nextBillingAmount || '0.00'}</div>
+                                <div className="text-xs text-muted-foreground">{new Date(user.nextBillingDate).toLocaleDateString()}</div>
+                              </>
+                            ) : (
+                              <span>None scheduled</span>
+                            )}
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Total Lifetime Spend:</span>
+                          <span className="text-sm font-semibold">
+                            ${user.totalLifetimeSpend || '0.00'}
                           </span>
                         </div>
                       </CardContent>
@@ -1209,6 +1219,36 @@ export default function ManageUser() {
                             ))}
                           </ul>
                         </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="mt-4">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Payment History</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {user.paymentHistory && user.paymentHistory.length > 0 ? (
+                          <div className="space-y-2 text-sm">
+                            {user.paymentHistory.slice(0, 4).map((payment, index) => (
+                              <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                                <div>
+                                  <p className="font-medium">{payment.description || 'Subscription Payment'}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(payment.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <Badge variant={payment.paymentStatus === 'succeeded' ? 'success' : 
+                                              payment.paymentStatus === 'pending' ? 'outline' : 'destructive'}>
+                                  ${payment.amount}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground">
+                            <p>No payment history available</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>

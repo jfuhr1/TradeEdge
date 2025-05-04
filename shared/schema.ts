@@ -88,6 +88,7 @@ export const users = pgTable("users", {
   lastBillingAmount: decimal("last_billing_amount", { precision: 10, scale: 2 }),
   nextBillingDate: timestamp("next_billing_date"),
   nextBillingAmount: decimal("next_billing_amount", { precision: 10, scale: 2 }),
+  totalLifetimeSpend: decimal("total_lifetime_spend", { precision: 10, scale: 2 }).default("0"),
   appliedCouponId: integer("applied_coupon_id"), // Reference to coupon used during signup
   activeDiscountId: integer("active_discount_id"), // Reference to active user discount
   isAdmin: boolean("is_admin").default(false),
