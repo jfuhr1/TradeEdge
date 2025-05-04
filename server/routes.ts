@@ -1479,7 +1479,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't allow changing super admin data by non-super admins
-      if (user.adminRole === 'super_admin' && req.user.adminRole !== 'super_admin') {
+      if (user.adminRoles && user.adminRoles.includes('super_admin') && 
+          (!req.user.adminRoles || !req.user.adminRoles.includes('super_admin'))) {
         return res.status(403).json({ message: "You don't have permission to edit a super admin" });
       }
       
@@ -1522,6 +1523,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create a new user (admin only)
+  app.post("/api/admin/users", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Check permission if user is not super admin
+      if (req.user.adminRoles && !req.user.adminRoles.includes('super_admin')) {
+        const permissions = await storage.getAdminPermissions(req.user.id);
+        if (!permissions || !permissions.canManageUsers) {
+          return res.status(403).json({ message: "You don't have permission to create users" });
+        }
+      }
+      
+      // Extract user data from request
+      const { 
+        username, 
+        password, 
+        email, 
+        firstName, 
+        lastName, 
+        phone, 
+        tier, 
+        isEmployee, 
+        isAdmin: newUserIsAdmin, 
+        adminRoles,
+        sendWelcomeEmail
+      } = req.body;
+      
+      // Check if username already exists
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      // Hash the password
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      // Create new user with proper settings based on tier and admin status
+      const userData = {
+        username,
+        password: hashedPassword,
+        email,
+        firstName,
+        lastName,
+        phone: phone || null,
+        tier, // Use the tier from form
+        isAdmin: tier === 'employee' && isEmployee && newUserIsAdmin ? true : false,
+        adminRoles: tier === 'employee' && isEmployee && newUserIsAdmin ? adminRoles : []
+      };
+      
+      const newUser = await storage.createUser(userData);
+      
+      // If user is an admin, create admin permissions
+      if (newUser.isAdmin) {
+        await storage.createAdminPermissions({
+          userId: newUser.id,
+          canManageUsers: adminRoles.includes('super_admin'),
+          canManageAdmins: adminRoles.includes('super_admin'),
+          canCreateAlerts: adminRoles.includes('alerts_admin') || adminRoles.includes('super_admin'),
+          canEditAlerts: adminRoles.includes('alerts_admin') || adminRoles.includes('super_admin'),
+          canDeleteAlerts: adminRoles.includes('alerts_admin') || adminRoles.includes('super_admin'),
+          canCreateEducation: adminRoles.includes('education_admin') || adminRoles.includes('super_admin'),
+          canEditEducation: adminRoles.includes('education_admin') || adminRoles.includes('super_admin'),
+          canDeleteEducation: adminRoles.includes('education_admin') || adminRoles.includes('super_admin'),
+          canManageCoaching: adminRoles.includes('coaching_admin') || adminRoles.includes('super_admin'),
+          canManageGroupSessions: adminRoles.includes('coaching_admin') || adminRoles.includes('super_admin'),
+          canScheduleSessions: adminRoles.includes('coaching_admin') || adminRoles.includes('super_admin'),
+          canViewSessionDetails: adminRoles.includes('coaching_admin') || adminRoles.includes('super_admin'),
+          canCreateContent: adminRoles.includes('content_admin') || adminRoles.includes('super_admin'),
+          canEditContent: adminRoles.includes('content_admin') || adminRoles.includes('super_admin'),
+          canDeleteContent: adminRoles.includes('content_admin') || adminRoles.includes('super_admin'),
+          canViewAnalytics: adminRoles.includes('super_admin')
+        });
+      }
+      
+      // TODO: If sendWelcomeEmail is true, implement email sending functionality
+      
+      res.status(201).json(newUser);
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      res.status(500).send(`Error creating user: ${error.message}`);
+    }
+  });
+
   // Get admin permissions for a user
   app.get("/api/admin/permissions/:userId", async (req, res) => {
     try {
