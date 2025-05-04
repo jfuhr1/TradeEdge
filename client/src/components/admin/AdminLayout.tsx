@@ -76,14 +76,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       requiredPermission: "canCreateContent",
     },
     {
-      name: "Coupons",
-      href: "/admin/coupons",
-      icon: Ticket,
-      requiredPermission: "canManageUsers", // Using user management permission
-    },
-    {
-      name: "Discounts",
-      href: "/admin/discounts",
+      name: "Promotions",
+      href: "/admin/promotions",
       icon: Percent,
       requiredPermission: "canManageUsers", // Using user management permission
     },

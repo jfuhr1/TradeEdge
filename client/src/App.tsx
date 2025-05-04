@@ -18,8 +18,7 @@ import AdminEducation from "./pages/admin/education";
 import AdminArticles from "./pages/admin/articles";
 import AdminCoaching from "./pages/admin/coaching";
 import AlertPerformance from "./pages/admin/performance";
-import AdminCoupons from "./pages/admin/coupons";
-import AdminDiscounts from "./pages/admin/discounts";
+import AdminPromotions from "./pages/admin/promotions";
 
 // User Management Pages
 import EditUserProfile from "./pages/admin/users/edit-profile/index";
@@ -79,8 +78,7 @@ function App() {
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />
           <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
           <ProtectedRoute path="/admin/performance" component={AlertPerformance} />
-          <ProtectedRoute path="/admin/coupons" component={AdminCoupons} />
-          <ProtectedRoute path="/admin/discounts" component={AdminDiscounts} />
+          <ProtectedRoute path="/admin/promotions" component={AdminPromotions} />
           
           {/* User Management Routes */}
           <ProtectedRoute path="/admin/users/edit-profile" component={EditUserProfile} />
