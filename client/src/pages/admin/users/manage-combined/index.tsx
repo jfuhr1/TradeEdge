@@ -108,11 +108,15 @@ type AccountStatusFormValues = z.infer<typeof accountStatusSchema>;
 
 export default function ManageUser() {
   const [match, params] = useRoute<{ id: string }>("/admin/users/manage-combined/:id");
-  const idParam = match ? params.id : new URLSearchParams(window.location.search).get("id") || "";
+  const [demouserMatch] = useRoute("/admin/users/manage-combined/demouser");
   
-  // Handle special case for demouser
-  const [actualUserId, setActualUserId] = useState<string | number>(idParam);
-  const [isResolvingUsername, setIsResolvingUsername] = useState(idParam === "demouser");
+  // Get the ID parameter from the route or query string
+  const idParam = match ? params.id : (demouserMatch ? "demouser" : new URLSearchParams(window.location.search).get("id") || "");
+  
+  // Handle special case for demouser - hardcode the ID since we know it's 1
+  const initialUserId = idParam === "demouser" ? 1 : idParam;
+  const [actualUserId, setActualUserId] = useState<string | number>(initialUserId);
+  const [isResolvingUsername, setIsResolvingUsername] = useState(false);
   
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
   const [tierUpdateSuccess, setTierUpdateSuccess] = useState(false);
@@ -121,36 +125,12 @@ export default function ManageUser() {
   
   const { hasPermission } = useAdminPermissions();
 
-  // Resolve username to ID if needed
+  // We no longer need the username resolution code since we hardcoded demouser to ID 1
+  // But keeping this effect just in case we need to add similar logic for other usernames
   useEffect(() => {
-    const resolveUsername = async () => {
-      if (idParam === "demouser" && isResolvingUsername) {
-        try {
-          console.log("Resolving demouser ID...");
-          // Fetch all users and find the one with username "demouser"
-          const res = await fetch("/api/admin/users");
-          if (!res.ok) {
-            throw new Error(`Failed to fetch users: ${res.statusText}`);
-          }
-          const users = await res.json();
-          const demoUser = users.find((u: any) => u.username === "demouser");
-          
-          if (demoUser && demoUser.id) {
-            console.log("Found demouser with ID:", demoUser.id);
-            setActualUserId(demoUser.id);
-          } else {
-            console.error("Demouser not found in users list");
-          }
-        } catch (error) {
-          console.error("Error resolving username:", error);
-        } finally {
-          setIsResolvingUsername(false);
-        }
-      }
-    };
-    
-    resolveUsername();
-  }, [idParam, isResolvingUsername]);
+    console.log("Current user ID parameter:", idParam);
+    console.log("Using actual user ID:", actualUserId);
+  }, [idParam, actualUserId]);
 
   // Fetch user data
   const { data: user, isLoading, refetch } = useQuery<UserType>({
@@ -168,7 +148,7 @@ export default function ManageUser() {
         throw error;
       }
     },
-    enabled: !isResolvingUsername,
+    enabled: true,
     onError: (error) => {
       console.error("Error fetching user data:", error);
       toast({
@@ -194,7 +174,7 @@ export default function ManageUser() {
         throw error;
       }
     },
-    enabled: !isResolvingUsername && !!user?.isAdmin,
+    enabled: !!user?.isAdmin,
     onError: (error) => {
       console.error("Error fetching permissions:", error);
     }

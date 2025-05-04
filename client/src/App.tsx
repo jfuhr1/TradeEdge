@@ -82,6 +82,7 @@ function App() {
           
           {/* User Management Routes */}
           <ProtectedRoute path="/admin/users/manage/:id" component={ManageUser} />
+          <ProtectedRoute path="/admin/users/manage-combined/demouser" component={ManageUserCombined} />
           <ProtectedRoute path="/admin/users/manage-combined/:id" component={ManageUserCombined} />
           <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
           
