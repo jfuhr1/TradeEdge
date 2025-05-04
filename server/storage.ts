@@ -266,6 +266,7 @@ export class MemStorage implements IStorage {
     this.couponId = 1;
     this.userDiscountId = 1;
     this.couponUsageId = 1;
+    this.paymentTransactionId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -2379,6 +2380,76 @@ export class MemStorage implements IStorage {
     return Array.from(this.couponUsages.values())
       .filter(usage => usage.couponId === couponId)
       .sort((a, b) => new Date(b.usedAt).getTime() - new Date(a.usedAt).getTime());
+  }
+
+  // Payment transactions and analytics
+  async createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const id = this.paymentTransactionId++;
+    const now = new Date();
+    
+    const paymentTransaction: PaymentTransaction = {
+      ...transaction,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.paymentTransactions.set(id, paymentTransaction);
+    return paymentTransaction;
+  }
+  
+  async getPaymentTransactions(startDate: Date): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactions.values())
+      .filter(transaction => transaction.createdAt >= startDate)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getSubscriptionStats(startDate: Date): Promise<{
+    total: number;
+    active: number;
+    new: number;
+    churn: number;
+    planBreakdown: { name: string; value: number }[];
+  }> {
+    // Get transactions in the period
+    const transactions = await this.getPaymentTransactions(startDate);
+    
+    // Get all users with subscription
+    const users = Array.from(this.users.values()).filter(user => 
+      user.tier && user.tier !== 'free'
+    );
+    
+    // Calculate new subscriptions in the period
+    const newSubscriptions = transactions.filter(
+      t => t.type === 'subscription_created'
+    ).length;
+    
+    // Calculate churned subscriptions in the period
+    const churnedSubscriptions = transactions.filter(
+      t => t.type === 'subscription_canceled'
+    ).length;
+    
+    // Calculate plan breakdown
+    const planCounts = new Map<string, number>();
+    users.forEach(user => {
+      if (user.tier) {
+        const count = planCounts.get(user.tier) || 0;
+        planCounts.set(user.tier, count + 1);
+      }
+    });
+    
+    const planBreakdown = Array.from(planCounts.entries()).map(([name, value]) => ({ 
+      name, 
+      value 
+    }));
+    
+    return {
+      total: users.length,
+      active: users.filter(u => u.subscriptionStatus === 'active').length,
+      new: newSubscriptions,
+      churn: churnedSubscriptions,
+      planBreakdown
+    };
   }
 }
 
