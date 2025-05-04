@@ -44,7 +44,7 @@ const editUserSchema = insertUserSchema.extend({
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 export default function EditUserProfile() {
-  const [match, routeParams] = useRoute("/admin/users/edit-profile/:id");
+  const [match, routeParams] = useRoute<{ id: string }>("/admin/users/edit-profile/:id");
   const id = routeParams?.id || new URLSearchParams(window.location.search).get("id");
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
@@ -426,8 +426,8 @@ export default function EditUserProfile() {
                     <div className="text-sm text-muted-foreground mt-1">
                       <p>Roles:</p>
                       <ul className="list-disc pl-5 mt-1">
-                        {user.adminRoles.map((role, index) => (
-                          <li key={index} className="capitalize">{role.replace('_', ' ')}</li>
+                        {user.adminRoles.map((role: string, index: number) => (
+                          <li key={index} className="capitalize">{String(role).replace('_', ' ')}</li>
                         ))}
                       </ul>
                     </div>
