@@ -73,7 +73,8 @@ export default function EditUserProfile() {
       form.reset({
         username: user.username,
         email: user.email,
-        name: user.name || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
         tier: user.tier,
         phone: user.phone || "",
         profilePicture: user.profilePicture || "",
@@ -270,10 +271,24 @@ export default function EditUserProfile() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="name"
+                        name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name</FormLabel>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>

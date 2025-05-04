@@ -31,6 +31,12 @@ import {
 import { User } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function AdminUsers() {
   const { toast } = useToast();
@@ -66,7 +72,8 @@ export default function AdminUsers() {
             search === "" ||
             user.username.toLowerCase().includes(search.toLowerCase()) ||
             user.email.toLowerCase().includes(search.toLowerCase()) ||
-            (user.name && user.name.toLowerCase().includes(search.toLowerCase()));
+            (user.firstName && user.firstName.toLowerCase().includes(search.toLowerCase())) ||
+            (user.lastName && user.lastName.toLowerCase().includes(search.toLowerCase()));
 
           const matchesTier = tierFilter === "all" || user.tier === tierFilter;
 
@@ -234,38 +241,42 @@ export default function AdminUsers() {
                   <TableRow key={user.id}>
                     <TableCell className="text-center">
                       {user.isAdmin && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="inline-flex items-center justify-center w-6 h-6 cursor-help">
-                              <Shield className="h-4 w-4 text-primary" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-xs">
-                              <p className="font-medium">Admin Roles:</p>
-                              {user.adminRoles && Array.isArray(user.adminRoles) && user.adminRoles.length > 0 ? (
-                                <ul className="list-disc pl-4 mt-1">
-                                  {user.adminRoles.map((role, index) => (
-                                    <li key={index} className="capitalize">{role.replace('_', ' ')}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p>No specific roles</p>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex items-center justify-center w-6 h-6 cursor-help">
+                                <Shield className="h-4 w-4 text-primary" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="text-xs">
+                                <p className="font-medium">Admin Roles:</p>
+                                {user.adminRoles && Array.isArray(user.adminRoles) && user.adminRoles.length > 0 ? (
+                                  <ul className="list-disc pl-4 mt-1">
+                                    {user.adminRoles.map((role, index) => (
+                                      <li key={index} className="capitalize">{role.replace('_', ' ')}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p>No specific roles</p>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground mr-2">
-                          {user.name?.charAt(0) || user.username.charAt(0)}
+                          {user.firstName?.charAt(0) || user.username.charAt(0)}
                         </div>
                         <div>
                           <div className="font-medium">{user.username}</div>
                           <div className="text-xs text-muted-foreground">
-                            {user.name || "No name provided"}
+                            {user.firstName && user.lastName 
+                              ? `${user.firstName} ${user.lastName}` 
+                              : "No name provided"}
                           </div>
                         </div>
                       </div>
