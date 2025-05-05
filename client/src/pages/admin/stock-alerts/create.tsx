@@ -237,18 +237,28 @@ export default function CreateStockAlertPage() {
         ...data,
         // Convert array fields to match schema expectations
         risks: Array.isArray(data.risks) ? data.risks.join(", ") : data.risks, // Convert risks array to comma-separated string
+        
+        // Log to console for debugging what we're sending
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
         status: computeAlertStatus(data),
         isDraft: true, // Mark as draft initially
       };
+
+      console.log("Submitting stock alert:", payload);
       
       const endpoint = "/api/stock-alerts?demo=true";
-      const res = await apiRequest("POST", endpoint, payload);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create stock alert preview");
+      try {
+        const res = await apiRequest("POST", endpoint, payload);
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("Server error response:", errorData);
+          throw new Error(errorData.message || "Failed to create stock alert preview");
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        throw error;
       }
-      return await res.json();
     },
     onSuccess: (data) => {
       toast({
