@@ -420,6 +420,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   });
+  
+  // Price confluences for stock alerts
+  app.get("/api/confluences", (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    if (isDemoMode) {
+      const demoConfluences = [
+        // Price-Based Confluences
+        { id: 1, category: "Price-Based", name: "Support Zone Strength", description: "The support zone has held firm—buyers are stepping up." },
+        { id: 2, category: "Price-Based", name: "Resistance Turned Support", description: "The zone flipped from a ceiling to a floor—buyers are holding strong." },
+        { id: 3, category: "Price-Based", name: "Bullish Trend Line Support", description: "A trend line below is propping up the price—bulls are holding the fort." },
+        { id: 4, category: "Price-Based", name: "Trendline Break", description: "A break from specific high/low signals a shift—momentum's turning bullish." },
+        { id: 5, category: "Price-Based", name: "4-Hour Trend Line Break", description: "Short-term charts show a trend line snap—early bulls are stepping up." },
+        
+        // Volume-Based Confluences
+        { id: 6, category: "Volume-Based", name: "Volume Spike/Volume - Buy at the Lows", description: "Buying volume's picking up—investors are grabbing shares at these lows." },
+        { id: 7, category: "Volume-Based", name: "High Volume Node", description: "This support zone is a high volume hotspot—intense buyer interest locks it in." },
+        
+        // Momentum Indicators
+        { id: 8, category: "Momentum", name: "Daily MACD Turning Up", description: "Daily charts show momentum starting to turn bullish—a shift is underway." },
+        { id: 9, category: "Momentum", name: "Daily MACD Cross", description: "Daily charts confirm momentum's flipped bullish—the turn is here." },
+        { id: 10, category: "Momentum", name: "Daily MACD Divergence", description: "Daily charts show hidden strength—a bounce is brewing." },
+        { id: 11, category: "Momentum", name: "Daily RSI Divergence", description: "Daily charts show hidden strength—ready to bounce." },
+        { id: 12, category: "Momentum", name: "Daily RSI Oversold", description: "Daily charts signal oversold conditions—undervaluation suggests a rebound." },
+        { id: 13, category: "Momentum", name: "Weekly MACD Turning Up", description: "Weekly charts show momentum starting to turn bullish—a shift is underway." },
+        { id: 14, category: "Momentum", name: "Weekly MACD Cross", description: "Weekly charts are on the cusp of a bullish signal—momentum's brewing." },
+        { id: 15, category: "Momentum", name: "Weekly MACD Divergence", description: "Weekly charts show hidden strength—a bounce is brewing." },
+        { id: 16, category: "Momentum", name: "Weekly RSI Divergence", description: "Oversold signals on the weekly chart hint at a rebound—undervaluation's clear." },
+        { id: 17, category: "Momentum", name: "Weekly RSI Oversold", description: "Oversold vibes on the weekly chart hint at a rebound—undervaluation's clear." },
+        
+        // Chart Patterns
+        { id: 18, category: "Chart Patterns", name: "Wyckoff Pattern", description: "A textbook Wyckoff setup at support shows accumulation—a breakout's brewing." },
+        { id: 19, category: "Chart Patterns", name: "Weinstein Analysis", description: "Stage 1-to-2 transition signals classic growth potential at the bottom." },
+        
+        // Sentiment and Insider Activity
+        { id: 20, category: "Sentiment", name: "Insider Buys", description: "Specific insider activity—insider confidence shines through." },
+        { id: 21, category: "Sentiment", name: "Dark Pool Print", description: "Hidden buying activity in dark pools suggests investors are quietly accumulating shares—price suppression may be at play." }
+      ];
+      return res.json(demoConfluences);
+    } else {
+      try {
+        // Non-demo mode would fetch from database
+        const simpleConfluences = [
+          { id: 1, category: "Price-Based", name: "Support Zone Strength" },
+          { id: 2, category: "Volume-Based", name: "Volume Spike" },
+          { id: 3, category: "Momentum", name: "RSI Oversold" }
+        ];
+        res.json(simpleConfluences);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch confluences" });
+      }
+    }
+  });
+  
+  // Tags for stock alerts
+  app.get("/api/tags", (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    if (isDemoMode) {
+      const demoTags = [
+        { id: 1, name: "Fintech", description: "Financial technology companies" },
+        { id: 2, name: "Growth Stocks", description: "Companies with above-average growth potential" },
+        { id: 3, name: "Crypto Plays", description: "Companies involved in cryptocurrency" },
+        { id: 4, name: "Weinstein", description: "Following Weinstein methodology" },
+        { id: 5, name: "Biotech", description: "Biotechnology companies" },
+        { id: 6, name: "Leveraged Plays", description: "Stocks with leverage potential" },
+        { id: 7, name: "Retail", description: "Retail sector companies" },
+        { id: 8, name: "Leveraged ETFs", description: "Exchange-traded funds with leverage" },
+        { id: 9, name: "Inverse Plays", description: "Stocks for downside positioning" },
+        { id: 10, name: "Energy", description: "Energy sector companies" },
+        { id: 11, name: "Currency", description: "Currency-related investments" },
+        { id: 12, name: "Safe-Haven Plays", description: "Defensive investments" },
+        { id: 13, name: "China", description: "China-based investments" },
+        { id: 14, name: "Emerging Markets", description: "Investments in emerging economies" }
+      ];
+      return res.json(demoTags);
+    } else {
+      try {
+        // Non-demo mode
+        const simpleTags = [
+          { id: 1, name: "Fintech" },
+          { id: 2, name: "Growth Stocks" },
+          { id: 3, name: "Biotech" }
+        ];
+        res.json(simpleTags);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch tags" });
+      }
+    }
+  });
+  
+  // Risk factors for stock alerts
+  app.get("/api/risks", (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    if (isDemoMode) {
+      const demoRisks = [
+        { id: 1, name: "Earnings Miss", description: "Risk of company missing earnings expectations" },
+        { id: 2, name: "Sector Rotation", description: "Risk of money flowing out of this sector" },
+        { id: 3, name: "Regulatory Headwinds", description: "Potential negative regulatory changes" },
+        { id: 4, name: "Market Volatility", description: "Overall market instability affecting stock" },
+        { id: 5, name: "Competition", description: "Increasing competitive pressure" },
+        { id: 6, name: "Valuation Concerns", description: "Stock may be overvalued at current levels" },
+        { id: 7, name: "Supply Chain Issues", description: "Disruptions in product/service delivery" },
+        { id: 8, name: "Macro Economic Risks", description: "Broader economic factors affecting stock" },
+        { id: 9, name: "Management Changes", description: "Changes in leadership creating uncertainty" },
+        { id: 10, name: "Technical Resistance", description: "Strong technical resistance overhead" }
+      ];
+      return res.json(demoRisks);
+    } else {
+      try {
+        // Non-demo mode
+        const simpleRisks = [
+          { id: 1, name: "Earnings Miss" },
+          { id: 2, name: "Market Volatility" },
+          { id: 3, name: "Technical Resistance" }
+        ];
+        res.json(simpleRisks);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch risks" });
+      }
+    }
+  });
+  
+  // Add a new confluence 
+  app.post("/api/confluences", async (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    try {
+      const { name, category, description } = req.body;
+      
+      if (!name || !category) {
+        return res.status(400).json({ message: "Name and category are required" });
+      }
+      
+      if (isDemoMode) {
+        // In demo mode, just return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          category,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // In production, we would add to the database here
+        // For now, return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          category,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add confluence" });
+    }
+  });
+  
+  // Add a new tag
+  app.post("/api/tags", async (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    try {
+      const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      
+      if (isDemoMode) {
+        // In demo mode, just return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // In production, we would add to the database here
+        // For now, return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add tag" });
+    }
+  });
+  
+  // Add a new risk
+  app.post("/api/risks", async (req, res) => {
+    const isDemoMode = req.query.demo === "true";
+    
+    try {
+      const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      
+      if (isDemoMode) {
+        // In demo mode, just return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // In production, we would add to the database here
+        // For now, return a mock response
+        return res.status(201).json({
+          id: Math.floor(Math.random() * 1000) + 100,
+          name,
+          description: description || "",
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add risk" });
+    }
+  });
 
   app.get("/api/stock-alerts/:id", async (req, res) => {
     try {
