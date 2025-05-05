@@ -80,6 +80,7 @@ function App() {
           <ProtectedRoute path="/admin/stock-alerts" component={AdminStockAlerts} />
           <ProtectedRoute path="/admin/stock-alerts/create" component={CreateStockAlert} />
           <ProtectedRoute path="/admin/stock-alerts/preview" component={StockAlertPreview} />
+          <ProtectedRoute path="/admin/stock-alerts/edit/:id" component={CreateStockAlert} />
           <ProtectedRoute path="/admin/education" component={AdminEducation} />
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />
           <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
