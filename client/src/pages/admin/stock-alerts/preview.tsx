@@ -265,16 +265,27 @@ export default function StockAlertPreviewPage() {
                 )}
                 
                 {/* Risks */}
-                {stockAlert.risks && stockAlert.risks.length > 0 && (
+                {stockAlert.risks && (
                   <div className="mt-6">
                     <h3 className="font-medium mb-3">Known Risks</h3>
                     <div className="space-y-2">
-                      {stockAlert.risks.map((risk, index) => (
-                        <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
-                          <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" />
-                          <span>{risk}</span>
-                        </div>
-                      ))}
+                      {typeof stockAlert.risks === 'string' ? (
+                        // Handle risks as a string
+                        stockAlert.risks.split(', ').map((risk, index) => (
+                          <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
+                            <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" />
+                            <span>{risk}</span>
+                          </div>
+                        ))
+                      ) : (
+                        // Fallback for array (for backwards compatibility)
+                        Array.isArray(stockAlert.risks) && stockAlert.risks.map((risk, index) => (
+                          <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
+                            <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" />
+                            <span>{risk}</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
