@@ -143,7 +143,7 @@ export const stockAlerts = pgTable("stock_alerts", {
   // Main narrative and risk assessment
   narrative: text("narrative"), // Overall investment thesis
   risks: text("risks"), // Potential risks or concerns
-  supportLevel: doublePrecision("support_level"), // Critical support level for risk assessment
+  lossLevel: doublePrecision("loss_level"), // Loss and hold below level for risk assessment
   
   // Chart images - separate fields for daily and weekly charts
   dailyChartImageUrl: text("daily_chart_image_url"),
