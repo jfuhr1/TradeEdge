@@ -901,10 +901,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Stock alert not found" });
         }
         
-        // Update the alert to remove draft status
+        // Update the alert (draft concept removed)
         const updatedAlert = {
           ...alert,
-          isDraft: false,
           updatedAt: new Date().toISOString()
         };
         
@@ -940,16 +939,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
       
-      // Get the draft status from request
-      const { isDraft } = req.body;
-      
-      // Validate that it's being set to false
-      if (isDraft !== false) {
-        return res.status(400).json({ message: "Invalid publish operation" });
-      }
-      
-      // Update the alert in storage
-      const updatedAlert = await storage.updateStockAlert(id, { isDraft: false });
+      // We no longer use draft status, just update whatever data was provided
+      // Update the alert in storage with whatever data is in the request body
+      const updatedAlert = await storage.updateStockAlert(id, req.body);
       if (!updatedAlert) {
         return res.status(404).json({ message: "Stock alert not found" });
       }

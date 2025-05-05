@@ -237,11 +237,11 @@ export default function StockAlertPreviewPage() {
                 Back to List
               </Link>
             </Button>
-            {stockAlert.isDraft && canEditAlerts && (
+            {canEditAlerts && (
               <Button variant="outline" asChild>
                 <Link to={`/admin/stock-alerts/edit/${alertId}`}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit Draft
+                  Edit Alert
                 </Link>
               </Button>
             )}

@@ -185,8 +185,7 @@ export const insertStockAlertSchema = createInsertSchema(stockAlerts)
     target2: z.number().optional(),
     target3: z.number().optional(),
     lossLevel: z.number().optional(),
-    // Make the draft status explicitly available
-    isDraft: z.boolean().default(true), // Default to true for preview workflow
+    // Note: isDraft concept has been removed as requested
   });
 
 // User Portfolio Model

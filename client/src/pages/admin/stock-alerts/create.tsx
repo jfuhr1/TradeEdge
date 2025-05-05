@@ -263,13 +263,13 @@ export default function CreateStockAlertPage() {
       // Ensure risks is a string rather than an array - critical!
       const risksString = Array.isArray(data.risks) ? data.risks.join(", ") : data.risks || "";
       
-      // Set up the payload with draft status
+      // Set up the payload without draft status
       const payload = {
         ...data,
         risks: risksString,
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
-        status: computeAlertStatus(data),
-        isDraft: true, // Mark as draft initially
+        status: computeAlertStatus(data)
+        // isDraft concept has been removed
       };
 
       console.log("Submitting stock alert:", payload);
@@ -297,8 +297,8 @@ export default function CreateStockAlertPage() {
         tags: [],
         confluences: [],
         requiredTier: data.requiredTier || "free",
-        status: "active",
-        isDraft: true
+        status: "active"
+        // removed isDraft field
       };
       
       console.log("Sending clean test payload:", testPayload);
