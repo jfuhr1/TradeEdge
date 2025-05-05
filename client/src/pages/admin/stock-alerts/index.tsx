@@ -568,7 +568,7 @@ export default function AdminStockAlertsPage() {
                           {canEditAlerts && (
                             <div className="flex space-x-2 mt-2">
                               <Button variant="outline" size="sm" asChild className="flex-1">
-                                <Link to={`/admin/stock-alerts/${alert.id}/preview`}>Preview</Link>
+                                <Link to={`/admin/stock-alerts/preview?id=${alert.id}&draft=true`}>Preview</Link>
                               </Button>
                               <Button variant="outline" size="sm" asChild className="flex-1">
                                 <Link to={`/admin/stock-alerts/${alert.id}/edit`}>Edit</Link>
