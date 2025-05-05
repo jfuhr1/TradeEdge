@@ -108,12 +108,12 @@ export default function AdminStockAlertForm({
     defaultValues: {
       symbol: "",
       companyName: "",
-      currentPrice: 0,
-      buyZoneMin: 0,
-      buyZoneMax: 0,
-      target1: 0,
-      target2: 0,
-      target3: 0,
+      currentPrice: undefined,
+      buyZoneMin: undefined,
+      buyZoneMax: undefined,
+      target1: undefined,
+      target2: undefined,
+      target3: undefined,
       target1Reasoning: "",
       target2Reasoning: "",
       target3Reasoning: "",
@@ -313,7 +313,10 @@ export default function AdminStockAlertForm({
                       step="0.01"
                       placeholder="175.50" 
                       {...field} 
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                        field.onChange(value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -337,7 +340,10 @@ export default function AdminStockAlertForm({
                           step="0.01"
                           placeholder="170.00" 
                           {...field} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -357,7 +363,10 @@ export default function AdminStockAlertForm({
                           step="0.01"
                           placeholder="175.00" 
                           {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -385,7 +394,10 @@ export default function AdminStockAlertForm({
                             step="0.01"
                             placeholder="185.00" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -424,7 +436,10 @@ export default function AdminStockAlertForm({
                             step="0.01"
                             placeholder="195.00" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -463,7 +478,10 @@ export default function AdminStockAlertForm({
                             step="0.01"
                             placeholder="205.00" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

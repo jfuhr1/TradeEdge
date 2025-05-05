@@ -1,0 +1,41 @@
+// Updated handler for currentPrice
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for buyZoneMin
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for buyZoneMax
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for target1
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for target2
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for target3
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
+
+// Updated handler for lossLevel
+onChange={(e) => {
+  const value = e.target.value.trim() === '' ? undefined : parseFloat(e.target.value);
+  field.onChange(value);
+}}
