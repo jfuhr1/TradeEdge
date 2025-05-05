@@ -962,7 +962,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Add to our global storage
         global.DEMO_CREATED_ALERTS.push(mockAlert);
-        console.log(`Stored mock alert with ID ${mockAlert.id} in global storage`);
+        
+        // For better persistence after server restarts, also store in actual database
+        await storage.createStockAlert(mockAlert);
+        
+        console.log(`Stored mock alert with ID ${mockAlert.id} in global storage and database`);
         
         return res.status(201).json(mockAlert);
       }
