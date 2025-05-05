@@ -172,7 +172,7 @@ export default function StockAlertPreviewPage() {
                     </CardTitle>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold">${stockAlert.currentPrice.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">${stockAlert.currentPrice ? stockAlert.currentPrice.toFixed(2) : 'N/A'}</div>
                     <div className={`text-sm font-medium ${parseFloat(stockAlert.changePercent || "0") >= 0 ? "text-green-600" : "text-red-600"}`}>
                       {parseFloat(stockAlert.changePercent || "0") >= 0 ? "+" : ""}{stockAlert.changePercent}%
                     </div>
@@ -187,19 +187,22 @@ export default function StockAlertPreviewPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
                         <div>Buy Zone</div>
-                        <div className="font-medium">${stockAlert.buyZoneMin.toFixed(2)} - ${stockAlert.buyZoneMax.toFixed(2)}</div>
+                        <div className="font-medium">
+                          {stockAlert.buyZoneMin ? `$${stockAlert.buyZoneMin.toFixed(2)}` : 'N/A'} - 
+                          {stockAlert.buyZoneMax ? `$${stockAlert.buyZoneMax.toFixed(2)}` : 'N/A'}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
                         <div>Target 1</div>
-                        <div className="font-medium">${stockAlert.target1.toFixed(2)}</div>
+                        <div className="font-medium">{stockAlert.target1 ? `$${stockAlert.target1.toFixed(2)}` : 'N/A'}</div>
                       </div>
                       <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
                         <div>Target 2</div>
-                        <div className="font-medium">${stockAlert.target2.toFixed(2)}</div>
+                        <div className="font-medium">{stockAlert.target2 ? `$${stockAlert.target2.toFixed(2)}` : 'N/A'}</div>
                       </div>
                       <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
                         <div>Target 3</div>
-                        <div className="font-medium">${stockAlert.target3.toFixed(2)}</div>
+                        <div className="font-medium">{stockAlert.target3 ? `$${stockAlert.target3.toFixed(2)}` : 'N/A'}</div>
                       </div>
                     </div>
                   </div>
