@@ -247,6 +247,17 @@ export default function CreateStockAlertPage() {
 
   // Create a draft stock alert for preview
   const [location, navigate] = useLocation();
+  
+  // Check if we're in edit mode by looking at the URL
+  const isEditMode = location.includes('/edit/');
+  const alertId = isEditMode ? parseInt(location.split('/edit/')[1]) : 0;
+  
+  // Fetch stock alert data if in edit mode
+  const { data: editAlertData, isLoading: isLoadingEditData } = useQuery({
+    queryKey: [`/api/stock-alerts/${alertId}?demo=true`],
+    enabled: isEditMode && alertId > 0,
+    staleTime: 10000,
+  });
   const createAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
       // Ensure risks is a string rather than an array - critical!
@@ -292,9 +303,21 @@ export default function CreateStockAlertPage() {
       
       console.log("Sending clean test payload:", testPayload);
       
-      const endpoint = "/api/stock-alerts?demo=true";
       try {
-        const res = await apiRequest("POST", endpoint, testPayload);
+        let res;
+        
+        // If in edit mode, update the existing alert
+        if (isEditMode && alertId > 0) {
+          console.log(`Updating existing alert with ID: ${alertId}`);
+          const endpoint = `/api/stock-alerts/${alertId}?demo=true`;
+          res = await apiRequest("PATCH", endpoint, testPayload);
+        } else {
+          // Create a new alert
+          console.log("Creating new alert");
+          const endpoint = "/api/stock-alerts?demo=true";
+          res = await apiRequest("POST", endpoint, testPayload);
+        }
+        
         if (!res.ok) {
           const errorData = await res.json();
           console.error("Server error response:", errorData);
@@ -411,6 +434,53 @@ export default function CreateStockAlertPage() {
   useEffect(() => {
     form.setValue("technicalReasons", selectedTechnicalReasons);
   }, [selectedTechnicalReasons, form]);
+  
+  // Load existing data when in edit mode
+  useEffect(() => {
+    if (isEditMode && editAlertData && !isLoadingEditData) {
+      // Set form values from the fetched alert data
+      form.setValue("symbol", editAlertData.symbol || "");
+      form.setValue("companyName", editAlertData.companyName || "");
+      form.setValue("currentPrice", editAlertData.currentPrice);
+      form.setValue("buyZoneMin", editAlertData.buyZoneMin);
+      form.setValue("buyZoneMax", editAlertData.buyZoneMax);
+      form.setValue("target1", editAlertData.target1);
+      form.setValue("target2", editAlertData.target2);
+      form.setValue("target3", editAlertData.target3);
+      form.setValue("target1Reasoning", editAlertData.target1Reasoning || "");
+      form.setValue("target2Reasoning", editAlertData.target2Reasoning || "");
+      form.setValue("target3Reasoning", editAlertData.target3Reasoning || "");
+      form.setValue("lossLevel", editAlertData.lossLevel);
+      form.setValue("dailyChartImageUrl", editAlertData.dailyChartImageUrl || "");
+      form.setValue("weeklyChartImageUrl", editAlertData.weeklyChartImageUrl || "");
+      form.setValue("mainChartType", editAlertData.mainChartType || "daily");
+      form.setValue("narrative", editAlertData.narrative || "");
+      form.setValue("requiredTier", editAlertData.requiredTier || "free");
+      
+      // Set state for the selections
+      if (editAlertData.technicalReasons && Array.isArray(editAlertData.technicalReasons)) {
+        setSelectedTechnicalReasons(editAlertData.technicalReasons);
+      }
+      
+      if (editAlertData.confluences && Array.isArray(editAlertData.confluences)) {
+        setSelectedConfluences(editAlertData.confluences);
+      }
+      
+      if (editAlertData.tags && Array.isArray(editAlertData.tags)) {
+        setSelectedTags(editAlertData.tags);
+      }
+      
+      // Handle risks which might be a string or array
+      if (editAlertData.risks) {
+        if (typeof editAlertData.risks === 'string') {
+          const risksArray = editAlertData.risks.split(',').map(r => r.trim());
+          setSelectedRisks(risksArray);
+        } else if (Array.isArray(editAlertData.risks)) {
+          setSelectedRisks(editAlertData.risks);
+        }
+      }
+    }
+  }, [isEditMode, editAlertData, isLoadingEditData, form]);
 
   // Form submission handler
   function onSubmit(data: StockAlertFormValues) {
