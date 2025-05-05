@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { Loader2, X, Plus, AlertTriangle, Check, Tag, Image } from "lucide-react";
+import { Loader2, X, Plus, AlertTriangle, Check, Tag, Image, Eye } from "lucide-react";
 import { Link } from "wouter";
 
 import {
@@ -223,38 +223,38 @@ export default function CreateStockAlertPage() {
     },
   });
 
-  // Create stock alert mutation
+  // Create a draft stock alert for preview
+  const [location, navigate] = useLocation();
   const createAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
-      // Convert to formData for image uploads
+      // Set up the payload with draft status
       const payload = {
         ...data,
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
         status: computeAlertStatus(data),
+        isDraft: true, // Mark as draft initially
       };
       
       const endpoint = "/api/stock-alerts?demo=true";
       const res = await apiRequest("POST", endpoint, payload);
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create stock alert");
+        throw new Error(errorData.message || "Failed to create stock alert preview");
       }
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "Stock alert created",
-        description: "The stock alert has been created successfully.",
+        title: "Preview Ready",
+        description: "Your stock alert preview is ready to review.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
-      form.reset();
-      setSelectedConfluences([]);
-      setSelectedRisks([]);
-      setSelectedTags([]);
+      
+      // Navigate to the preview page with the alert ID
+      navigate(`/admin/stock-alerts/preview?id=${data.id}&draft=true`);
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create stock alert",
+        title: "Failed to create preview",
         description: error.message,
         variant: "destructive",
       });
@@ -713,33 +713,29 @@ export default function CreateStockAlertPage() {
                     />
                   </div>
 
-                  {/* Right Column: Advanced Options */}
+                  {/* Right Column: Additional Info */}
                   <div className="space-y-6">
-                    {/* Required Membership Tier (repeated from left column to fill space) */}
-                    <Card className="border border-border/40 shadow-sm">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">Chart Preview</CardTitle>
-                        <CardDescription>
-                          Preview of the selected chart image
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex justify-center p-6">
-                        {form.watch("dailyChartImageUrl") ? (
-                          <img 
-                            src={form.watch("mainChartType") === "daily" 
-                              ? form.watch("dailyChartImageUrl") 
-                              : form.watch("weeklyChartImageUrl")}
-                            alt="Chart Preview" 
-                            className="max-w-full max-h-[300px] object-contain rounded-md"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-[200px] w-full border-2 border-dashed rounded-lg border-muted-foreground/20">
-                            <Image className="h-10 w-10 text-muted-foreground mb-2" strokeWidth={1.5} />
-                            <p className="text-sm text-muted-foreground">Upload chart images to preview</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <div className="p-4 border rounded-md bg-muted/30">
+                      <h3 className="text-base font-medium mb-3">Alert Preview Guidelines</h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-primary mt-0.5" />
+                          <span>Fill out all required fields marked with * to enable the preview button</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-primary mt-0.5" />
+                          <span>The preview page will show exactly how members will see this alert</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-primary mt-0.5" />
+                          <span>You'll have a chance to review and edit before final publishing</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-primary mt-0.5" />
+                          <span>Only alerts with status "active" will be visible to members</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
@@ -990,9 +986,14 @@ export default function CreateStockAlertPage() {
                     {createAlert.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        Creating Preview...
                       </>
-                    ) : "Create Alert"}
+                    ) : (
+                      <>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview Alert
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
