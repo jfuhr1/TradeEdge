@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { Loader2, X, Plus, AlertTriangle, Check, Tag } from "lucide-react";
+import { Loader2, X, Plus, AlertTriangle, Check, Tag, Image } from "lucide-react";
 import { Link } from "wouter";
 
 import {
@@ -715,241 +715,261 @@ export default function CreateStockAlertPage() {
 
                   {/* Right Column: Advanced Options */}
                   <div className="space-y-6">
-                    <Tabs defaultValue="confluences">
-                      <TabsList className="grid grid-cols-3 mb-4">
-                        <TabsTrigger value="confluences">Confluences</TabsTrigger>
-                        <TabsTrigger value="risks">Known Risks</TabsTrigger>
-                        <TabsTrigger value="tags">Tags</TabsTrigger>
-                      </TabsList>
-
-                      {/* Confluences Tab */}
-                      <TabsContent value="confluences" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">Confluences</h3>
-                          <div className="flex items-center space-x-2">
-                            <Select
-                              value={newConfluenceCategory}
-                              onValueChange={setNewConfluenceCategory}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {confluenceCategories.map(category => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input 
-                              placeholder="New confluence" 
-                              value={newConfluenceName}
-                              onChange={(e) => setNewConfluenceName(e.target.value)}
-                              className="max-w-[180px]"
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={handleAddNewConfluence} 
-                              disabled={createConfluence.isPending || !newConfluenceName.trim()}
-                            >
-                              {createConfluence.isPending ? 
-                                <Loader2 className="h-4 w-4 animate-spin" /> : 
-                                <Plus className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {isLoadingConfluences ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                          </div>
+                    {/* Required Membership Tier (repeated from left column to fill space) */}
+                    <Card className="border border-border/40 shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Chart Preview</CardTitle>
+                        <CardDescription>
+                          Preview of the selected chart image
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex justify-center p-6">
+                        {form.watch("dailyChartImageUrl") ? (
+                          <img 
+                            src={form.watch("mainChartType") === "daily" 
+                              ? form.watch("dailyChartImageUrl") 
+                              : form.watch("weeklyChartImageUrl")}
+                            alt="Chart Preview" 
+                            className="max-w-full max-h-[300px] object-contain rounded-md"
+                          />
                         ) : (
-                          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                            {confluenceCategories.map((category) => (
-                              <div key={category} className="space-y-2">
-                                <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {confluencesGrouped[category]?.map((confluence) => (
-                                    <Badge 
-                                      key={confluence.id} 
-                                      variant={selectedConfluences.includes(confluence.name) ? "default" : "outline"}
-                                      className="cursor-pointer text-xs"
-                                      onClick={() => handleSelectConfluence(confluence.name)}
-                                    >
-                                      {selectedConfluences.includes(confluence.name) && 
-                                        <Check className="h-3 w-3 mr-1" />
-                                      }
-                                      {confluence.name}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
+                          <div className="flex flex-col items-center justify-center h-[200px] w-full border-2 border-dashed rounded-lg border-muted-foreground/20">
+                            <Image className="h-10 w-10 text-muted-foreground mb-2" strokeWidth={1.5} />
+                            <p className="text-sm text-muted-foreground">Upload chart images to preview</p>
                           </div>
                         )}
-                        
-                        <div className="pt-2">
-                          <h4 className="text-sm font-medium mb-2">Selected Confluences:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedConfluences.length === 0 ? (
-                              <span className="text-sm text-muted-foreground">No confluences selected</span>
-                            ) : (
-                              selectedConfluences.map((name, idx) => (
-                                <Badge key={idx} variant="default" className="flex items-center gap-1">
-                                  {name}
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer" 
-                                    onClick={() => handleSelectConfluence(name)}
-                                  />
-                                </Badge>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      {/* Known Risks Tab */}
-                      <TabsContent value="risks" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">Known Risks</h3>
-                          <div className="flex items-center space-x-2">
-                            <Input 
-                              placeholder="New risk" 
-                              value={newRiskName}
-                              onChange={(e) => setNewRiskName(e.target.value)}
-                              className="max-w-[250px]"
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={handleAddNewRisk} 
-                              disabled={createRisk.isPending || !newRiskName.trim()}
-                            >
-                              {createRisk.isPending ? 
-                                <Loader2 className="h-4 w-4 animate-spin" /> : 
-                                <Plus className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {isLoadingRisks ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto pr-2">
-                            {risksData?.map((risk) => (
-                              <Badge 
-                                key={risk.id} 
-                                variant={selectedRisks.includes(risk.name) ? "destructive" : "outline"}
-                                className="cursor-pointer flex items-center gap-1"
-                                onClick={() => handleSelectRisk(risk.name)}
-                              >
-                                {selectedRisks.includes(risk.name) && 
-                                  <Check className="h-3 w-3" />
-                                }
-                                <AlertTriangle className="h-3 w-3 mr-1" />
-                                {risk.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className="pt-2">
-                          <h4 className="text-sm font-medium mb-2">Selected Risks:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedRisks.length === 0 ? (
-                              <span className="text-sm text-muted-foreground">No risks selected</span>
-                            ) : (
-                              selectedRisks.map((name, idx) => (
-                                <Badge key={idx} variant="destructive" className="flex items-center gap-1">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  {name}
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer" 
-                                    onClick={() => handleSelectRisk(name)}
-                                  />
-                                </Badge>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      {/* Tags Tab */}
-                      <TabsContent value="tags" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">Tags</h3>
-                          <div className="flex items-center space-x-2">
-                            <Input 
-                              placeholder="New tag" 
-                              value={newTagName}
-                              onChange={(e) => setNewTagName(e.target.value)}
-                              className="max-w-[250px]"
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={handleAddNewTag} 
-                              disabled={createTag.isPending || !newTagName.trim()}
-                            >
-                              {createTag.isPending ? 
-                                <Loader2 className="h-4 w-4 animate-spin" /> : 
-                                <Plus className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {isLoadingTags ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto pr-2">
-                            {tagsData?.map((tag) => (
-                              <Badge 
-                                key={tag.id} 
-                                variant={selectedTags.includes(tag.name) ? "secondary" : "outline"}
-                                className="cursor-pointer flex items-center gap-1"
-                                onClick={() => handleSelectTag(tag.name)}
-                              >
-                                {selectedTags.includes(tag.name) && 
-                                  <Check className="h-3 w-3" />
-                                }
-                                <Tag className="h-3 w-3 mr-1" />
-                                {tag.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className="pt-2">
-                          <h4 className="text-sm font-medium mb-2">Selected Tags:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedTags.length === 0 ? (
-                              <span className="text-sm text-muted-foreground">No tags selected</span>
-                            ) : (
-                              selectedTags.map((name, idx) => (
-                                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
-                                  <Tag className="h-3 w-3" />
-                                  {name}
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer" 
-                                    onClick={() => handleSelectTag(name)}
-                                  />
-                                </Badge>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4 border-t">
+                <div className="grid grid-cols-1 gap-6 mt-6 pt-6 border-t">
+                  {/* Confluences Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium">Confluences</h3>
+                      <div className="flex items-center space-x-2">
+                        <Select
+                          value={newConfluenceCategory}
+                          onValueChange={setNewConfluenceCategory}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {confluenceCategories.map(category => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input 
+                          placeholder="New confluence" 
+                          value={newConfluenceName}
+                          onChange={(e) => setNewConfluenceName(e.target.value)}
+                          className="max-w-[180px]"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleAddNewConfluence} 
+                          disabled={createConfluence.isPending || !newConfluenceName.trim()}
+                        >
+                          {createConfluence.isPending ? 
+                            <Loader2 className="h-4 w-4 animate-spin" /> : 
+                            <Plus className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isLoadingConfluences ? (
+                      <div className="flex items-center justify-center p-4 border rounded-md">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 border rounded-md p-4">
+                        {confluenceCategories.map((category) => (
+                          <div key={category} className="space-y-2">
+                            <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {confluencesGrouped[category]?.map((confluence) => (
+                                <Badge 
+                                  key={confluence.id} 
+                                  variant={selectedConfluences.includes(confluence.name) ? "default" : "outline"}
+                                  className="cursor-pointer text-xs"
+                                  onClick={() => handleSelectConfluence(confluence.name)}
+                                >
+                                  {selectedConfluences.includes(confluence.name) && 
+                                    <Check className="h-3 w-3 mr-1" />
+                                  }
+                                  {confluence.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="pt-2">
+                      <h4 className="text-sm font-medium mb-2">Selected Confluences:</h4>
+                      <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                        {selectedConfluences.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">No confluences selected</span>
+                        ) : (
+                          selectedConfluences.map((name, idx) => (
+                            <Badge key={idx} variant="default" className="flex items-center gap-1">
+                              {name}
+                              <X 
+                                className="h-3 w-3 cursor-pointer" 
+                                onClick={() => handleSelectConfluence(name)}
+                              />
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Known Risks Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium">Known Risks</h3>
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          placeholder="New risk" 
+                          value={newRiskName}
+                          onChange={(e) => setNewRiskName(e.target.value)}
+                          className="max-w-[250px]"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleAddNewRisk} 
+                          disabled={createRisk.isPending || !newRiskName.trim()}
+                        >
+                          {createRisk.isPending ? 
+                            <Loader2 className="h-4 w-4 animate-spin" /> : 
+                            <Plus className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isLoadingRisks ? (
+                      <div className="flex items-center justify-center p-4 border rounded-md">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 border rounded-md p-4 max-h-[150px] overflow-y-auto">
+                        {risksData?.map((risk) => (
+                          <Badge 
+                            key={risk.id} 
+                            variant={selectedRisks.includes(risk.name) ? "destructive" : "outline"}
+                            className="cursor-pointer flex items-center gap-1"
+                            onClick={() => handleSelectRisk(risk.name)}
+                          >
+                            {selectedRisks.includes(risk.name) && 
+                              <Check className="h-3 w-3" />
+                            }
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            {risk.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Selected Risks:</h4>
+                      <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                        {selectedRisks.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">No risks selected</span>
+                        ) : (
+                          selectedRisks.map((name, idx) => (
+                            <Badge key={idx} variant="destructive" className="flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              {name}
+                              <X 
+                                className="h-3 w-3 cursor-pointer" 
+                                onClick={() => handleSelectRisk(name)}
+                              />
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tags Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium">Tags</h3>
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          placeholder="New tag" 
+                          value={newTagName}
+                          onChange={(e) => setNewTagName(e.target.value)}
+                          className="max-w-[250px]"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleAddNewTag} 
+                          disabled={createTag.isPending || !newTagName.trim()}
+                        >
+                          {createTag.isPending ? 
+                            <Loader2 className="h-4 w-4 animate-spin" /> : 
+                            <Plus className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isLoadingTags ? (
+                      <div className="flex items-center justify-center p-4 border rounded-md">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 border rounded-md p-4 max-h-[150px] overflow-y-auto">
+                        {tagsData?.map((tag) => (
+                          <Badge 
+                            key={tag.id} 
+                            variant={selectedTags.includes(tag.name) ? "secondary" : "outline"}
+                            className="cursor-pointer flex items-center gap-1"
+                            onClick={() => handleSelectTag(tag.name)}
+                          >
+                            {selectedTags.includes(tag.name) && 
+                              <Check className="h-3 w-3" />
+                            }
+                            <Tag className="h-3 w-3 mr-1" />
+                            {tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Selected Tags:</h4>
+                      <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                        {selectedTags.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">No tags selected</span>
+                        ) : (
+                          selectedTags.map((name, idx) => (
+                            <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                              <Tag className="h-3 w-3" />
+                              {name}
+                              <X 
+                                className="h-3 w-3 cursor-pointer" 
+                                onClick={() => handleSelectTag(name)}
+                              />
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-4 mt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
