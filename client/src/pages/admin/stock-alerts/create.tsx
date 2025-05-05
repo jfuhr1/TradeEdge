@@ -34,16 +34,17 @@ import AdminLayout from "@/components/admin/AdminLayout";
 const stockAlertFormSchema = z.object({
   symbol: z.string().min(1, "Symbol is required").max(10),
   companyName: z.string().min(1, "Company name is required"),
-  currentPrice: z.number().min(0, "Current price must be greater than 0"),
-  buyZoneMin: z.number().min(0, "Buy zone minimum must be greater than 0"),
-  buyZoneMax: z.number().min(0, "Buy zone maximum must be greater than 0"),
-  target1: z.number().min(0, "Target 1 must be greater than 0"),
-  target2: z.number().min(0, "Target 2 must be greater than 0"),
-  target3: z.number().min(0, "Target 3 must be greater than 0"),
+  // Use optional for numeric fields to allow them to be undefined in the form
+  currentPrice: z.number().min(0, "Current price must be greater than 0").optional().or(z.undefined()),
+  buyZoneMin: z.number().min(0, "Buy zone minimum must be greater than 0").optional().or(z.undefined()),
+  buyZoneMax: z.number().min(0, "Buy zone maximum must be greater than 0").optional().or(z.undefined()),
+  target1: z.number().min(0, "Target 1 must be greater than 0").optional().or(z.undefined()),
+  target2: z.number().min(0, "Target 2 must be greater than 0").optional().or(z.undefined()),
+  target3: z.number().min(0, "Target 3 must be greater than 0").optional().or(z.undefined()),
   target1Reasoning: z.string().optional(),
   target2Reasoning: z.string().optional(),
   target3Reasoning: z.string().optional(),
-  lossLevel: z.number().min(0, "Loss level must be greater than 0"),
+  lossLevel: z.number().min(0, "Loss level must be greater than 0").optional().or(z.undefined()),
   technicalReasons: z.array(z.string()),
   dailyChartImageUrl: z.string().min(1, "Daily chart image is required"),
   weeklyChartImageUrl: z.string().min(1, "Weekly chart image is required"),
@@ -53,16 +54,32 @@ const stockAlertFormSchema = z.object({
   tags: z.array(z.string()).default([]),
   confluences: z.array(z.string()).default([]),
   requiredTier: z.enum(["free", "paid", "premium", "mentorship"]).default("free"),
-}).refine(data => data.buyZoneMax >= data.buyZoneMin, {
+}).refine(data => {
+  // Skip this validation if either value is undefined
+  if (data.buyZoneMin === undefined || data.buyZoneMax === undefined) return true;
+  return data.buyZoneMax >= data.buyZoneMin;
+}, {
   message: "Buy zone maximum must be greater than or equal to buy zone minimum",
   path: ["buyZoneMax"],
-}).refine(data => data.target1 >= data.buyZoneMax, {
+}).refine(data => {
+  // Skip this validation if either value is undefined
+  if (data.buyZoneMax === undefined || data.target1 === undefined) return true;
+  return data.target1 >= data.buyZoneMax;
+}, {
   message: "Target 1 must be greater than buy zone maximum",
   path: ["target1"],
-}).refine(data => data.target2 > data.target1, {
+}).refine(data => {
+  // Skip this validation if either value is undefined
+  if (data.target1 === undefined || data.target2 === undefined) return true;
+  return data.target2 > data.target1;
+}, {
   message: "Target 2 must be greater than Target 1",
   path: ["target2"],
-}).refine(data => data.target3 > data.target2, {
+}).refine(data => {
+  // Skip this validation if either value is undefined
+  if (data.target2 === undefined || data.target3 === undefined) return true;
+  return data.target3 > data.target2;
+}, {
   message: "Target 3 must be greater than Target 2",
   path: ["target3"],
 });
@@ -122,16 +139,16 @@ export default function CreateStockAlertPage() {
     defaultValues: {
       symbol: "",
       companyName: "",
-      currentPrice: 0,
-      buyZoneMin: 0,
-      buyZoneMax: 0,
-      target1: 0,
-      target2: 0,
-      target3: 0,
+      currentPrice: undefined,
+      buyZoneMin: undefined,
+      buyZoneMax: undefined,
+      target1: undefined,
+      target2: undefined,
+      target3: undefined,
       target1Reasoning: "",
       target2Reasoning: "",
       target3Reasoning: "",
-      lossLevel: 0,
+      lossLevel: undefined,
       technicalReasons: ["Support Level"], // Default value to satisfy validation
       dailyChartImageUrl: "",
       weeklyChartImageUrl: "",
@@ -250,16 +267,16 @@ export default function CreateStockAlertPage() {
       const testPayload = {
         symbol: data.symbol,
         companyName: data.companyName,
-        currentPrice: data.currentPrice,
-        buyZoneMin: data.buyZoneMin,
-        buyZoneMax: data.buyZoneMax,
-        target1: data.target1,
-        target2: data.target2,
-        target3: data.target3,
+        currentPrice: data.currentPrice ?? 0,
+        buyZoneMin: data.buyZoneMin ?? 0,
+        buyZoneMax: data.buyZoneMax ?? 0,
+        target1: data.target1 ?? 0,
+        target2: data.target2 ?? 0,
+        target3: data.target3 ?? 0,
         target1Reasoning: data.target1Reasoning || "",
         target2Reasoning: data.target2Reasoning || "",
         target3Reasoning: data.target3Reasoning || "",
-        lossLevel: data.lossLevel || 0,
+        lossLevel: data.lossLevel ?? 0,
         technicalReasons: data.technicalReasons || ["Support Level"],
         dailyChartImageUrl: data.dailyChartImageUrl || "",
         weeklyChartImageUrl: data.weeklyChartImageUrl || "",
@@ -359,6 +376,11 @@ export default function CreateStockAlertPage() {
   const computeAlertStatus = (data: StockAlertFormValues): string => {
     const { currentPrice, buyZoneMin, buyZoneMax, target3 } = data;
     
+    // Handle undefined values by defaulting to active
+    if (currentPrice === undefined || buyZoneMin === undefined || buyZoneMax === undefined || target3 === undefined) {
+      return "active";
+    }
+    
     if (currentPrice >= target3) {
       return "closed"; // If price hit the highest target, consider it closed
     } else if (currentPrice >= buyZoneMin && currentPrice <= buyZoneMax) {
@@ -412,11 +434,56 @@ export default function CreateStockAlertPage() {
       return;
     }
     
-    // Ensure we have valid target values
-    if (!(data.target1 > 0 && data.target2 > 0 && data.target3 > 0)) {
+    // Ensure we have valid target values if they are provided
+    const hasTarget1 = data.target1 !== undefined && data.target1 > 0;
+    const hasTarget2 = data.target2 !== undefined && data.target2 > 0;
+    const hasTarget3 = data.target3 !== undefined && data.target3 > 0;
+    
+    // If values are entered, ensure they are valid and in ascending order
+    if (data.target1 !== undefined || data.target2 !== undefined || data.target3 !== undefined) {
+      if (!hasTarget1) {
+        toast({
+          title: "Validation Error",
+          description: "Target 1 price must be provided and greater than 0.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (data.target2 !== undefined && !hasTarget2) {
+        toast({
+          title: "Validation Error",
+          description: "Target 2 price must be greater than 0.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (data.target3 !== undefined && !hasTarget3) {
+        toast({
+          title: "Validation Error",
+          description: "Target 3 price must be greater than 0.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check ascending order if all targets are provided
+      if (hasTarget1 && hasTarget2 && hasTarget3) {
+        if (!(data.target1 < data.target2 && data.target2 < data.target3)) {
+          toast({
+            title: "Validation Error",
+            description: "Target prices must be in ascending order (Target 1 < Target 2 < Target 3).",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    } else {
+      // No targets provided
       toast({
         title: "Validation Error",
-        description: "Please enter valid target prices.",
+        description: "Please enter at least Target 1 price.",
         variant: "destructive",
       });
       return;
@@ -514,7 +581,10 @@ export default function CreateStockAlertPage() {
                               step="0.01"
                               placeholder="175.50" 
                               {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                              }}
                               className="w-full"
                             />
                           </FormControl>
@@ -537,7 +607,10 @@ export default function CreateStockAlertPage() {
                                 step="0.01"
                                 placeholder="170.00" 
                                 {...field} 
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -557,7 +630,10 @@ export default function CreateStockAlertPage() {
                                 step="0.01"
                                 placeholder="175.00" 
                                 {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -584,7 +660,10 @@ export default function CreateStockAlertPage() {
                                     step="0.01"
                                     placeholder="185.00" 
                                     {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                    }}
                                   />
                                 </FormControl>
                                 <FormMessage />
