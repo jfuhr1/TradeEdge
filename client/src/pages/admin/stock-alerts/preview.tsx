@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 import { Link } from "wouter";
-import { Loader2, ArrowLeft, Check, X, Edit, AlertTriangle, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Check, X, Edit, AlertTriangle, Plus, Info } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -248,15 +248,13 @@ export default function StockAlertPreviewPage() {
           </div>
         </div>
         
-        {stockAlert.isDraft && (
-          <Alert className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Draft Alert</AlertTitle>
+        <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Preview Mode</AlertTitle>
             <AlertDescription>
-              This is a preview of your stock alert. It will not be visible to members until you publish it.
+              This is a preview of your stock alert. Review the details before making it available to members.
             </AlertDescription>
           </Alert>
-        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main alert info - 2/3 width */}
@@ -405,27 +403,19 @@ export default function StockAlertPreviewPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Publish Controls</CardTitle>
+                <CardTitle>Alert Controls</CardTitle>
                 <CardDescription>
-                  Review and publish your stock alert
+                  Manage your stock alert
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert variant={stockAlert.isDraft ? "default" : "success"}>
+                <Alert>
                   <div className="flex items-center">
-                    {stockAlert.isDraft ? (
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Check className="h-4 w-4 mr-2" />
-                    )}
-                    <AlertTitle>
-                      {stockAlert.isDraft ? "Draft Status" : "Published"}
-                    </AlertTitle>
+                    <Check className="h-4 w-4 mr-2" />
+                    <AlertTitle>Active Status</AlertTitle>
                   </div>
                   <AlertDescription>
-                    {stockAlert.isDraft 
-                      ? "This alert is currently in draft mode and not visible to members."
-                      : "This alert is published and visible to members."}
+                    This alert is active and can be visible to members with the appropriate membership tier.
                   </AlertDescription>
                 </Alert>
                 
@@ -443,7 +433,7 @@ export default function StockAlertPreviewPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <h4 className="font-medium">Pre-Publish Checklist</h4>
+                  <h4 className="font-medium">Quality Checklist</h4>
                   <div className="space-y-1.5">
                     <div className="flex items-center text-sm">
                       {stockAlert.symbol ? (
@@ -489,25 +479,6 @@ export default function StockAlertPreviewPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-stretch space-y-2">
-                {stockAlert.isDraft && (
-                  <Button 
-                    onClick={() => publishMutation.mutate()}
-                    disabled={publishMutation.isPending}
-                    className="w-full"
-                  >
-                    {publishMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Publishing...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Publish Alert
-                      </>
-                    )}
-                  </Button>
-                )}
                 <Button 
                   variant="outline" 
                   asChild
@@ -515,7 +486,7 @@ export default function StockAlertPreviewPage() {
                 >
                   <Link to={`/admin/stock-alerts/edit/${alertId}`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    {stockAlert.isDraft ? "Edit Draft" : "Edit Alert"}
+                    Edit Alert
                   </Link>
                 </Button>
               </CardFooter>
@@ -527,7 +498,7 @@ export default function StockAlertPreviewPage() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div>
-                  <p className="font-medium">What to check before publishing:</p>
+                  <p className="font-medium">Alert Quality Check:</p>
                   <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
                     <li>Verify all stock information is accurate</li>
                     <li>Ensure buy zone and targets are realistic</li>
