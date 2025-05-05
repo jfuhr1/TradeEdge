@@ -23,7 +23,8 @@ export default function StockAlertPreviewPage() {
   const [location, navigate] = useLocation();
   const params = new URLSearchParams(location.split("?")[1]);
   const alertId = parseInt(params.get("id") || "0");
-  const isDraft = params.get("draft") === "true";
+  // Get initial draft status from URL, but will use actual status from data when available
+  const initialIsDraft = params.get("draft") === "true";
   
   // Fetch the stock alert data
   const { data: stockAlert, isLoading, error } = useQuery({
@@ -132,7 +133,7 @@ export default function StockAlertPreviewPage() {
                 Back to List
               </Link>
             </Button>
-            {isDraft && canEditAlerts && (
+            {stockAlert.isDraft && canEditAlerts && (
               <Button variant="outline" asChild>
                 <Link to={`/admin/stock-alerts/edit/${alertId}`}>
                   <Edit className="mr-2 h-4 w-4" />
@@ -143,7 +144,7 @@ export default function StockAlertPreviewPage() {
           </div>
         </div>
         
-        {isDraft && (
+        {stockAlert.isDraft && (
           <Alert className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Draft Alert</AlertTitle>
@@ -306,19 +307,19 @@ export default function StockAlertPreviewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert variant={isDraft ? "default" : "success"}>
+                <Alert variant={stockAlert.isDraft ? "default" : "success"}>
                   <div className="flex items-center">
-                    {isDraft ? (
+                    {stockAlert.isDraft ? (
                       <AlertTriangle className="h-4 w-4 mr-2" />
                     ) : (
                       <Check className="h-4 w-4 mr-2" />
                     )}
                     <AlertTitle>
-                      {isDraft ? "Draft Status" : "Published"}
+                      {stockAlert.isDraft ? "Draft Status" : "Published"}
                     </AlertTitle>
                   </div>
                   <AlertDescription>
-                    {isDraft 
+                    {stockAlert.isDraft 
                       ? "This alert is currently in draft mode and not visible to members."
                       : "This alert is published and visible to members."}
                   </AlertDescription>
@@ -384,7 +385,7 @@ export default function StockAlertPreviewPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-stretch space-y-2">
-                {isDraft && (
+                {stockAlert.isDraft && (
                   <Button 
                     onClick={() => publishMutation.mutate()}
                     disabled={publishMutation.isPending}
@@ -410,7 +411,7 @@ export default function StockAlertPreviewPage() {
                 >
                   <Link to={`/admin/stock-alerts/edit/${alertId}`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    {isDraft ? "Edit Draft" : "Edit Alert"}
+                    {stockAlert.isDraft ? "Edit Draft" : "Edit Alert"}
                   </Link>
                 </Button>
               </CardFooter>
