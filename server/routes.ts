@@ -648,6 +648,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH endpoint for updating stock alerts
+  app.patch("/api/stock-alerts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Special handling for demo mode
+      const isDemoMode = req.query.demo === 'true';
+      if (isDemoMode) {
+        console.log(`Demo mode stock alert update for ID: ${id}`);
+        
+        // Initialize the global array if it doesn't exist
+        if (!global.DEMO_CREATED_ALERTS) {
+          global.DEMO_CREATED_ALERTS = [];
+        }
+        
+        // Check for the alert in our dynamically created alerts first
+        let alert = global.DEMO_CREATED_ALERTS.find(a => a.id === id);
+        
+        // If not found in dynamic alerts, try the mock data
+        if (!alert) {
+          alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        }
+        
+        if (!alert) {
+          return res.status(404).json({ message: "Stock alert not found" });
+        }
+        
+        // Update the alert with new data
+        const updatedAlert = {
+          ...alert,
+          ...req.body,
+          id: id, // Keep the original ID
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update in the correct storage
+        if (global.DEMO_CREATED_ALERTS.find(a => a.id === id)) {
+          // If it's in the dynamic alerts, update there
+          const alertIndex = global.DEMO_CREATED_ALERTS.findIndex(a => a.id === id);
+          if (alertIndex !== -1) {
+            global.DEMO_CREATED_ALERTS[alertIndex] = updatedAlert;
+            console.log(`Updated dynamic alert with ID ${id} in global storage`);
+          }
+        } else if (MOCK_STOCK_ALERTS.find(a => a.id === id)) {
+          // Otherwise update in mock data
+          const alertIndex = MOCK_STOCK_ALERTS.findIndex(a => a.id === id);
+          if (alertIndex !== -1) {
+            MOCK_STOCK_ALERTS[alertIndex] = updatedAlert;
+            console.log(`Updated mock alert with ID ${id}`);
+          }
+        }
+        
+        return res.json(updatedAlert);
+      }
+      
+      // Normal behavior (not in demo mode)
+      // Only allow authenticated admin users to update stock alerts
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Update the alert in storage
+      const updatedAlert = await storage.updateStockAlert(id, req.body);
+      if (!updatedAlert) {
+        return res.status(404).json({ message: "Stock alert not found" });
+      }
+      
+      res.json(updatedAlert);
+    } catch (error) {
+      console.error("Error updating stock alert:", error);
+      res.status(500).json({ message: "Failed to update stock alert" });
+    }
+  });
+
   app.get("/api/stock-alerts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -772,23 +855,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isDemoMode) {
         console.log('Demo mode stock alert publishing granted via query parameter');
         
-        // Simulate getting the alert
-        const alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        // Initialize the global array if it doesn't exist
+        if (!global.DEMO_CREATED_ALERTS) {
+          global.DEMO_CREATED_ALERTS = [];
+        }
+        
+        // Check for the alert in our dynamically created alerts first
+        let alert = global.DEMO_CREATED_ALERTS.find(a => a.id === id);
+        
+        // If not found in dynamic alerts, try the mock data
+        if (!alert) {
+          alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        }
+        
         if (!alert) {
           return res.status(404).json({ message: "Stock alert not found" });
         }
         
-        // Update the mock alert to remove draft status
+        // Update the alert to remove draft status
         const updatedAlert = {
           ...alert,
           isDraft: false,
           updatedAt: new Date().toISOString()
         };
         
-        // Find and replace in the mock data
-        const alertIndex = MOCK_STOCK_ALERTS.findIndex(a => a.id === id);
-        if (alertIndex !== -1) {
-          MOCK_STOCK_ALERTS[alertIndex] = updatedAlert;
+        // Update in the correct storage
+        if (global.DEMO_CREATED_ALERTS.find(a => a.id === id)) {
+          // If it's in the dynamic alerts, update there
+          const alertIndex = global.DEMO_CREATED_ALERTS.findIndex(a => a.id === id);
+          if (alertIndex !== -1) {
+            global.DEMO_CREATED_ALERTS[alertIndex] = updatedAlert;
+            console.log(`Updated dynamic alert with ID ${id} in global storage`);
+          }
+        } else if (MOCK_STOCK_ALERTS.find(a => a.id === id)) {
+          // Otherwise update in mock data
+          const alertIndex = MOCK_STOCK_ALERTS.findIndex(a => a.id === id);
+          if (alertIndex !== -1) {
+            MOCK_STOCK_ALERTS[alertIndex] = updatedAlert;
+            console.log(`Updated mock alert with ID ${id}`);
+          }
         }
         
         return res.json(updatedAlert);
@@ -849,6 +954,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+        
+        // Store the mock alert in our global array for future retrieval
+        if (!global.DEMO_CREATED_ALERTS) {
+          global.DEMO_CREATED_ALERTS = [];
+        }
+        
+        // Add to our global storage
+        global.DEMO_CREATED_ALERTS.push(mockAlert);
+        console.log(`Stored mock alert with ID ${mockAlert.id} in global storage`);
         
         return res.status(201).json(mockAlert);
       }
