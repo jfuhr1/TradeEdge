@@ -23,8 +23,7 @@ export default function StockAlertPreviewPage() {
   const [location, navigate] = useLocation();
   const params = new URLSearchParams(location.split("?")[1]);
   const alertId = parseInt(params.get("id") || "0");
-  // Get initial draft status from URL, but will use actual status from data when available
-  const initialIsDraft = params.get("draft") === "true";
+  // We no longer track draft status
   
   // Fetch the stock alert data
   const { data: stockAlert, isLoading, error } = useQuery({
@@ -37,34 +36,7 @@ export default function StockAlertPreviewPage() {
     refetchOnMount: true, // Always refetch when component mounts
   });
   
-  // Publish the alert (mark as not draft)
-  const publishMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("PATCH", `/api/stock-alerts/${alertId}/publish?demo=true`, {
-        isDraft: false,
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to publish stock alert");
-      }
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Stock Alert Published",
-        description: "The stock alert has been published and is now visible to members.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
-      navigate("/admin/stock-alerts");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to publish",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+  // We've removed the publishing mutation since we no longer use draft concept
   
   if (!canCreateAlerts) {
     return (
@@ -102,8 +74,8 @@ export default function StockAlertPreviewPage() {
   
   // Effect to attempt automatic recovery of missing alerts
   useEffect(() => {
-    // If there's an error and this was a draft, try to fetch from storage
-    if (error && initialIsDraft && alertId > 0) {
+    // If there's an error, try to fetch from storage
+    if (error && alertId > 0) {
       console.log('Attempting to recover alert from database storage...');
 
       // Retry loading the alert with a direct database query parameter
@@ -127,16 +99,12 @@ export default function StockAlertPreviewPage() {
       
       fetchAlertFromDatabase();
     }
-  }, [error, initialIsDraft, alertId]);
+  }, [error, alertId]);
   
   if (error || !stockAlert) {
     const isServerError = error instanceof Error && (error as any)?.canRecover;
     
-    // Handler for recovering a draft alert
-    const handleRecoverDraft = () => {
-      // Redirect to the dedicated recovery page
-      navigate("/admin/stock-alerts/recover-draft");
-    };
+    // We've removed the draft recovery functionality
     
     // Handler to retry loading from database
     const handleRetryFromDatabase = async () => {
@@ -182,12 +150,10 @@ export default function StockAlertPreviewPage() {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               Failed to load stock alert preview. The alert may not exist or there was an error.
-              {initialIsDraft && (
-                <p className="mt-2">
-                  This could happen if the server was restarted, as draft alerts are stored in memory.
-                  You can recover a blank draft alert, create a new one, or try to retrieve it from the database.
-                </p>
-              )}
+              <p className="mt-2">
+                This could happen if the server was restarted or if there was a temporary connection issue.
+                You can try retrieving the data from the database or create a new alert.
+              </p>
             </AlertDescription>
           </Alert>
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
@@ -200,18 +166,10 @@ export default function StockAlertPreviewPage() {
                     Create New Alert
                   </Link>
                 </Button>
-                {initialIsDraft && (
-                  <>
-                    <Button variant="secondary" onClick={handleRecoverDraft}>
-                      <X className="mr-2 h-4 w-4" />
-                      Recover Draft
-                    </Button>
-                    <Button variant="outline" onClick={handleRetryFromDatabase}>
-                      <Loader2 className="mr-2 h-4 w-4" />
-                      Retry from Database
-                    </Button>
-                  </>
-                )}
+                <Button variant="outline" onClick={handleRetryFromDatabase}>
+                  <Loader2 className="mr-2 h-4 w-4" />
+                  Retry from Database
+                </Button>
               </>
             )}
           </div>
