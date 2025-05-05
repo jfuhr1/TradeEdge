@@ -1,139 +1,80 @@
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { 
-  ArrowLeft, Edit, Check, X, AlertTriangle, 
-  ChevronDown, ChevronUp, Layers, Tag, 
-  Clock, Percent, Target, DollarSign
-} from "lucide-react";
+import { Link } from "wouter";
+import { Loader2, ArrowLeft, Check, X, Edit, AlertTriangle } from "lucide-react";
 
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 export default function StockAlertPreviewPage() {
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
   const { hasPermission } = useAdminPermissions();
   const canCreateAlerts = hasPermission("canCreateAlerts");
   const canEditAlerts = hasPermission("canEditAlerts");
   
-  // Get alert ID from URL params
-  const searchParams = new URLSearchParams(window.location.search);
-  const alertId = searchParams.get("id");
-  const draftMode = searchParams.get("draft") === "true";
+  const [location, navigate] = useLocation();
+  const params = new URLSearchParams(location.split("?")[1]);
+  const alertId = parseInt(params.get("id") || "0");
+  const isDraft = params.get("draft") === "true";
   
-  // Get alert data
-  const { data: alert, isLoading, error } = useQuery({
+  // Fetch the stock alert data
+  const { data: stockAlert, isLoading, error } = useQuery({
     queryKey: [`/api/stock-alerts/${alertId}?demo=true`],
-    enabled: !!alertId,
-    staleTime: 30000,
+    enabled: alertId > 0,
+    staleTime: 10000,
   });
   
-  // Publish alert mutation
-  const publishAlert = useMutation({
+  // Publish the alert (mark as not draft)
+  const publishMutation = useMutation({
     mutationFn: async () => {
-      if (!alertId) throw new Error("Alert ID is required");
-      
-      const res = await apiRequest(
-        "PATCH", 
-        `/api/stock-alerts/${alertId}/publish?demo=true`, 
-        { isDraft: false }
-      );
-      
+      const res = await apiRequest("PATCH", `/api/stock-alerts/${alertId}/publish?demo=true`, {
+        isDraft: false,
+      });
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to publish alert");
+        throw new Error(errorData.message || "Failed to publish stock alert");
       }
       return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Alert Published",
-        description: "The stock alert has been published successfully.",
+        title: "Stock Alert Published",
+        description: "The stock alert has been published and is now visible to members.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
       navigate("/admin/stock-alerts");
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to publish alert",
+        title: "Failed to publish",
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
   
-  // Handle publish click
-  const handlePublish = () => {
-    publishAlert.mutate();
-  };
-
-  // Navigate back to edit
-  const handleEdit = () => {
-    navigate(`/admin/stock-alerts/edit?id=${alertId}`);
-  };
-  
-  // Format price as currency
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(price);
-  };
-  
-  // Calculate percentage difference
-  const calculatePercentage = (current: number, target: number) => {
-    return ((target - current) / current * 100).toFixed(2);
-  };
-  
-  // Loading state
-  if (isLoading) {
+  if (!canCreateAlerts) {
     return (
       <AdminLayout>
-        <div className="container mx-auto py-6 px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Stock Alert Preview</h1>
-            <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Alerts</Link></Button>
-          </div>
-          <Card>
-            <CardContent className="py-10">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </AdminLayout>
-    );
-  }
-  
-  // Error state
-  if (error || !alert) {
-    return (
-      <AdminLayout>
-        <div className="container mx-auto py-6 px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Stock Alert Preview</h1>
-            <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Alerts</Link></Button>
-          </div>
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold tracking-tight mb-4">Stock Alert Preview</h1>
           <Card>
             <CardHeader>
-              <CardTitle className="text-destructive">Error Loading Alert</CardTitle>
+              <CardTitle>Permission Required</CardTitle>
               <CardDescription>
-                There was a problem loading this stock alert. Please try again or contact support.
+                You don't have permission to preview stock alerts. Contact an administrator for access.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Alerts</Link></Button>
+              <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
             </CardContent>
           </Card>
         </div>
@@ -141,307 +82,349 @@ export default function StockAlertPreviewPage() {
     );
   }
   
-  // Calculate if price is in buy zone
-  const isInBuyZone = alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax;
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Loading preview...</span>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
   
-  // Calculate percentage to targets
-  const percentToTarget1 = calculatePercentage(alert.currentPrice, alert.target1);
-  const percentToTarget2 = calculatePercentage(alert.currentPrice, alert.target2);
-  const percentToTarget3 = calculatePercentage(alert.currentPrice, alert.target3);
-  
-  // Determine active tab based on mainChartType
-  const activeTab = alert.mainChartType || "daily";
-  
+  if (error || !stockAlert) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold tracking-tight mb-4">Stock Alert Preview</h1>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load stock alert preview. The alert may not exist or there was an error.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      <div className="container mx-auto py-6 px-4">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Preview Stock Alert</h1>
+            <p className="text-muted-foreground mt-1">
+              Review how this alert will appear to members before publishing.
+            </p>
+          </div>
+          <div className="flex space-x-2 mt-2 md:mt-0">
+            <Button variant="outline" asChild>
               <Link to="/admin/stock-alerts">
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to List
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold">Stock Alert Preview</h1>
-            {draftMode && (
-              <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+            {isDraft && canEditAlerts && (
+              <Button variant="outline" asChild>
+                <Link to={`/admin/stock-alerts/edit/${alertId}`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Draft
+                </Link>
+              </Button>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={handleEdit} disabled={!canEditAlerts}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-            <Button onClick={handlePublish} disabled={!canCreateAlerts || publishAlert.isPending}>
-              {publishAlert.isPending ? (
-                <>
-                  <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Publishing...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Publish Alert
-                </>
-              )}
-            </Button>
-          </div>
         </div>
         
-        {/* Main Alert Preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Column */}
+        {isDraft && (
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Draft Alert</AlertTitle>
+            <AlertDescription>
+              This is a preview of your stock alert. It will not be visible to members until you publish it.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main alert info - 2/3 width */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Alert Header */}
             <Card>
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start mb-2">
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-start">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-3xl font-bold">{alert.symbol}</h2>
-                      <Badge className="h-6">{isInBuyZone ? "In Buy Zone" : "Monitoring"}</Badge>
-                    </div>
-                    <p className="text-lg font-medium text-muted-foreground">{alert.companyName}</p>
+                    <Badge variant={stockAlert.currentPrice >= stockAlert.buyZoneMax ? "destructive" : "success"} className="mb-2">
+                      {stockAlert.currentPrice >= stockAlert.buyZoneMax 
+                        ? "Above Buy Zone" 
+                        : stockAlert.currentPrice >= stockAlert.buyZoneMin 
+                          ? "In Buy Zone" 
+                          : "Below Buy Zone"}
+                    </Badge>
+                    <CardTitle className="text-2xl flex items-center">
+                      {stockAlert.symbol} - {stockAlert.companyName}
+                    </CardTitle>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold">{formatPrice(alert.currentPrice)}</p>
-                    <p className="text-sm text-muted-foreground">Current Price</p>
+                    <div className="text-2xl font-bold">${stockAlert.currentPrice.toFixed(2)}</div>
+                    <div className={`text-sm font-medium ${parseFloat(stockAlert.changePercent || "0") >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {parseFloat(stockAlert.changePercent || "0") >= 0 ? "+" : ""}{stockAlert.changePercent}%
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {alert.tags?.map((tag: string, index: number) => (
-                    <Badge key={index} variant="secondary">
-                      <Tag className="h-3 w-3 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
                 </div>
               </CardHeader>
-              
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="p-3 border rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Buy Zone</p>
-                    <p className="font-mono font-medium">
-                      {formatPrice(alert.buyZoneMin)} - {formatPrice(alert.buyZoneMax)}
-                    </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Price targets section */}
+                  <div>
+                    <h3 className="font-medium mb-3">Price Targets</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
+                        <div>Buy Zone</div>
+                        <div className="font-medium">${stockAlert.buyZoneMin.toFixed(2)} - ${stockAlert.buyZoneMax.toFixed(2)}</div>
+                      </div>
+                      <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
+                        <div>Target 1</div>
+                        <div className="font-medium">${stockAlert.target1.toFixed(2)}</div>
+                      </div>
+                      <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
+                        <div>Target 2</div>
+                        <div className="font-medium">${stockAlert.target2.toFixed(2)}</div>
+                      </div>
+                      <div className="flex justify-between items-center p-2 border rounded-md bg-muted/20">
+                        <div>Target 3</div>
+                        <div className="font-medium">${stockAlert.target3.toFixed(2)}</div>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="p-3 border rounded-md bg-muted/30">
-                    <p className="text-sm text-muted-foreground mb-1">Required Tier</p>
-                    <p className="font-medium capitalize">{alert.requiredTier || "Free"}</p>
-                  </div>
-                  
-                  <div className="p-3 border rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Status</p>
-                    <p className="font-medium capitalize">
-                      {alert.status || "Active"}
-                    </p>
+                  {/* Technical Reasons section */}
+                  <div>
+                    <h3 className="font-medium mb-3">Technical Reasons</h3>
+                    <div className="space-y-2">
+                      {stockAlert.technicalReasons && Array.isArray(stockAlert.technicalReasons) && 
+                        stockAlert.technicalReasons.map((reason, index) => (
+                          <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
+                            <Check className="h-4 w-4 mr-2 text-green-600" />
+                            <span>{reason}</span>
+                          </div>
+                        ))
+                      }
+                      {(!stockAlert.technicalReasons || !stockAlert.technicalReasons.length) && (
+                        <div className="p-2 border rounded-md bg-muted/20 text-muted-foreground">
+                          No technical reasons specified
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                {alert.narrative && (
-                  <div className="mb-4">
-                    <h3 className="text-md font-medium mb-2">Analysis</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-line">{alert.narrative}</p>
+                {/* Chart Image */}
+                {stockAlert.dailyChartImageUrl && (
+                  <div className="mt-6">
+                    <h3 className="font-medium mb-3">Chart</h3>
+                    <div className="border rounded-md overflow-hidden">
+                      <img 
+                        src={stockAlert.dailyChartImageUrl} 
+                        alt={`${stockAlert.symbol} chart`} 
+                        className="w-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Narrative */}
+                {stockAlert.narrative && (
+                  <div className="mt-6">
+                    <h3 className="font-medium mb-3">Investment Thesis</h3>
+                    <div className="p-3 border rounded-md bg-muted/20">
+                      {stockAlert.narrative}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Confluences */}
+                {stockAlert.confluences && stockAlert.confluences.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-medium mb-3">Confluences</h3>
+                    <div className="space-y-2">
+                      {stockAlert.confluences.map((confluence, index) => (
+                        <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
+                          <Check className="h-4 w-4 mr-2 text-green-600" />
+                          <span>{confluence}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Risks */}
+                {stockAlert.risks && stockAlert.risks.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-medium mb-3">Known Risks</h3>
+                    <div className="space-y-2">
+                      {stockAlert.risks.map((risk, index) => (
+                        <div key={index} className="flex items-center p-2 border rounded-md bg-muted/20">
+                          <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" />
+                          <span>{risk}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
-            
-            {/* Charts */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Charts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue={activeTab}>
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="daily">Daily Chart</TabsTrigger>
-                    <TabsTrigger value="weekly">Weekly Chart</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="daily" className="mt-0">
-                    {alert.dailyChartImageUrl ? (
-                      <div className="border rounded-md overflow-hidden">
-                        <img 
-                          src={alert.dailyChartImageUrl} 
-                          alt={`${alert.symbol} Daily Chart`} 
-                          className="w-full max-h-[500px] object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-[300px] border rounded-md flex items-center justify-center">
-                        <p className="text-sm text-muted-foreground">No daily chart available</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                  <TabsContent value="weekly" className="mt-0">
-                    {alert.weeklyChartImageUrl ? (
-                      <div className="border rounded-md overflow-hidden">
-                        <img 
-                          src={alert.weeklyChartImageUrl} 
-                          alt={`${alert.symbol} Weekly Chart`} 
-                          className="w-full max-h-[500px] object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-[300px] border rounded-md flex items-center justify-center">
-                        <p className="text-sm text-muted-foreground">No weekly chart available</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
           </div>
           
-          {/* Right Column - Targets & Info */}
+          {/* Right sidebar - publish controls */}
           <div className="space-y-6">
-            {/* Targets Card */}
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Price Targets</CardTitle>
+              <CardHeader>
+                <CardTitle>Publish Controls</CardTitle>
+                <CardDescription>
+                  Review and publish your stock alert
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Target 1 */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="h-6 font-medium">Target 1</Badge>
-                      <span className="font-mono font-medium">{formatPrice(alert.target1)}</span>
-                    </div>
-                    <span className="text-sm font-medium text-emerald-600">+{percentToTarget1}%</span>
+                <Alert variant={isDraft ? "default" : "success"}>
+                  <div className="flex items-center">
+                    {isDraft ? (
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-2" />
+                    )}
+                    <AlertTitle>
+                      {isDraft ? "Draft Status" : "Published"}
+                    </AlertTitle>
                   </div>
-                  <Progress value={10} className="h-1.5" />
-                  {alert.target1Reasoning && (
-                    <p className="text-xs text-muted-foreground">{alert.target1Reasoning}</p>
-                  )}
+                  <AlertDescription>
+                    {isDraft 
+                      ? "This alert is currently in draft mode and not visible to members."
+                      : "This alert is published and visible to members."}
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium">Required Membership Tier</h4>
+                  <Badge variant="outline" className="text-sm">
+                    {stockAlert.requiredTier === "free" 
+                      ? "Free" 
+                      : stockAlert.requiredTier === "premium" 
+                        ? "Premium" 
+                        : stockAlert.requiredTier === "mentorship" 
+                          ? "Mentorship" 
+                          : "Paid"}
+                  </Badge>
                 </div>
                 
-                {/* Target 2 */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="h-6 font-medium">Target 2</Badge>
-                      <span className="font-mono font-medium">{formatPrice(alert.target2)}</span>
+                  <h4 className="font-medium">Pre-Publish Checklist</h4>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center text-sm">
+                      {stockAlert.symbol ? (
+                        <Check className="h-4 w-4 mr-2 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2 text-red-600" />
+                      )}
+                      <span>Stock symbol is set</span>
                     </div>
-                    <span className="text-sm font-medium text-emerald-600">+{percentToTarget2}%</span>
-                  </div>
-                  <Progress value={6} className="h-1.5" />
-                  {alert.target2Reasoning && (
-                    <p className="text-xs text-muted-foreground">{alert.target2Reasoning}</p>
-                  )}
-                </div>
-                
-                {/* Target 3 */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="h-6 font-medium">Target 3</Badge>
-                      <span className="font-mono font-medium">{formatPrice(alert.target3)}</span>
+                    <div className="flex items-center text-sm">
+                      {stockAlert.companyName ? (
+                        <Check className="h-4 w-4 mr-2 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2 text-red-600" />
+                      )}
+                      <span>Company name is set</span>
                     </div>
-                    <span className="text-sm font-medium text-emerald-600">+{percentToTarget3}%</span>
+                    <div className="flex items-center text-sm">
+                      {stockAlert.dailyChartImageUrl ? (
+                        <Check className="h-4 w-4 mr-2 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2 text-red-600" />
+                      )}
+                      <span>Chart image is uploaded</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      {stockAlert.technicalReasons && stockAlert.technicalReasons.length > 0 ? (
+                        <Check className="h-4 w-4 mr-2 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2 text-red-600" />
+                      )}
+                      <span>Technical reasons are set</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      {stockAlert.target1 && stockAlert.target2 && stockAlert.target3 ? (
+                        <Check className="h-4 w-4 mr-2 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2 text-red-600" />
+                      )}
+                      <span>All price targets are set</span>
+                    </div>
                   </div>
-                  <Progress value={3} className="h-1.5" />
-                  {alert.target3Reasoning && (
-                    <p className="text-xs text-muted-foreground">{alert.target3Reasoning}</p>
-                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex-col items-stretch space-y-2">
+                {isDraft && (
+                  <Button 
+                    onClick={() => publishMutation.mutate()}
+                    disabled={publishMutation.isPending}
+                    className="w-full"
+                  >
+                    {publishMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="mr-2 h-4 w-4" />
+                        Publish Alert
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  asChild
+                  className="w-full"
+                >
+                  <Link to={`/admin/stock-alerts/edit/${alertId}`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    {isDraft ? "Edit Draft" : "Edit Alert"}
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview Guidelines</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div>
+                  <p className="font-medium">What to check before publishing:</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
+                    <li>Verify all stock information is accurate</li>
+                    <li>Ensure buy zone and targets are realistic</li>
+                    <li>Check that technical reasons make sense</li>
+                    <li>Verify chart image displays correctly</li>
+                    <li>Review confluences and risks (if any)</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium">Alert Visibility:</p>
+                  <p className="text-muted-foreground mt-1">
+                    This alert will be visible to members with <span className="font-medium">{stockAlert.requiredTier}</span> membership tier or higher.
+                  </p>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Confluences */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Confluences</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {alert.confluences && alert.confluences.length > 0 ? (
-                  <div className="space-y-2">
-                    {alert.confluences.map((confluence: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-primary mt-0.5" />
-                        <span className="text-sm">{confluence}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No confluences specified</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Technical Reasons */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Technical Reasons</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {alert.technicalReasons && alert.technicalReasons.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {alert.technicalReasons.map((reason: string, index: number) => (
-                      <Badge key={index} variant="outline">
-                        {reason}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No technical reasons specified</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Known Risks */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Known Risks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {alert.risks && alert.risks.length > 0 ? (
-                  <div className="space-y-2">
-                    {alert.risks.map((risk: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
-                        <span className="text-sm">{risk}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No known risks specified</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-        
-        {/* Action Footer */}
-        <div className="flex justify-between items-center border-t pt-6">
-          <Button variant="outline" asChild>
-            <Link to="/admin/stock-alerts">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Alerts
-            </Link>
-          </Button>
-          
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleEdit} disabled={!canEditAlerts}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-            <Button onClick={handlePublish} disabled={!canCreateAlerts || publishAlert.isPending}>
-              {publishAlert.isPending ? (
-                <>
-                  <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Publishing...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Publish Alert
-                </>
-              )}
-            </Button>
           </div>
         </div>
       </div>
