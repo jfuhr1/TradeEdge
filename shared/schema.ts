@@ -171,10 +171,21 @@ export const stockAlerts = pgTable("stock_alerts", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertStockAlertSchema = createInsertSchema(stockAlerts).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertStockAlertSchema = createInsertSchema(stockAlerts)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    // Override the schema to allow nullable numeric fields
+    currentPrice: z.number().optional(),
+    buyZoneMin: z.number().optional(),
+    buyZoneMax: z.number().optional(),
+    target1: z.number().optional(),
+    target2: z.number().optional(),
+    target3: z.number().optional(),
+    lossLevel: z.number().optional(),
+  });
 
 // User Portfolio Model
 export const portfolioItems = pgTable("portfolio_items", {
