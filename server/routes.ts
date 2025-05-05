@@ -655,12 +655,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
+      // Special handling for demo mode
+      const isDemoMode = req.query.demo === 'true';
+      
+      if (isDemoMode) {
+        console.log(`Demo mode stock alert retrieval for ID: ${id}`);
+        
+        // For demo mode, get from our mock data or create a new mock alert
+        let alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        
+        // If the alert isn't in our mocks but it's likely a dynamically created one (ID > 100)
+        if (!alert && id > 100) {
+          // Create a mock alert for dynamically created alerts in demo mode
+          alert = {
+            id,
+            symbol: "DEMO",
+            companyName: "Demo Stock Alert",
+            currentPrice: 100.00,
+            buyZoneMin: 95.00,
+            buyZoneMax: 105.00,
+            target1: 110.00,
+            target2: 120.00,
+            target3: 130.00,
+            target1Reasoning: "Demo target 1",
+            target2Reasoning: "Demo target 2",
+            target3Reasoning: "Demo target 3",
+            lossLevel: 90.00,
+            technicalReasons: ["Support Level", "Volume Pattern"],
+            dailyChartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
+            weeklyChartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
+            chartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
+            mainChartType: "daily",
+            narrative: "This is a dynamically created demo stock alert.",
+            risks: "Market volatility, Stop loss if price drops below buy zone",
+            tags: [],
+            confluences: [],
+            requiredTier: "free",
+            status: "active",
+            isDraft: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        
+        if (!alert) {
+          return res.status(404).json({ message: "Stock alert not found" });
+        }
+        
+        // For the detail page, we'll inject a random change percentage for demo
+        const changePercent = ((Math.random() * 3) - 1).toFixed(2);
+        
+        return res.json({
+          ...alert,
+          changePercent
+        });
+      }
+      
+      // Normal non-demo behavior
       const alert = await storage.getStockAlert(id);
       if (!alert) {
         return res.status(404).json({ message: "Stock alert not found" });
       }
       
-      // For the detail page, we'll inject a random change percentage for demo
+      // For the detail page, we'll inject a random change percentage
       const changePercent = ((Math.random() * 3) - 1).toFixed(2);
       
       res.json({
@@ -668,6 +725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         changePercent
       });
     } catch (error) {
+      console.error("Error fetching stock alert:", error);
       res.status(500).json({ message: "Failed to fetch stock alert" });
     }
   });
