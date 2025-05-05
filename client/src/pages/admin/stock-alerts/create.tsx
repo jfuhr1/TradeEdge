@@ -91,7 +91,7 @@ export default function CreateStockAlertPage() {
   const [newConfluenceName, setNewConfluenceName] = useState("");
   const [newConfluenceCategory, setNewConfluenceCategory] = useState("Price-Based");
   const [selectedConfluences, setSelectedConfluences] = useState<string[]>([]);
-  const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
+  const [selectedRisks, setSelectedRisks] = useState<string[]>(["Stop loss if price drops below buy zone"]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedTechnicalReasons, setSelectedTechnicalReasons] = useState<string[]>([
     "Support Level" // Default to at least one technical reason to satisfy the validation
@@ -137,7 +137,7 @@ export default function CreateStockAlertPage() {
       weeklyChartImageUrl: "",
       mainChartType: "daily",
       narrative: "",
-      risks: [],
+      risks: "Stop loss if price drops below buy zone",
       tags: [],
       confluences: [],
       requiredTier: "free",
@@ -232,13 +232,13 @@ export default function CreateStockAlertPage() {
   const [location, navigate] = useLocation();
   const createAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
+      // Ensure risks is a string rather than an array - critical!
+      const risksString = Array.isArray(data.risks) ? data.risks.join(", ") : data.risks || "";
+      
       // Set up the payload with draft status
       const payload = {
         ...data,
-        // Convert array fields to match schema expectations
-        risks: Array.isArray(data.risks) ? data.risks.join(", ") : data.risks, // Convert risks array to comma-separated string
-        
-        // Log to console for debugging what we're sending
+        risks: risksString,
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
         status: computeAlertStatus(data),
         isDraft: true, // Mark as draft initially
@@ -246,9 +246,38 @@ export default function CreateStockAlertPage() {
 
       console.log("Submitting stock alert:", payload);
       
+      // Create a direct test payload that matches what worked in our curl test
+      const testPayload = {
+        symbol: data.symbol,
+        companyName: data.companyName,
+        currentPrice: data.currentPrice,
+        buyZoneMin: data.buyZoneMin,
+        buyZoneMax: data.buyZoneMax,
+        target1: data.target1,
+        target2: data.target2,
+        target3: data.target3,
+        target1Reasoning: data.target1Reasoning || "",
+        target2Reasoning: data.target2Reasoning || "",
+        target3Reasoning: data.target3Reasoning || "",
+        lossLevel: data.lossLevel || 0,
+        technicalReasons: data.technicalReasons || ["Support Level"],
+        dailyChartImageUrl: data.dailyChartImageUrl || "",
+        weeklyChartImageUrl: data.weeklyChartImageUrl || "",
+        mainChartType: data.mainChartType || "daily",
+        narrative: data.narrative || "",
+        risks: risksString,
+        tags: [],
+        confluences: [],
+        requiredTier: data.requiredTier || "free",
+        status: "active",
+        isDraft: true
+      };
+      
+      console.log("Sending clean test payload:", testPayload);
+      
       const endpoint = "/api/stock-alerts?demo=true";
       try {
-        const res = await apiRequest("POST", endpoint, payload);
+        const res = await apiRequest("POST", endpoint, testPayload);
         if (!res.ok) {
           const errorData = await res.json();
           console.error("Server error response:", errorData);
@@ -347,7 +376,10 @@ export default function CreateStockAlertPage() {
   }, [selectedConfluences, form]);
 
   useEffect(() => {
-    form.setValue("risks", selectedRisks);
+    // Convert selected risks array to a string for the form
+    const risksString = selectedRisks.length > 0 ? selectedRisks.join(", ") : "Stop loss if price drops below buy zone";
+    form.setValue("risks", risksString);
+    console.log("Setting risks form value to:", risksString);
   }, [selectedRisks, form]);
 
   useEffect(() => {
@@ -368,6 +400,28 @@ export default function CreateStockAlertPage() {
       });
       return;
     }
+    console.log("Form data before submission:", data);
+    
+    // Make sure all required fields are populated
+    if (!data.technicalReasons || data.technicalReasons.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one technical reason.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Ensure we have valid target values
+    if (!(data.target1 > 0 && data.target2 > 0 && data.target3 > 0)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter valid target prices.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createAlert.mutate(data);
   }
 
