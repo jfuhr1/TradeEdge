@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 import { Link } from "wouter";
-import { Loader2, ArrowLeft, Check, X, Edit, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowLeft, Check, X, Edit, AlertTriangle, Plus } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export default function StockAlertPreviewPage() {
     queryKey: [`/api/stock-alerts/${alertId}?demo=true`],
     enabled: alertId > 0,
     staleTime: 10000,
+    retry: 1, // Only retry once for missing data to avoid excessive requests
   });
   
   // Publish the alert (mark as not draft)
@@ -106,10 +107,23 @@ export default function StockAlertPreviewPage() {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               Failed to load stock alert preview. The alert may not exist or there was an error.
+              {initialIsDraft && (
+                <p className="mt-2">
+                  This could happen if the server was restarted, as draft alerts are stored in memory.
+                </p>
+              )}
             </AlertDescription>
           </Alert>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
+            {canCreateAlerts && (
+              <Button asChild>
+                <Link to="/admin/stock-alerts/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New Alert
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </AdminLayout>
