@@ -257,6 +257,8 @@ export default function AdminStockAlertsPage() {
         >
           <TabsList className="mb-4">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="active">Active Alerts</TabsTrigger>
+            <TabsTrigger value="drafts">Drafts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics">
@@ -386,6 +388,198 @@ export default function AdminStockAlertsPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+          
+          {/* Active Alerts Tab */}
+          <TabsContent value="active">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Published Alerts</h2>
+                {canCreateAlerts && (
+                  <Button asChild>
+                    <Link to="/admin/stock-alerts/create">Create New Alert</Link>
+                  </Button>
+                )}
+              </div>
+              
+              {alertsArray.filter(alert => !alert.isDraft).length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center p-6">
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg text-center text-muted-foreground">No published alerts found</p>
+                    {canCreateAlerts && (
+                      <Button className="mt-4" asChild>
+                        <Link to="/admin/stock-alerts/create">Create your first alert</Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {alertsArray
+                    .filter(alert => !alert.isDraft)
+                    .map((alert) => (
+                      <Card key={alert.id} className="overflow-hidden">
+                        <div className="relative">
+                          <img 
+                            src={alert.dailyChartImageUrl || "https://via.placeholder.com/400x200"} 
+                            alt={`${alert.symbol} chart`}
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute top-0 right-0 bg-background/80 p-2 m-2 rounded-md">
+                            <span className={`text-sm font-medium ${
+                              alert.status === "active" ? "text-green-500" : 
+                              alert.status === "closed" ? "text-amber-500" : 
+                              "text-red-500"
+                            }`}>
+                              {alert.status?.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-bold">{alert.symbol}</h3>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              alert.requiredTier === "free" ? "bg-green-100 text-green-800" :
+                              alert.requiredTier === "paid" ? "bg-blue-100 text-blue-800" :
+                              alert.requiredTier === "premium" ? "bg-purple-100 text-purple-800" :
+                              "bg-amber-100 text-amber-800"
+                            }`}>
+                              {alert.requiredTier?.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-4 truncate">{alert.companyName}</p>
+                          
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Buy Zone</p>
+                              <p className="text-sm font-medium">${alert.buyZoneMin?.toFixed(2)} - ${alert.buyZoneMax?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Current</p>
+                              <p className="text-sm font-medium">${alert.currentPrice?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Target 1</p>
+                              <p className="text-sm font-medium">${alert.target1?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Target 3</p>
+                              <p className="text-sm font-medium">${alert.target3?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          
+                          {canEditAlerts && (
+                            <div className="flex space-x-2 mt-2">
+                              <Button variant="outline" size="sm" asChild className="flex-1">
+                                <Link to={`/admin/stock-alerts/${alert.id}/edit`}>Edit</Link>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild className="flex-1">
+                                <Link to={`/admin/stock-alerts/${alert.id}`}>View</Link>
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          {/* Drafts Tab */}
+          <TabsContent value="drafts">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Draft Alerts</h2>
+                {canCreateAlerts && (
+                  <Button asChild>
+                    <Link to="/admin/stock-alerts/create">Create New Draft</Link>
+                  </Button>
+                )}
+              </div>
+              
+              {alertsArray.filter(alert => alert.isDraft).length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center p-6">
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg text-center text-muted-foreground">No draft alerts found</p>
+                    {canCreateAlerts && (
+                      <Button className="mt-4" asChild>
+                        <Link to="/admin/stock-alerts/create">Create your first draft</Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {alertsArray
+                    .filter(alert => alert.isDraft)
+                    .map((alert) => (
+                      <Card key={alert.id} className="overflow-hidden">
+                        <div className="relative">
+                          <img 
+                            src={alert.dailyChartImageUrl || "https://via.placeholder.com/400x200"} 
+                            alt={`${alert.symbol} chart`}
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute top-0 right-0 bg-background/80 p-2 m-2 rounded-md">
+                            <span className="text-sm font-medium text-amber-500">DRAFT</span>
+                          </div>
+                        </div>
+                        
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-bold">{alert.symbol}</h3>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              alert.requiredTier === "free" ? "bg-green-100 text-green-800" :
+                              alert.requiredTier === "paid" ? "bg-blue-100 text-blue-800" :
+                              alert.requiredTier === "premium" ? "bg-purple-100 text-purple-800" :
+                              "bg-amber-100 text-amber-800"
+                            }`}>
+                              {alert.requiredTier?.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-4 truncate">{alert.companyName}</p>
+                          
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Buy Zone</p>
+                              <p className="text-sm font-medium">${alert.buyZoneMin?.toFixed(2)} - ${alert.buyZoneMax?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Current</p>
+                              <p className="text-sm font-medium">${alert.currentPrice?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Target 1</p>
+                              <p className="text-sm font-medium">${alert.target1?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Target 3</p>
+                              <p className="text-sm font-medium">${alert.target3?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          
+                          {canEditAlerts && (
+                            <div className="flex space-x-2 mt-2">
+                              <Button variant="outline" size="sm" asChild className="flex-1">
+                                <Link to={`/admin/stock-alerts/${alert.id}/preview`}>Preview</Link>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild className="flex-1">
+                                <Link to={`/admin/stock-alerts/${alert.id}/edit`}>Edit</Link>
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
