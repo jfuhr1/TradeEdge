@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2, X, Plus, AlertTriangle, Check, Tag } from "lucide-react";
 import { Link } from "wouter";
 
 import {
@@ -21,10 +21,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { FileDropzone } from "@/components/ui/dropzone";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 // Create a schema for stock alert form
@@ -41,19 +44,14 @@ const stockAlertFormSchema = z.object({
   target2Reasoning: z.string().optional(),
   target3Reasoning: z.string().optional(),
   technicalReasons: z.array(z.string()),
-  dailyChartImageUrl: z.string().min(1, "Daily chart image URL is required"),
-  weeklyChartImageUrl: z.string().min(1, "Weekly chart image URL is required"),
+  dailyChartImageUrl: z.string().min(1, "Daily chart image is required"),
+  weeklyChartImageUrl: z.string().min(1, "Weekly chart image is required"),
   mainChartType: z.enum(["daily", "weekly"]),
   narrative: z.string().optional(),
-  risks: z.string().optional(),
+  risks: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   confluences: z.array(z.string()).default([]),
-  sector: z.string().optional(),
-  industry: z.string().optional(),
-  timeFrame: z.enum(["short", "medium", "long"]).default("medium"),
-  riskRating: z.number().min(1).max(5).default(3),
   requiredTier: z.enum(["free", "paid", "premium", "mentorship"]).default("free"),
-  status: z.enum(["active", "closed", "cancelled"]).default("active"),
 }).refine(data => data.buyZoneMax >= data.buyZoneMin, {
   message: "Buy zone maximum must be greater than or equal to buy zone minimum",
   path: ["buyZoneMax"],
@@ -70,21 +68,49 @@ const stockAlertFormSchema = z.object({
 
 type StockAlertFormValues = z.infer<typeof stockAlertFormSchema>;
 
+// Helper function to group items by category
+function groupByCategory<T extends { category: string }>(items: T[]): Record<string, T[]> {
+  return items.reduce((acc, item) => {
+    const category = item.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {} as Record<string, T[]>);
+}
+
 export default function CreateStockAlertPage() {
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const canCreateAlerts = hasPermission("canCreateAlerts");
   
-  const [tagInput, setTagInput] = useState("");
-  const [confluenceInput, setConfluenceInput] = useState("");
-  const [techReason, setTechReason] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [newRiskName, setNewRiskName] = useState("");
+  const [newConfluenceName, setNewConfluenceName] = useState("");
+  const [newConfluenceCategory, setNewConfluenceCategory] = useState("Price-Based");
+  const [selectedConfluences, setSelectedConfluences] = useState<string[]>([]);
+  const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Get technical reasons from the API
-  const { data: technicalReasons, isLoading: isLoadingTechReasons } = useQuery({
-    queryKey: ["/api/technical-reasons?demo=true"], 
-    staleTime: 60000, // 1 minute
-    retry: 1 // Only retry once
+  // Fetch data from API
+  const { data: confluencesData, isLoading: isLoadingConfluences } = useQuery({
+    queryKey: ["/api/confluences?demo=true"], 
+    staleTime: 60000,
   });
+
+  const { data: tagsData, isLoading: isLoadingTags } = useQuery({
+    queryKey: ["/api/tags?demo=true"], 
+    staleTime: 60000,
+  });
+
+  const { data: risksData, isLoading: isLoadingRisks } = useQuery({
+    queryKey: ["/api/risks?demo=true"], 
+    staleTime: 60000,
+  });
+
+  const confluencesGrouped = confluencesData ? groupByCategory(confluencesData) : {};
+  const confluenceCategories = confluencesData ? [...new Set(confluencesData.map(c => c.category))] : [];
 
   // Form setup
   const form = useForm<StockAlertFormValues>({
@@ -102,74 +128,109 @@ export default function CreateStockAlertPage() {
       target2Reasoning: "",
       target3Reasoning: "",
       technicalReasons: [],
-      dailyChartImageUrl: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=800",
-      weeklyChartImageUrl: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=800",
+      dailyChartImageUrl: "",
+      weeklyChartImageUrl: "",
       mainChartType: "daily",
       narrative: "",
-      risks: "",
+      risks: [],
       tags: [],
       confluences: [],
-      sector: "",
-      industry: "",
-      timeFrame: "medium",
-      riskRating: 3,
       requiredTier: "free",
-      status: "active",
     },
   });
 
-  // Helper functions for tags and confluences
-  const addTag = () => {
-    if (!tagInput.trim()) return;
-    const currentTags = form.getValues("tags") || [];
-    if (!currentTags.includes(tagInput.trim())) {
-      form.setValue("tags", [...currentTags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
+  // Create new tag
+  const createTag = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/tags?demo=true", { name });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create tag");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Tag added",
+        description: `The tag "${data.name}" has been added successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+      setNewTagName("");
+      handleSelectTag(data.name); // Select the newly created tag
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add tag",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-  const removeTag = (tag: string) => {
-    const currentTags = form.getValues("tags") || [];
-    form.setValue("tags", currentTags.filter(t => t !== tag));
-  };
+  // Create new risk
+  const createRisk = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/risks?demo=true", { name });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create risk");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Risk added",
+        description: `The risk "${data.name}" has been added successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/risks"] });
+      setNewRiskName("");
+      handleSelectRisk(data.name); // Select the newly created risk
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add risk",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-  const addConfluence = () => {
-    if (!confluenceInput.trim()) return;
-    const currentConfluences = form.getValues("confluences") || [];
-    if (!currentConfluences.includes(confluenceInput.trim())) {
-      form.setValue("confluences", [...currentConfluences, confluenceInput.trim()]);
-      setConfluenceInput("");
-    }
-  };
-
-  const removeConfluence = (confluence: string) => {
-    const currentConfluences = form.getValues("confluences") || [];
-    form.setValue("confluences", currentConfluences.filter(c => c !== confluence));
-  };
-
-  // Add technical reason
-  const addTechnicalReason = () => {
-    if (!techReason.trim()) return;
-    const currentReasons = form.getValues("technicalReasons") || [];
-    if (!currentReasons.includes(techReason.trim())) {
-      form.setValue("technicalReasons", [...currentReasons, techReason.trim()]);
-      setTechReason("");
-    }
-  };
-
-  // Remove technical reason
-  const removeTechnicalReason = (reason: string) => {
-    const currentReasons = form.getValues("technicalReasons") || [];
-    form.setValue("technicalReasons", currentReasons.filter(r => r !== reason));
-  };
+  // Create new confluence
+  const createConfluence = useMutation({
+    mutationFn: async ({ name, category }: { name: string, category: string }) => {
+      const res = await apiRequest("POST", "/api/confluences?demo=true", { name, category });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create confluence");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Confluence added",
+        description: `The confluence "${data.name}" has been added successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/confluences"] });
+      setNewConfluenceName("");
+      handleSelectConfluence(data.name); // Select the newly created confluence
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add confluence",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Create stock alert mutation
   const createAlert = useMutation({
     mutationFn: async (data: StockAlertFormValues) => {
-      // If chartImageUrl is still used, set it from dailyChartImageUrl for backward compatibility
+      // Convert to formData for image uploads
       const payload = {
         ...data,
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
+        status: computeAlertStatus(data),
       };
       
       const endpoint = "/api/stock-alerts?demo=true";
@@ -187,6 +248,9 @@ export default function CreateStockAlertPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
       form.reset();
+      setSelectedConfluences([]);
+      setSelectedRisks([]);
+      setSelectedTags([]);
     },
     onError: (error: Error) => {
       toast({
@@ -196,6 +260,82 @@ export default function CreateStockAlertPage() {
       });
     },
   });
+
+  // Handle selection of confluence
+  const handleSelectConfluence = (name: string) => {
+    if (selectedConfluences.includes(name)) {
+      setSelectedConfluences(selectedConfluences.filter(c => c !== name));
+    } else {
+      setSelectedConfluences([...selectedConfluences, name]);
+    }
+  };
+
+  // Handle selection of risk
+  const handleSelectRisk = (name: string) => {
+    if (selectedRisks.includes(name)) {
+      setSelectedRisks(selectedRisks.filter(r => r !== name));
+    } else {
+      setSelectedRisks([...selectedRisks, name]);
+    }
+  };
+
+  // Handle selection of tag
+  const handleSelectTag = (name: string) => {
+    if (selectedTags.includes(name)) {
+      setSelectedTags(selectedTags.filter(t => t !== name));
+    } else {
+      setSelectedTags([...selectedTags, name]);
+    }
+  };
+
+  // Add a new tag
+  const handleAddNewTag = () => {
+    if (!newTagName.trim()) return;
+    createTag.mutate(newTagName.trim());
+  };
+
+  // Add a new risk
+  const handleAddNewRisk = () => {
+    if (!newRiskName.trim()) return;
+    createRisk.mutate(newRiskName.trim());
+  };
+
+  // Add a new confluence
+  const handleAddNewConfluence = () => {
+    if (!newConfluenceName.trim()) return;
+    createConfluence.mutate({ 
+      name: newConfluenceName.trim(), 
+      category: newConfluenceCategory 
+    });
+  };
+
+  // Compute alert status automatically
+  const computeAlertStatus = (data: StockAlertFormValues): string => {
+    const { currentPrice, buyZoneMin, buyZoneMax, target3 } = data;
+    
+    if (currentPrice >= target3) {
+      return "closed"; // If price hit the highest target, consider it closed
+    } else if (currentPrice >= buyZoneMin && currentPrice <= buyZoneMax) {
+      return "active"; // If price is in buy zone, the alert is active
+    } else if (currentPrice < buyZoneMin) {
+      return "active"; // If price below buy zone, still consider it active (it could enter)
+    } else {
+      return "active"; // Default to active
+    }
+  };
+
+  // Update form values when selections change
+  useEffect(() => {
+    form.setValue("confluences", selectedConfluences);
+  }, [selectedConfluences, form]);
+
+  useEffect(() => {
+    form.setValue("risks", selectedRisks);
+  }, [selectedRisks, form]);
+
+  useEffect(() => {
+    form.setValue("tags", selectedTags);
+  }, [selectedTags, form]);
 
   // Form submission handler
   function onSubmit(data: StockAlertFormValues) {
@@ -235,81 +375,48 @@ export default function CreateStockAlertPage() {
     <AdminLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Create Stock Alert</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Create Stock Alert</h1>
           <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Create New Stock Alert</CardTitle>
             <CardDescription>
-              Add a new stock alert to recommend to members. Required fields are marked with an asterisk (*).
+              Add a new stock alert to recommend to members. Fields marked with * are required.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-medium">Stock Information</h3>
-                    
-                    {/* Stock Symbol */}
-                    <FormField
-                      control={form.control}
-                      name="symbol"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Stock Symbol *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="AAPL" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Enter the stock ticker symbol (e.g., AAPL for Apple)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Company Name */}
-                    <FormField
-                      control={form.control}
-                      name="companyName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Apple Inc." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Sector & Industry */}
+                  {/* Left Column: Basic Stock Info */}
+                  <div className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
+                      {/* Stock Symbol */}
                       <FormField
                         control={form.control}
-                        name="sector"
+                        name="symbol"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Sector</FormLabel>
+                            <FormLabel>Symbol *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Technology" {...field} />
+                              <Input placeholder="AAPL" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
+                      {/* Company Name */}
                       <FormField
                         control={form.control}
-                        name="industry"
+                        name="companyName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Industry</FormLabel>
+                            <FormLabel>Company Name *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Consumer Electronics" {...field} />
+                              <Input placeholder="Apple Inc." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -339,20 +446,62 @@ export default function CreateStockAlertPage() {
                     />
 
                     {/* Buy Zone */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Buy Zone *</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="buyZoneMin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Buy Zone Min ($) *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="170.00" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="buyZoneMax"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Buy Zone Max ($) *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="175.00" 
+                                {...field}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Targets with Reasoning */}
+                    <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="buyZoneMin"
+                          name="target1"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Min ($)</FormLabel>
+                              <FormLabel>Target 1 ($) *</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="number" 
                                   step="0.01"
-                                  placeholder="170.00" 
+                                  placeholder="185.00" 
                                   {...field} 
                                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
@@ -361,21 +510,84 @@ export default function CreateStockAlertPage() {
                             </FormItem>
                           )}
                         />
-
                         <FormField
                           control={form.control}
-                          name="buyZoneMax"
+                          name="target1Reasoning"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Max ($)</FormLabel>
+                              <FormLabel>Reasoning</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Recent resistance level" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="target2"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Target 2 ($) *</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="number" 
                                   step="0.01"
-                                  placeholder="175.00" 
-                                  {...field}
+                                  placeholder="195.00" 
+                                  {...field} 
                                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="target2Reasoning"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reasoning</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Previous all-time high" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="target3"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Target 3 ($) *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.01"
+                                  placeholder="210.00" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="target3Reasoning"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reasoning</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Fibonacci extension" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -384,256 +596,98 @@ export default function CreateStockAlertPage() {
                       </div>
                     </div>
 
-                    {/* Targets with Reasoning */}
+                    {/* Daily & Weekly Chart Images */}
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium">Price Targets *</h4>
-                      
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="target1"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 1 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01"
-                                    placeholder="185.00" 
-                                    {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="target1Reasoning"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Reasoning</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Short-term resistance level" 
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                      <FormField
+                        control={form.control}
+                        name="dailyChartImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Daily Chart Image *</FormLabel>
+                            <FormControl>
+                              <FileDropzone
+                                onFileAccepted={(url) => field.onChange(url)}
+                                value={field.value}
+                                label="Drag & drop daily chart image or click to select"
+                                maxSize={5 * 1024 * 1024} // 5MB
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="target2"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 2 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01"
-                                    placeholder="195.00" 
-                                    {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="target2Reasoning"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Reasoning</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Previous pivot high" 
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                      <FormField
+                        control={form.control}
+                        name="weeklyChartImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Weekly Chart Image *</FormLabel>
+                            <FormControl>
+                              <FileDropzone
+                                onFileAccepted={(url) => field.onChange(url)}
+                                value={field.value}
+                                label="Drag & drop weekly chart image or click to select"
+                                maxSize={5 * 1024 * 1024} // 5MB
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="target3"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Target 3 ($)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01"
-                                    placeholder="205.00" 
-                                    {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="target3Reasoning"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Reasoning</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Historical all-time high" 
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="mainChartType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Primary Chart Display</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select chart to display" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="daily">Daily Chart</SelectItem>
+                                  <SelectItem value="weekly">Weekly Chart</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  </div>
 
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-medium">Analysis & Chart</h3>
-                    
-                    {/* Technical Reasons */}
+                    {/* Required Membership Tier */}
                     <FormField
                       control={form.control}
-                      name="technicalReasons"
-                      render={() => (
+                      name="requiredTier"
+                      render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Technical Reasons *</FormLabel>
-                          <div className="flex items-center space-x-2">
-                            <Select 
-                              value={techReason} 
-                              onValueChange={setTechReason}
+                          <FormLabel>Required Membership Tier *</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select reason" />
+                                <SelectValue placeholder="Select membership tier" />
                               </SelectTrigger>
                               <SelectContent>
-                                {isLoadingTechReasons ? (
-                                  <div className="flex items-center justify-center p-4">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  </div>
-                                ) : (
-                                  <>
-                                    {technicalReasons?.map((reason: any) => (
-                                      <SelectItem key={reason.id} value={reason.name}>
-                                        {reason.name}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem value="Custom">Custom reason</SelectItem>
-                                  </>
-                                )}
+                                <SelectItem value="free">Free</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                                <SelectItem value="premium">Premium</SelectItem>
+                                <SelectItem value="mentorship">Mentorship</SelectItem>
                               </SelectContent>
                             </Select>
-                            <Button 
-                              type="button" 
-                              variant="secondary" 
-                              size="sm"
-                              onClick={addTechnicalReason}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {form.getValues("technicalReasons")?.map((reason, index) => (
-                              <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm">
-                                {reason}
-                                <button 
-                                  type="button" 
-                                  onClick={() => removeTechnicalReason(reason)}
-                                  className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Chart Images */}
-                    <FormField
-                      control={form.control}
-                      name="dailyChartImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Daily Chart Image URL *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/chart.png" {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="weeklyChartImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Weekly Chart Image URL *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/chart.png" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Main Chart Type */}
-                    <FormField
-                      control={form.control}
-                      name="mainChartType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Main Chart Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                              className="flex gap-4"
-                            >
-                              <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="daily" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Daily
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="weekly" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Weekly
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
+                          <FormDescription>
+                            Members with this tier or above will see this alert
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -645,262 +699,280 @@ export default function CreateStockAlertPage() {
                       name="narrative"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Trade Narrative</FormLabel>
+                          <FormLabel>Narrative</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Share the narrative behind this stock pick..."
+                              placeholder="Why is this a good opportunity?" 
+                              {...field} 
                               className="min-h-[100px]"
-                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
 
-                    {/* Risks */}
-                    <FormField
-                      control={form.control}
-                      name="risks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Known Risks</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Describe potential risks to this investment thesis..."
-                              className="min-h-[100px]"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {/* Right Column: Advanced Options */}
+                  <div className="space-y-6">
+                    <Tabs defaultValue="confluences">
+                      <TabsList className="grid grid-cols-3 mb-4">
+                        <TabsTrigger value="confluences">Confluences</TabsTrigger>
+                        <TabsTrigger value="risks">Known Risks</TabsTrigger>
+                        <TabsTrigger value="tags">Tags</TabsTrigger>
+                      </TabsList>
 
-                    {/* Tags */}
-                    <FormField
-                      control={form.control}
-                      name="tags"
-                      render={() => (
-                        <FormItem>
-                          <FormLabel>Tags</FormLabel>
+                      {/* Confluences Tab */}
+                      <TabsContent value="confluences" className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-medium">Confluences</h3>
                           <div className="flex items-center space-x-2">
-                            <FormControl>
-                              <Input 
-                                placeholder="Add a tag"
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                              />
-                            </FormControl>
-                            <Button 
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={addTag}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {form.getValues("tags")?.map((tag, index) => (
-                              <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm">
-                                {tag}
-                                <button 
-                                  type="button" 
-                                  onClick={() => removeTag(tag)}
-                                  className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Confluences */}
-                    <FormField
-                      control={form.control}
-                      name="confluences"
-                      render={() => (
-                        <FormItem>
-                          <FormLabel>Price Confluences</FormLabel>
-                          <div className="flex items-center space-x-2">
-                            <FormControl>
-                              <Input 
-                                placeholder="Add a confluence"
-                                value={confluenceInput}
-                                onChange={(e) => setConfluenceInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addConfluence())}
-                              />
-                            </FormControl>
-                            <Button 
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={addConfluence}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {form.getValues("confluences")?.map((confluence, index) => (
-                              <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm">
-                                {confluence}
-                                <button 
-                                  type="button" 
-                                  onClick={() => removeConfluence(confluence)}
-                                  className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator />
-
-                    {/* Additional Settings */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Time Frame */}
-                      <FormField
-                        control={form.control}
-                        name="timeFrame"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Time Frame</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select timeframe" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="short">Short-term (Days/Weeks)</SelectItem>
-                                <SelectItem value="medium">Medium-term (Weeks/Months)</SelectItem>
-                                <SelectItem value="long">Long-term (Months+)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Risk Rating */}
-                      <FormField
-                        control={form.control}
-                        name="riskRating"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Risk Rating (1-5)</FormLabel>
                             <Select
-                              onValueChange={(value) => field.onChange(parseInt(value))}
-                              defaultValue={field.value.toString()}
+                              value={newConfluenceCategory}
+                              onValueChange={setNewConfluenceCategory}
                             >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select risk rating" />
-                                </SelectTrigger>
-                              </FormControl>
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue placeholder="Category" />
+                              </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="1">1 - Very Low Risk</SelectItem>
-                                <SelectItem value="2">2 - Low Risk</SelectItem>
-                                <SelectItem value="3">3 - Moderate Risk</SelectItem>
-                                <SelectItem value="4">4 - High Risk</SelectItem>
-                                <SelectItem value="5">5 - Very High Risk</SelectItem>
+                                {confluenceCategories.map(category => (
+                                  <SelectItem key={category} value={category}>
+                                    {category}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            <Input 
+                              placeholder="New confluence" 
+                              value={newConfluenceName}
+                              onChange={(e) => setNewConfluenceName(e.target.value)}
+                              className="max-w-[180px]"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleAddNewConfluence} 
+                              disabled={createConfluence.isPending || !newConfluenceName.trim()}
+                            >
+                              {createConfluence.isPending ? 
+                                <Loader2 className="h-4 w-4 animate-spin" /> : 
+                                <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
 
-                      {/* Required Tier */}
-                      <FormField
-                        control={form.control}
-                        name="requiredTier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Required Membership Tier</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select required tier" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="free">Free</SelectItem>
-                                <SelectItem value="paid">Paid</SelectItem>
-                                <SelectItem value="premium">Premium</SelectItem>
-                                <SelectItem value="mentorship">Mentorship</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                        {isLoadingConfluences ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            {confluenceCategories.map((category) => (
+                              <div key={category} className="space-y-2">
+                                <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {confluencesGrouped[category]?.map((confluence) => (
+                                    <Badge 
+                                      key={confluence.id} 
+                                      variant={selectedConfluences.includes(confluence.name) ? "default" : "outline"}
+                                      className="cursor-pointer text-xs"
+                                      onClick={() => handleSelectConfluence(confluence.name)}
+                                    >
+                                      {selectedConfluences.includes(confluence.name) && 
+                                        <Check className="h-3 w-3 mr-1" />
+                                      }
+                                      {confluence.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
-                      />
+                        
+                        <div className="pt-2">
+                          <h4 className="text-sm font-medium mb-2">Selected Confluences:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedConfluences.length === 0 ? (
+                              <span className="text-sm text-muted-foreground">No confluences selected</span>
+                            ) : (
+                              selectedConfluences.map((name, idx) => (
+                                <Badge key={idx} variant="default" className="flex items-center gap-1">
+                                  {name}
+                                  <X 
+                                    className="h-3 w-3 cursor-pointer" 
+                                    onClick={() => handleSelectConfluence(name)}
+                                  />
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </TabsContent>
 
-                      {/* Status */}
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Alert Status</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
+                      {/* Known Risks Tab */}
+                      <TabsContent value="risks" className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-medium">Known Risks</h3>
+                          <div className="flex items-center space-x-2">
+                            <Input 
+                              placeholder="New risk" 
+                              value={newRiskName}
+                              onChange={(e) => setNewRiskName(e.target.value)}
+                              className="max-w-[250px]"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleAddNewRisk} 
+                              disabled={createRisk.isPending || !newRiskName.trim()}
                             >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="closed">Closed (Target Hit)</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                              {createRisk.isPending ? 
+                                <Loader2 className="h-4 w-4 animate-spin" /> : 
+                                <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {isLoadingRisks ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto pr-2">
+                            {risksData?.map((risk) => (
+                              <Badge 
+                                key={risk.id} 
+                                variant={selectedRisks.includes(risk.name) ? "destructive" : "outline"}
+                                className="cursor-pointer flex items-center gap-1"
+                                onClick={() => handleSelectRisk(risk.name)}
+                              >
+                                {selectedRisks.includes(risk.name) && 
+                                  <Check className="h-3 w-3" />
+                                }
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {risk.name}
+                              </Badge>
+                            ))}
+                          </div>
                         )}
-                      />
-                    </div>
+                        
+                        <div className="pt-2">
+                          <h4 className="text-sm font-medium mb-2">Selected Risks:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedRisks.length === 0 ? (
+                              <span className="text-sm text-muted-foreground">No risks selected</span>
+                            ) : (
+                              selectedRisks.map((name, idx) => (
+                                <Badge key={idx} variant="destructive" className="flex items-center gap-1">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {name}
+                                  <X 
+                                    className="h-3 w-3 cursor-pointer" 
+                                    onClick={() => handleSelectRisk(name)}
+                                  />
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      {/* Tags Tab */}
+                      <TabsContent value="tags" className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-medium">Tags</h3>
+                          <div className="flex items-center space-x-2">
+                            <Input 
+                              placeholder="New tag" 
+                              value={newTagName}
+                              onChange={(e) => setNewTagName(e.target.value)}
+                              className="max-w-[250px]"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleAddNewTag} 
+                              disabled={createTag.isPending || !newTagName.trim()}
+                            >
+                              {createTag.isPending ? 
+                                <Loader2 className="h-4 w-4 animate-spin" /> : 
+                                <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {isLoadingTags ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto pr-2">
+                            {tagsData?.map((tag) => (
+                              <Badge 
+                                key={tag.id} 
+                                variant={selectedTags.includes(tag.name) ? "secondary" : "outline"}
+                                className="cursor-pointer flex items-center gap-1"
+                                onClick={() => handleSelectTag(tag.name)}
+                              >
+                                {selectedTags.includes(tag.name) && 
+                                  <Check className="h-3 w-3" />
+                                }
+                                <Tag className="h-3 w-3 mr-1" />
+                                {tag.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="pt-2">
+                          <h4 className="text-sm font-medium mb-2">Selected Tags:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedTags.length === 0 ? (
+                              <span className="text-sm text-muted-foreground">No tags selected</span>
+                            ) : (
+                              selectedTags.map((name, idx) => (
+                                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                                  <Tag className="h-3 w-3" />
+                                  {name}
+                                  <X 
+                                    className="h-3 w-3 cursor-pointer" 
+                                    onClick={() => handleSelectTag(name)}
+                                  />
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4">
-                  <Button variant="outline" type="button" onClick={() => form.reset()}>Reset</Button>
+                <div className="flex justify-end space-x-4 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      form.reset();
+                      setSelectedConfluences([]);
+                      setSelectedRisks([]);
+                      setSelectedTags([]);
+                    }}
+                  >
+                    Reset
+                  </Button>
                   <Button 
-                    type="submit" 
+                    type="submit"
                     disabled={createAlert.isPending}
+                    className="min-w-[120px]"
                   >
                     {createAlert.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Creating...
                       </>
-                    ) : (
-                      "Create Stock Alert"
-                    )}
+                    ) : "Create Alert"}
                   </Button>
                 </div>
               </form>
