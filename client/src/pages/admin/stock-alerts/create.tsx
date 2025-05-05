@@ -43,6 +43,7 @@ const stockAlertFormSchema = z.object({
   target1Reasoning: z.string().optional(),
   target2Reasoning: z.string().optional(),
   target3Reasoning: z.string().optional(),
+  supportLevel: z.number().min(0, "Support level must be greater than 0").optional(),
   technicalReasons: z.array(z.string()),
   dailyChartImageUrl: z.string().min(1, "Daily chart image is required"),
   weeklyChartImageUrl: z.string().min(1, "Weekly chart image is required"),
@@ -127,6 +128,7 @@ export default function CreateStockAlertPage() {
       target1Reasoning: "",
       target2Reasoning: "",
       target3Reasoning: "",
+      supportLevel: 0,
       technicalReasons: [],
       dailyChartImageUrl: "",
       weeklyChartImageUrl: "",
@@ -413,10 +415,10 @@ export default function CreateStockAlertPage() {
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="col-span-1">
                             <FormLabel>Company Name *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Apple Inc." {...field} />
+                              <Input placeholder="Apple Inc." {...field} className="h-12" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -425,25 +427,52 @@ export default function CreateStockAlertPage() {
                     </div>
 
                     {/* Current Price */}
-                    <FormField
-                      control={form.control}
-                      name="currentPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Current Price ($) *</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.01"
-                              placeholder="175.50" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="currentPrice"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Price ($) *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="175.50" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                className="w-full"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="supportLevel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Support Level ($)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="165.00" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                className="w-full"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Critical level for risk assessment
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     {/* Buy Zone */}
                     <div className="grid grid-cols-2 gap-4">
