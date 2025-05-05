@@ -93,6 +93,9 @@ export default function CreateStockAlertPage() {
   const [selectedConfluences, setSelectedConfluences] = useState<string[]>([]);
   const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTechnicalReasons, setSelectedTechnicalReasons] = useState<string[]>([
+    "Support Level" // Default to at least one technical reason to satisfy the validation
+  ]);
 
   // Fetch data from API
   const { data: confluencesData, isLoading: isLoadingConfluences } = useQuery({
@@ -129,7 +132,7 @@ export default function CreateStockAlertPage() {
       target2Reasoning: "",
       target3Reasoning: "",
       lossLevel: 0,
-      technicalReasons: [],
+      technicalReasons: ["Support Level"], // Default value to satisfy validation
       dailyChartImageUrl: "",
       weeklyChartImageUrl: "",
       mainChartType: "daily",
@@ -338,6 +341,10 @@ export default function CreateStockAlertPage() {
   useEffect(() => {
     form.setValue("tags", selectedTags);
   }, [selectedTags, form]);
+  
+  useEffect(() => {
+    form.setValue("technicalReasons", selectedTechnicalReasons);
+  }, [selectedTechnicalReasons, form]);
 
   // Form submission handler
   function onSubmit(data: StockAlertFormValues) {
