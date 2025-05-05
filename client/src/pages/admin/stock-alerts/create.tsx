@@ -391,8 +391,9 @@ export default function CreateStockAlertPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Left Column: Basic Stock Info */}
+                {/* Full-width container for better layout */}
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Basic Stock Info - Now Full Width */}
                   <div className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
                       {/* Stock Symbol */}
@@ -729,7 +730,7 @@ export default function CreateStockAlertPage() {
                     />
                   </div>
 
-                  {/* Right Column: Additional Info - removed Alert Preview Guidelines section */}
+                  {/* Additional Info Section - Using Full Width Layout */}
                   <div className="space-y-6">
                     {/* Intentionally left empty after removing Alert Preview Guidelines */}
                   </div>
