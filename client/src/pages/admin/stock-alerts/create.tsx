@@ -410,21 +410,22 @@ export default function CreateStockAlertPage() {
                         )}
                       />
 
-                      {/* Company Name */}
-                      <FormField
-                        control={form.control}
-                        name="companyName"
-                        render={({ field }) => (
-                          <FormItem className="col-span-1">
-                            <FormLabel>Company Name *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Apple Inc." {...field} className="h-12" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
+                    
+                    {/* Company Name - Full Width */}
+                    <FormField
+                      control={form.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Apple Inc." {...field} className="h-12" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     {/* Current Price */}
                     <div className="grid grid-cols-2 gap-4">
@@ -546,7 +547,7 @@ export default function CreateStockAlertPage() {
                             <FormItem>
                               <FormLabel>Reasoning</FormLabel>
                               <FormControl>
-                                <Input placeholder="Recent resistance level" {...field} />
+                                <Textarea placeholder="Recent resistance level" {...field} className="min-h-[80px]" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -581,7 +582,7 @@ export default function CreateStockAlertPage() {
                             <FormItem>
                               <FormLabel>Reasoning</FormLabel>
                               <FormControl>
-                                <Input placeholder="Previous all-time high" {...field} />
+                                <Textarea placeholder="Previous all-time high" {...field} className="min-h-[80px]" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -616,7 +617,7 @@ export default function CreateStockAlertPage() {
                             <FormItem>
                               <FormLabel>Reasoning</FormLabel>
                               <FormControl>
-                                <Input placeholder="Fibonacci extension" {...field} />
+                                <Textarea placeholder="Fibonacci extension" {...field} className="min-h-[80px]" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -733,7 +734,7 @@ export default function CreateStockAlertPage() {
                             <Textarea 
                               placeholder="Why is this a good opportunity?" 
                               {...field} 
-                              className="min-h-[100px]"
+                              className="min-h-[200px]"
                             />
                           </FormControl>
                           <FormMessage />
@@ -742,29 +743,9 @@ export default function CreateStockAlertPage() {
                     />
                   </div>
 
-                  {/* Right Column: Additional Info */}
+                  {/* Right Column: Additional Info - removed Alert Preview Guidelines section */}
                   <div className="space-y-6">
-                    <div className="p-4 border rounded-md bg-muted/30">
-                      <h3 className="text-base font-medium mb-3">Alert Preview Guidelines</h3>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5" />
-                          <span>Fill out all required fields marked with * to enable the preview button</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5" />
-                          <span>The preview page will show exactly how members will see this alert</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5" />
-                          <span>You'll have a chance to review and edit before final publishing</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5" />
-                          <span>Only alerts with status "active" will be visible to members</span>
-                        </li>
-                      </ul>
-                    </div>
+                    {/* Intentionally left empty after removing Alert Preview Guidelines */}
                   </div>
                 </div>
 
