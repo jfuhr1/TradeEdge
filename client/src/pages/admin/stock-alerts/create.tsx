@@ -826,8 +826,41 @@ export default function CreateStockAlertPage() {
 
                   {/* Known Risks Section */}
                   <div className="space-y-4">
+                    <h3 className="text-base font-medium">Known Risks</h3>
+                    
+                    {/* Required Loss Level Field */}
+                    <div className="border rounded-md p-4 bg-muted/10">
+                      <FormField
+                        control={form.control}
+                        name="lossLevel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium flex items-center gap-1">
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                              Loss and hold below ($) *
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="165.00" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                className="w-full max-w-[200px]"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Critical price level for risk assessment (required)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    {/* Additional Risks Section */}
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium">Known Risks</h3>
+                      <h4 className="text-sm font-medium">Additional Risks</h4>
                       <div className="flex items-center space-x-2">
                         <Input 
                           placeholder="New risk" 
@@ -872,10 +905,10 @@ export default function CreateStockAlertPage() {
                     )}
                     
                     <div>
-                      <h4 className="text-sm font-medium mb-2">Selected Risks:</h4>
+                      <h4 className="text-sm font-medium mb-2">Selected Additional Risks:</h4>
                       <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
                         {selectedRisks.length === 0 ? (
-                          <span className="text-sm text-muted-foreground">No risks selected</span>
+                          <span className="text-sm text-muted-foreground">No additional risks selected</span>
                         ) : (
                           selectedRisks.map((name, idx) => (
                             <Badge key={idx} variant="destructive" className="flex items-center gap-1">
