@@ -671,6 +671,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch stock alert" });
     }
   });
+  
+  // Endpoint to publish a draft stock alert
+  app.patch("/api/stock-alerts/:id/publish", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Special handling for demo mode
+      const isDemoMode = req.query.demo === 'true';
+      if (isDemoMode) {
+        console.log('Demo mode stock alert publishing granted via query parameter');
+        
+        // Simulate getting the alert
+        const alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        if (!alert) {
+          return res.status(404).json({ message: "Stock alert not found" });
+        }
+        
+        // Update the mock alert to remove draft status
+        const updatedAlert = {
+          ...alert,
+          isDraft: false,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Find and replace in the mock data
+        const alertIndex = MOCK_STOCK_ALERTS.findIndex(a => a.id === id);
+        if (alertIndex !== -1) {
+          MOCK_STOCK_ALERTS[alertIndex] = updatedAlert;
+        }
+        
+        return res.json(updatedAlert);
+      }
+      
+      // Normal behavior (not in demo mode)
+      // Only allow authenticated admin users to publish stock alerts
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const isAdmin = await storage.checkIfAdmin(req.user.id);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Get the draft status from request
+      const { isDraft } = req.body;
+      
+      // Validate that it's being set to false
+      if (isDraft !== false) {
+        return res.status(400).json({ message: "Invalid publish operation" });
+      }
+      
+      // Update the alert in storage
+      const updatedAlert = await storage.updateStockAlert(id, { isDraft: false });
+      if (!updatedAlert) {
+        return res.status(404).json({ message: "Stock alert not found" });
+      }
+      
+      res.json(updatedAlert);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to publish stock alert" });
+    }
+  });
 
   app.post("/api/stock-alerts", async (req, res) => {
     try {
