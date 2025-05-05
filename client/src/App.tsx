@@ -23,6 +23,7 @@ import AdminAnalytics from "./pages/admin/analytics/index";
 import AdminStockAlerts from "./pages/admin/stock-alerts/index";
 import CreateStockAlert from "./pages/admin/stock-alerts/create";
 import StockAlertPreview from "./pages/admin/stock-alerts/preview";
+import RecoverDraftPage from "./pages/admin/stock-alerts/recover-draft";
 
 // User Management Pages
 import ManageUser from "./pages/admin/users/manage/index";
@@ -80,6 +81,7 @@ function App() {
           <ProtectedRoute path="/admin/stock-alerts" component={AdminStockAlerts} />
           <ProtectedRoute path="/admin/stock-alerts/create" component={CreateStockAlert} />
           <ProtectedRoute path="/admin/stock-alerts/preview" component={StockAlertPreview} />
+          <ProtectedRoute path="/admin/stock-alerts/recover-draft" component={RecoverDraftPage} />
           <ProtectedRoute path="/admin/stock-alerts/edit/:id" component={CreateStockAlert} />
           <ProtectedRoute path="/admin/education" component={AdminEducation} />
           <ProtectedRoute path="/admin/articles" component={AdminArticles} />

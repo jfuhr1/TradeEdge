@@ -657,6 +657,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Special handling for demo mode
       const isDemoMode = req.query.demo === 'true';
+      // Check for draft recovery mode, which helps recover after server restarts
+      const isDraftRecovery = req.query.draftRecovery === 'true';
       
       if (isDemoMode) {
         console.log(`Demo mode stock alert retrieval for ID: ${id}`);
@@ -664,29 +666,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For demo mode, get from our mock data or create a new mock alert
         let alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
         
-        // If the alert isn't in our mocks but it's likely a dynamically created one (ID > 100)
-        if (!alert && id > 100) {
+        // If the alert isn't in our mocks but it's likely a dynamically created one (ID > 100) or in draft recovery mode
+        if ((!alert && id > 100) || isDraftRecovery) {
           // Create a mock alert for dynamically created alerts in demo mode
           alert = {
-            id,
-            symbol: "DEMO",
-            companyName: "Demo Stock Alert",
+            id: isDraftRecovery ? 999 : id, // Use a known ID for draft recovery
+            symbol: isDraftRecovery ? "RECOVERED" : "DEMO",
+            companyName: isDraftRecovery ? "Recovered Draft Alert" : "Demo Stock Alert",
             currentPrice: 100.00,
             buyZoneMin: 95.00,
             buyZoneMax: 105.00,
             target1: 110.00,
             target2: 120.00,
             target3: 130.00,
-            target1Reasoning: "Demo target 1",
-            target2Reasoning: "Demo target 2",
-            target3Reasoning: "Demo target 3",
+            target1Reasoning: "First target reasoning",
+            target2Reasoning: "Second target reasoning",
+            target3Reasoning: "Third target reasoning",
             lossLevel: 90.00,
             technicalReasons: ["Support Level", "Volume Pattern"],
             dailyChartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
             weeklyChartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
             chartImageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop",
             mainChartType: "daily",
-            narrative: "This is a dynamically created demo stock alert.",
+            narrative: isDraftRecovery 
+              ? "This is a recovered draft alert to replace one that was lost during server restart."
+              : "This is a dynamically created demo stock alert.",
             risks: "Market volatility, Stop loss if price drops below buy zone",
             tags: [],
             confluences: [],
@@ -696,10 +700,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
+          
+          // For draft recovery, save this alert to our storage
+          if (isDraftRecovery) {
+            // Store the recovered alert so it persists
+            await storage.createStockAlert(alert);
+            console.log("Created recovery draft alert with ID:", alert.id);
+          }
         }
         
         if (!alert) {
-          return res.status(404).json({ message: "Stock alert not found" });
+          return res.status(404).json({ 
+            message: "Stock alert not found",
+            canRecover: true // Flag that indicates we can recover
+          });
         }
         
         // For the detail page, we'll inject a random change percentage for demo
@@ -714,7 +728,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normal non-demo behavior
       const alert = await storage.getStockAlert(id);
       if (!alert) {
-        return res.status(404).json({ message: "Stock alert not found" });
+        return res.status(404).json({ 
+          message: "Stock alert not found",
+          canRecover: true // Flag that indicates we can recover
+        });
       }
       
       // For the detail page, we'll inject a random change percentage

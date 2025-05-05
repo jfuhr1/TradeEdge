@@ -98,6 +98,14 @@ export default function StockAlertPreviewPage() {
   }
   
   if (error || !stockAlert) {
+    const isServerError = error instanceof Error && (error as any)?.canRecover;
+    
+    // Handler for recovering a draft alert
+    const handleRecoverDraft = () => {
+      // Redirect to the dedicated recovery page
+      navigate("/admin/stock-alerts/recover-draft");
+    };
+    
     return (
       <AdminLayout>
         <div className="container mx-auto px-4 py-6">
@@ -110,6 +118,7 @@ export default function StockAlertPreviewPage() {
               {initialIsDraft && (
                 <p className="mt-2">
                   This could happen if the server was restarted, as draft alerts are stored in memory.
+                  You can recover a blank draft alert or create a new one.
                 </p>
               )}
             </AlertDescription>
@@ -117,12 +126,20 @@ export default function StockAlertPreviewPage() {
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
             {canCreateAlerts && (
-              <Button asChild>
-                <Link to="/admin/stock-alerts/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create New Alert
-                </Link>
-              </Button>
+              <>
+                <Button asChild>
+                  <Link to="/admin/stock-alerts/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create New Alert
+                  </Link>
+                </Button>
+                {initialIsDraft && (
+                  <Button variant="secondary" onClick={handleRecoverDraft}>
+                    <X className="mr-2 h-4 w-4" />
+                    Recover Draft
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
