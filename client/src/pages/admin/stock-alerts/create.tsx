@@ -702,7 +702,10 @@ export default function CreateStockAlertPage() {
                                     step="0.01"
                                     placeholder="195.00" 
                                     {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                    }}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -741,7 +744,10 @@ export default function CreateStockAlertPage() {
                                     step="0.01"
                                     placeholder="210.00" 
                                     {...field} 
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                    }}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -998,7 +1004,10 @@ export default function CreateStockAlertPage() {
                                 step="0.01"
                                 placeholder="165.00" 
                                 {...field} 
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  return field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                                }}
                                 className="w-full max-w-[200px]"
                               />
                             </FormControl>
