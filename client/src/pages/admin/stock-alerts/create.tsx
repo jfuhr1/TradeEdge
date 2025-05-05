@@ -49,7 +49,7 @@ const stockAlertFormSchema = z.object({
   weeklyChartImageUrl: z.string().min(1, "Weekly chart image is required"),
   mainChartType: z.enum(["daily", "weekly"]),
   narrative: z.string().optional(),
-  risks: z.array(z.string()).default([]),
+  risks: z.string().default("Stop loss if price drops below buy zone"),
   tags: z.array(z.string()).default([]),
   confluences: z.array(z.string()).default([]),
   requiredTier: z.enum(["free", "paid", "premium", "mentorship"]).default("free"),
