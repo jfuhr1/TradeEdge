@@ -235,6 +235,8 @@ export default function CreateStockAlertPage() {
       // Set up the payload with draft status
       const payload = {
         ...data,
+        // Convert array fields to match schema expectations
+        risks: Array.isArray(data.risks) ? data.risks.join(", ") : data.risks, // Convert risks array to comma-separated string
         chartImageUrl: data.dailyChartImageUrl, // For backward compatibility
         status: computeAlertStatus(data),
         isDraft: true, // Mark as draft initially
