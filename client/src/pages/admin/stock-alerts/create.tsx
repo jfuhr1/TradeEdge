@@ -428,52 +428,26 @@ export default function CreateStockAlertPage() {
                     />
 
                     {/* Current Price */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="currentPrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Current Price ($) *</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01"
-                                placeholder="175.50" 
-                                {...field} 
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                className="w-full"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="supportLevel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Support Level ($)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01"
-                                placeholder="165.00" 
-                                {...field} 
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                className="w-full"
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Critical level for risk assessment
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="currentPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Price ($) *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              placeholder="175.50" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     {/* Buy Zone */}
                     <div className="grid grid-cols-2 gap-4">
@@ -519,110 +493,122 @@ export default function CreateStockAlertPage() {
                     </div>
 
                     {/* Targets with Reasoning */}
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="target1"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Target 1 ($) *</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.01"
-                                  placeholder="185.00" 
-                                  {...field} 
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="target1Reasoning"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Reasoning</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Recent resistance level" {...field} className="min-h-[80px]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="space-y-5">
+                      {/* Target 1 */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Target 1</h4>
+                        <div className="grid grid-cols-4 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="target1"
+                            render={({ field }) => (
+                              <FormItem className="col-span-1">
+                                <FormLabel>Price ($) *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.01"
+                                    placeholder="185.00" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="target1Reasoning"
+                            render={({ field }) => (
+                              <FormItem className="col-span-3">
+                                <FormLabel>Reasoning</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Recent resistance level" {...field} className="min-h-[80px]" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="target2"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Target 2 ($) *</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.01"
-                                  placeholder="195.00" 
-                                  {...field} 
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="target2Reasoning"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Reasoning</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Previous all-time high" {...field} className="min-h-[80px]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      {/* Target 2 */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Target 2</h4>
+                        <div className="grid grid-cols-4 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="target2"
+                            render={({ field }) => (
+                              <FormItem className="col-span-1">
+                                <FormLabel>Price ($) *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.01"
+                                    placeholder="195.00" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="target2Reasoning"
+                            render={({ field }) => (
+                              <FormItem className="col-span-3">
+                                <FormLabel>Reasoning</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Previous all-time high" {...field} className="min-h-[80px]" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="target3"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Target 3 ($) *</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.01"
-                                  placeholder="210.00" 
-                                  {...field} 
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="target3Reasoning"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Reasoning</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Fibonacci extension" {...field} className="min-h-[80px]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      {/* Target 3 */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Target 3</h4>
+                        <div className="grid grid-cols-4 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="target3"
+                            render={({ field }) => (
+                              <FormItem className="col-span-1">
+                                <FormLabel>Price ($) *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.01"
+                                    placeholder="210.00" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="target3Reasoning"
+                            render={({ field }) => (
+                              <FormItem className="col-span-3">
+                                <FormLabel>Reasoning</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Fibonacci extension" {...field} className="min-h-[80px]" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
 
