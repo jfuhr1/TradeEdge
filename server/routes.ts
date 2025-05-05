@@ -663,10 +663,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isDemoMode) {
         console.log(`Demo mode stock alert retrieval for ID: ${id}`);
         
-        // For demo mode, get from our mock data or create a new mock alert
-        let alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        // For demo mode, first check if this is a dynamically created alert (from POST endpoint)
+        // These would be stored in memory in a real implementation
+        // We use global variable for demo purposes to simulate database persistence
+        if (!global.DEMO_CREATED_ALERTS) {
+          global.DEMO_CREATED_ALERTS = [];
+        }
         
-        // If the alert isn't in our mocks but it's likely a dynamically created one (ID > 100) or in draft recovery mode
+        // Try to find the alert in our dynamically created alerts first
+        let alert = global.DEMO_CREATED_ALERTS.find(a => a.id === id);
+        
+        // If not found in dynamic alerts, try mock data
+        if (!alert) {
+          alert = MOCK_STOCK_ALERTS.find(a => a.id === id);
+        }
+        
+        // If the alert isn't in our mocks but it's in draft recovery mode
         if ((!alert && id > 100) || isDraftRecovery) {
           // Create a mock alert for dynamically created alerts in demo mode
           alert = {
