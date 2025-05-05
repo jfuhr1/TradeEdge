@@ -19,6 +19,9 @@ import {
   discountReasons
 } from "@shared/schema";
 
+// Create mock stock alerts array to avoid reference errors after server restarts
+global.MOCK_STOCK_ALERTS = [];
+
 const scryptAsync = promisify(scrypt);
 
 // Function to create sample notifications for demo purposes
