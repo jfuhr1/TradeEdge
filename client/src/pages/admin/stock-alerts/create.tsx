@@ -331,8 +331,10 @@ export default function CreateStockAlertPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Preview Ready",
-        description: "Your stock alert preview is ready to review.",
+        title: isEditMode ? "Update Successful" : "Preview Ready",
+        description: isEditMode 
+          ? "Stock alert has been updated and is ready to review." 
+          : "Your stock alert preview is ready to review.",
       });
       
       // Navigate to the preview page with the alert ID
@@ -340,7 +342,7 @@ export default function CreateStockAlertPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create preview",
+        title: isEditMode ? "Failed to update" : "Failed to create preview",
         description: error.message,
         variant: "destructive",
       });
@@ -587,15 +589,18 @@ export default function CreateStockAlertPage() {
     <AdminLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">Create Stock Alert</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{isEditMode ? "Edit Stock Alert" : "Create Stock Alert"}</h1>
           <Button variant="outline" asChild><Link to="/admin/stock-alerts">Back to Stock Alerts</Link></Button>
         </div>
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle>Create New Stock Alert</CardTitle>
+            <CardTitle>{isEditMode ? "Edit Stock Alert" : "Create New Stock Alert"}</CardTitle>
             <CardDescription>
-              Add a new stock alert to recommend to members. Fields marked with * are required.
+              {isEditMode 
+                ? "Update the stock alert details. Fields marked with * are required."
+                : "Add a new stock alert to recommend to members. Fields marked with * are required."
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
