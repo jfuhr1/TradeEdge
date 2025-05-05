@@ -742,9 +742,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isDemoMode = req.query.demo === 'true';
       // Check for draft recovery mode, which helps recover after server restarts
       const isDraftRecovery = req.query.draftRecovery === 'true';
+      // Check if we should force database retrieval (for alerts after server restart)
+      const forceDatabase = req.query.forceDatabase === 'true';
       
       if (isDemoMode) {
         console.log(`Demo mode stock alert retrieval for ID: ${id}`);
+        
+        // If forceDatabase is true, bypass in-memory checks and go straight to database
+        if (forceDatabase) {
+          console.log(`Force database retrieval requested for alert ID: ${id}`);
+          try {
+            // Try to retrieve the alert directly from database instead of in-memory storage
+            const dbAlert = await storage.getStockAlert(id);
+            if (dbAlert) {
+              console.log(`Successfully retrieved alert ID ${id} from database`);
+              
+              // Add simulated change percent for UI display
+              const alertWithChanges = {
+                ...dbAlert,
+                changePercent: "0.40" // Simple fixed value for demo purposes
+              };
+              
+              return res.json(alertWithChanges);
+            } else {
+              console.log(`Alert ID ${id} not found in database`);
+            }
+          } catch (err) {
+            console.error(`Database error retrieving alert ID ${id}:`, err);
+          }
+        }
         
         // For demo mode, first check if this is a dynamically created alert (from POST endpoint)
         // These would be stored in memory in a real implementation

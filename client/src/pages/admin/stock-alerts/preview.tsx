@@ -31,8 +31,10 @@ export default function StockAlertPreviewPage() {
     queryKey: [`/api/stock-alerts/${alertId}?demo=true`],
     enabled: alertId > 0,
     staleTime: 10000,
-    retry: 1, // Only retry once for missing data to avoid excessive requests
+    retry: 2, // Retry twice for better resilience
+    retryDelay: 1000, // Wait 1 second between retries
     refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnMount: true, // Always refetch when component mounts
   });
   
   // Publish the alert (mark as not draft)
@@ -98,6 +100,35 @@ export default function StockAlertPreviewPage() {
     );
   }
   
+  // Effect to attempt automatic recovery of missing alerts
+  useEffect(() => {
+    // If there's an error and this was a draft, try to fetch from storage
+    if (error && initialIsDraft && alertId > 0) {
+      console.log('Attempting to recover alert from database storage...');
+
+      // Retry loading the alert with a direct database query parameter
+      const fetchAlertFromDatabase = async () => {
+        try {
+          const res = await apiRequest('GET', `/api/stock-alerts/${alertId}?demo=true&forceDatabase=true`);
+          if (res.ok) {
+            const data = await res.json();
+            // Manually update the React Query cache with the recovered data
+            queryClient.setQueryData([`/api/stock-alerts/${alertId}?demo=true`], data);
+            console.log('Successfully recovered alert from database:', data);
+            toast({
+              title: "Alert Recovered",
+              description: "Successfully retrieved alert data from database storage.",
+            });
+          }
+        } catch (err) {
+          console.error('Failed to recover alert from database:', err);
+        }
+      };
+      
+      fetchAlertFromDatabase();
+    }
+  }, [error, initialIsDraft, alertId]);
+  
   if (error || !stockAlert) {
     const isServerError = error instanceof Error && (error as any)?.canRecover;
     
@@ -105,6 +136,41 @@ export default function StockAlertPreviewPage() {
     const handleRecoverDraft = () => {
       // Redirect to the dedicated recovery page
       navigate("/admin/stock-alerts/recover-draft");
+    };
+    
+    // Handler to retry loading from database
+    const handleRetryFromDatabase = async () => {
+      try {
+        toast({
+          title: "Retrying...",
+          description: "Attempting to retrieve alert data from database storage.",
+        });
+        
+        // Make a direct request to the database-specific endpoint
+        const res = await apiRequest('GET', `/api/stock-alerts/${alertId}?demo=true&forceDatabase=true`);
+        if (res.ok) {
+          const data = await res.json();
+          // Manually update the React Query cache
+          queryClient.setQueryData([`/api/stock-alerts/${alertId}?demo=true`], data);
+          
+          toast({
+            title: "Success",
+            description: "Alert data retrieved successfully.",
+          });
+        } else {
+          toast({
+            title: "Failed",
+            description: "Could not retrieve alert data from database.",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred during recovery.",
+          variant: "destructive",
+        });
+      }
     };
     
     return (
@@ -119,7 +185,7 @@ export default function StockAlertPreviewPage() {
               {initialIsDraft && (
                 <p className="mt-2">
                   This could happen if the server was restarted, as draft alerts are stored in memory.
-                  You can recover a blank draft alert or create a new one.
+                  You can recover a blank draft alert, create a new one, or try to retrieve it from the database.
                 </p>
               )}
             </AlertDescription>
@@ -135,10 +201,16 @@ export default function StockAlertPreviewPage() {
                   </Link>
                 </Button>
                 {initialIsDraft && (
-                  <Button variant="secondary" onClick={handleRecoverDraft}>
-                    <X className="mr-2 h-4 w-4" />
-                    Recover Draft
-                  </Button>
+                  <>
+                    <Button variant="secondary" onClick={handleRecoverDraft}>
+                      <X className="mr-2 h-4 w-4" />
+                      Recover Draft
+                    </Button>
+                    <Button variant="outline" onClick={handleRetryFromDatabase}>
+                      <Loader2 className="mr-2 h-4 w-4" />
+                      Retry from Database
+                    </Button>
+                  </>
                 )}
               </>
             )}
