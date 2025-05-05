@@ -32,6 +32,7 @@ export default function StockAlertPreviewPage() {
     enabled: alertId > 0,
     staleTime: 10000,
     retry: 1, // Only retry once for missing data to avoid excessive requests
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
   
   // Publish the alert (mark as not draft)
