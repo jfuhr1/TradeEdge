@@ -699,9 +699,14 @@ export class MemStorage implements IStorage {
       );
   }
   
-  async getClosedStockAlerts(): Promise<StockAlert[]> {
+  async getClosedStockAlerts(userTier: string = 'free'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
-      .filter(alert => alert.status === 'closed')
+      .filter(alert => 
+        // Show closed alerts
+        alert.status === 'closed' &&
+        // Filter by user tier or allow free alerts
+        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
+      )
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
@@ -753,13 +758,18 @@ export class MemStorage implements IStorage {
     return { target1, target2, target3 };
   }
   
-  async getStockAlertsNearingTargets(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
+  async getStockAlertsNearingTargets(userTier: string = 'paid'): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
     const target1: StockAlert[] = [];
     const target2: StockAlert[] = [];
     const target3: StockAlert[] = [];
     
     const alerts = Array.from(this.stockAlerts.values())
-      .filter(alert => alert.status !== 'closed'); // Include alerts without a status or with status='active'
+      .filter(alert => 
+        // Include alerts without a status or with status='active'
+        alert.status !== 'closed' &&
+        // Filter by user tier
+        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
+      );
     
     for (const alert of alerts) {
       // For target 1: price is above buy zone and within 95% of target 1

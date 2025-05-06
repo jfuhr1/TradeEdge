@@ -365,7 +365,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stock-alerts/targets", async (req, res) => {
     try {
-      const targets = await storage.getStockAlertsNearingTargets();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const targets = await storage.getStockAlertsNearingTargets(userTier);
       res.json(targets);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stock alerts nearing targets" });
@@ -374,7 +381,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stock-alerts/closed", async (req, res) => {
     try {
-      const closedAlerts = await storage.getClosedStockAlerts();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const closedAlerts = await storage.getClosedStockAlerts(userTier);
       res.json(closedAlerts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch closed stock alerts" });
@@ -383,7 +397,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/stock-alerts/high-risk-reward", async (req, res) => {
     try {
-      const alerts = await storage.getHighRiskRewardStockAlerts();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const alerts = await storage.getHighRiskRewardStockAlerts(userTier);
       res.json(alerts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch high risk/reward stock alerts" });
@@ -392,7 +413,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/stock-alerts/hit-targets", async (req, res) => {
     try {
-      const targets = await storage.getRecentlyHitTargetsStockAlerts();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const targets = await storage.getRecentlyHitTargetsStockAlerts(userTier);
       res.json(targets);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stock alerts that hit targets" });
