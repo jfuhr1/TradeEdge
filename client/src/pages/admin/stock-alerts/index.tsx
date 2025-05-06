@@ -57,7 +57,7 @@ export default function AdminStockAlertsPage() {
   });
   
   // Fetch pending approval alerts
-  const { data: pendingAlerts = [], isLoading: isLoadingPending } = useQuery({
+  const { data: pendingAlerts = [], isLoading: isLoadingPending } = useQuery<any[]>({
     queryKey: ["/api/admin/stock-alerts/pending"],
     enabled: hasPermission("canEditAlerts"),
     staleTime: 60000, // 1 minute
@@ -76,8 +76,7 @@ export default function AdminStockAlertsPage() {
     onSuccess: () => {
       toast({
         title: "Alert approved",
-        description: "The stock alert has been successfully approved and is now visible to users.",
-        variant: "success",
+        description: "The stock alert has been successfully approved and is now visible to users."
       });
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stock-alerts/pending"] });
@@ -110,8 +109,7 @@ export default function AdminStockAlertsPage() {
     onSuccess: () => {
       toast({
         title: "Alert rejected",
-        description: "The stock alert has been rejected.",
-        variant: "default",
+        description: "The stock alert has been rejected."
       });
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stock-alerts/pending"] });
