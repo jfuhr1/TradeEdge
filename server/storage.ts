@@ -656,15 +656,25 @@ export class MemStorage implements IStorage {
   
   async getStockAlerts(userTier: string = 'paid'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all alerts
+        if (userTier === 'employee') {
+          return true;
+        }
+        
+        // For regular users, show only approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Show an alert if:
         // 1. The user's tier meets or exceeds the required tier OR
         // 2. The alert is explicitly marked as a free alert (available to all users)
-        (
+        return (
           this.tierHasAccess(userTier, alert.requiredTier) || 
           alert.isFreeAlert === true
-        )
-      )
+        );
+      })
       .sort((a, b) => 
         b.createdAt.getTime() - a.createdAt.getTime()
       );
@@ -688,6 +698,16 @@ export class MemStorage implements IStorage {
     
     if (!alert) return undefined;
     
+    // Admin users or super admins can see all alerts regardless of status
+    if (userTier === 'employee') {
+      return alert;
+    }
+    
+    // Regular users can only see approved alerts (or admin users can see all)
+    if (alert.approvalStatus !== 'approved') {
+      return undefined;
+    }
+    
     // Allow access if:
     // 1. The alert is closed (educational value for all) OR
     // 2. The user's tier meets or exceeds the required tier OR
@@ -704,16 +724,69 @@ export class MemStorage implements IStorage {
     return undefined;
   }
   
+  // Get all alerts pending approval
+  async getPendingApprovalAlerts(): Promise<StockAlert[]> {
+    return Array.from(this.stockAlerts.values())
+      .filter(alert => alert.approvalStatus === 'pending')
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  // Approve a stock alert
+  async approveStockAlert(id: number, approverId: number, notes?: string): Promise<StockAlert | undefined> {
+    const alert = this.stockAlerts.get(id);
+    if (!alert) return undefined;
+    
+    const updatedAlert = { 
+      ...alert, 
+      approvalStatus: 'approved', 
+      approvedBy: approverId,
+      approvalNotes: notes || null,
+      updatedAt: new Date()
+    };
+    
+    this.stockAlerts.set(id, updatedAlert);
+    return updatedAlert;
+  }
+  
+  // Reject a stock alert
+  async rejectStockAlert(id: number, approverId: number, notes?: string): Promise<StockAlert | undefined> {
+    const alert = this.stockAlerts.get(id);
+    if (!alert) return undefined;
+    
+    const updatedAlert = { 
+      ...alert, 
+      approvalStatus: 'rejected', 
+      approvedBy: approverId,
+      approvalNotes: notes || null,
+      updatedAt: new Date()
+    };
+    
+    this.stockAlerts.set(id, updatedAlert);
+    return updatedAlert;
+  }
+  
   async getStockAlertsInBuyZone(userTier: string = 'paid'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all alerts
+        if (userTier === 'employee') {
+          return alert.status !== 'closed' &&
+                 alert.currentPrice >= alert.buyZoneMin && 
+                 alert.currentPrice <= alert.buyZoneMax;
+        }
+        
+        // For regular users, only show approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Include alerts without a status or with status='active', exclude status='closed'
-        alert.status !== 'closed' &&
-        alert.currentPrice >= alert.buyZoneMin && 
-        alert.currentPrice <= alert.buyZoneMax &&
-        // Filter by user tier
-        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
-      );
+        return alert.status !== 'closed' &&
+               alert.currentPrice >= alert.buyZoneMin && 
+               alert.currentPrice <= alert.buyZoneMax &&
+               // Filter by user tier
+               (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true);
+      });
   }
   
   async getClosedStockAlerts(userTier: string = 'free'): Promise<StockAlert[]> {

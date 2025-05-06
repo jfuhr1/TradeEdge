@@ -166,7 +166,10 @@ export const stockAlerts = pgTable("stock_alerts", {
   requiredTier: text("required_tier").default("paid"), // The minimum membership tier required to see this alert (free, paid, premium, mentorship)
   isFreeAlert: boolean("is_free_alert").default(false), // Whether this alert is available to free users (overrides requiredTier for "free" users)
   status: text("status").notNull().default("active"), // active, closed, cancelled
-  isDraft: boolean("is_draft").default(true), // Whether this alert is a draft or published
+  approvalStatus: text("approval_status").default("pending"), // pending, approved, rejected
+  approvedBy: integer("approved_by"), // User ID of the admin who approved or rejected the alert
+  approvalNotes: text("approval_notes"), // Any notes from the approver
+  submittedBy: integer("submitted_by"), // User ID of the admin who submitted the alert
   maxPrice: doublePrecision("max_price"), // To track the highest price reached
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
