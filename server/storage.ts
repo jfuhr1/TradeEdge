@@ -705,22 +705,28 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
-  async getHighRiskRewardStockAlerts(): Promise<StockAlert[]> {
+  async getHighRiskRewardStockAlerts(userTier: string = 'paid'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
       .filter(alert => 
         // Below buy zone but still active
         alert.status !== 'closed' && 
-        alert.currentPrice < alert.buyZoneMin
+        alert.currentPrice < alert.buyZoneMin &&
+        // Filter by user tier
+        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
       )
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
-  async getRecentlyHitTargetsStockAlerts(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
+  async getRecentlyHitTargetsStockAlerts(userTier: string = 'paid'): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}> {
     const target1: StockAlert[] = [];
     const target2: StockAlert[] = [];
     const target3: StockAlert[] = [];
     
-    const alerts = Array.from(this.stockAlerts.values());
+    const alerts = Array.from(this.stockAlerts.values())
+      .filter(alert => 
+        // Filter by user tier
+        this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true
+      );
     
     for (const alert of alerts) {
       // For target 1: current price is at or above target 1

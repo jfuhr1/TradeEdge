@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Create a schema for stock alert form
@@ -130,7 +131,8 @@ export default function AdminStockAlertForm({
       industry: "",
       timeFrame: "medium",
       riskRating: 3,
-      requiredTier: "free",
+      requiredTier: "paid",
+      isFreeAlert: false,
       status: "active",
     },
   });
@@ -831,6 +833,29 @@ export default function AdminStockAlertForm({
                   Members with this tier or higher can view this alert
                 </FormDescription>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="isFreeAlert"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Make Available to All Users
+                  </FormLabel>
+                  <FormDescription>
+                    If checked, this alert will be visible to all users including free tier members, regardless of the tier setting above.
+                  </FormDescription>
+                </div>
               </FormItem>
             )}
           />
