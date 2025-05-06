@@ -800,8 +800,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (forceDatabase) {
           console.log(`Force database retrieval requested for alert ID: ${id}`);
           try {
+            // Get user's membership tier if they're logged in
+            let userTier = 'free';
+            if (req.isAuthenticated()) {
+              userTier = req.user.tier || 'free';
+            }
+            
             // Try to retrieve the alert directly from database instead of in-memory storage
-            const dbAlert = await storage.getStockAlert(id);
+            const dbAlert = await storage.getStockAlert(id, userTier);
             if (dbAlert) {
               console.log(`Successfully retrieved alert ID ${id} from database`);
               
@@ -895,10 +901,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Normal non-demo behavior
-      const alert = await storage.getStockAlert(id);
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const alert = await storage.getStockAlert(id, userTier);
       if (!alert) {
         return res.status(404).json({ 
-          message: "Stock alert not found",
+          message: "Stock alert not found or access denied",
           canRecover: true // Flag that indicates we can recover
         });
       }

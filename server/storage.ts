@@ -683,8 +683,25 @@ export class MemStorage implements IStorage {
     return (tierLevels[userTier] ?? 0) >= (tierLevels[requiredTier] ?? 0);
   }
   
-  async getStockAlert(id: number): Promise<StockAlert | undefined> {
-    return this.stockAlerts.get(id);
+  async getStockAlert(id: number, userTier: string = 'free'): Promise<StockAlert | undefined> {
+    const alert = this.stockAlerts.get(id);
+    
+    if (!alert) return undefined;
+    
+    // Allow access if:
+    // 1. The alert is closed (educational value for all) OR
+    // 2. The user's tier meets or exceeds the required tier OR
+    // 3. The alert is explicitly marked as a free alert (available to all users)
+    if (
+      alert.status === 'closed' ||
+      this.tierHasAccess(userTier, alert.requiredTier) ||
+      alert.isFreeAlert === true
+    ) {
+      return alert;
+    }
+    
+    // Access denied based on tier
+    return undefined;
   }
   
   async getStockAlertsInBuyZone(userTier: string = 'paid'): Promise<StockAlert[]> {
