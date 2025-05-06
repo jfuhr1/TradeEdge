@@ -330,18 +330,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stock Alerts API
   app.get("/api/stock-alerts", async (req, res) => {
     try {
-      const alerts = await storage.getStockAlerts();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      // Get alerts filtered by the user's tier or free alerts
+      const alerts = await storage.getStockAlerts(userTier);
       res.json(alerts);
     } catch (error) {
+      console.error("Error fetching stock alerts:", error);
       res.status(500).json({ message: "Failed to fetch stock alerts" });
     }
   });
 
   app.get("/api/stock-alerts/buy-zone", async (req, res) => {
     try {
-      const alerts = await storage.getStockAlertsInBuyZone();
+      // Get user's membership tier if they're logged in
+      let userTier = 'free';
+      
+      if (req.isAuthenticated()) {
+        userTier = req.user.tier || 'free';
+      }
+      
+      const alerts = await storage.getStockAlertsInBuyZone(userTier);
       res.json(alerts);
     } catch (error) {
+      console.error("Error fetching stock alerts in buy zone:", error);
       res.status(500).json({ message: "Failed to fetch stock alerts in buy zone" });
     }
   });

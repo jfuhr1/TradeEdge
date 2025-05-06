@@ -62,7 +62,8 @@ const stockAlertFormSchema = z.object({
   industry: z.string().optional(),
   timeFrame: z.enum(["short", "medium", "long"]).optional(),
   riskRating: z.number().min(1).max(5).optional(),
-  requiredTier: z.enum(["free", "paid", "premium", "mentorship"]).default("free"),
+  requiredTier: z.enum(["free", "paid", "premium", "mentorship"]).default("paid"),
+  isFreeAlert: z.boolean().default(false),
   status: z.enum(["active", "closed", "cancelled"]).default("active"),
 }).refine(data => data.buyZoneMax > data.buyZoneMin, {
   message: "Buy zone maximum must be greater than minimum",

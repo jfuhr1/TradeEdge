@@ -687,12 +687,16 @@ export class MemStorage implements IStorage {
     return this.stockAlerts.get(id);
   }
   
-  async getStockAlertsInBuyZone(): Promise<StockAlert[]> {
-    return Array.from(this.stockAlerts.values()).filter(alert => 
-      // Include alerts without a status or with status='active', exclude status='closed'
-      alert.status !== 'closed' &&
-      alert.currentPrice >= alert.buyZoneMin && alert.currentPrice <= alert.buyZoneMax
-    );
+  async getStockAlertsInBuyZone(userTier: string = 'paid'): Promise<StockAlert[]> {
+    return Array.from(this.stockAlerts.values())
+      .filter(alert => 
+        // Include alerts without a status or with status='active', exclude status='closed'
+        alert.status !== 'closed' &&
+        alert.currentPrice >= alert.buyZoneMin && 
+        alert.currentPrice <= alert.buyZoneMax &&
+        // Filter by user tier
+        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
+      );
   }
   
   async getClosedStockAlerts(): Promise<StockAlert[]> {
