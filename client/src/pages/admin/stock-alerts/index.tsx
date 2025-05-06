@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, TrendingUp, Target, PieChart, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, Target, PieChart, CheckCircle2, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminPermissions } from "@/hooks/use-admin-permissions";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -39,12 +44,90 @@ export default function AdminStockAlertsPage() {
   const { toast } = useToast();
   const { hasPermission } = useAdminPermissions();
   const [activeTab, setActiveTab] = useState("new");
+  const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null);
+  const [approvalNotes, setApprovalNotes] = useState("");
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
   
   // Fetch all stock alerts for analytics with demo mode
   const { data: allAlerts, isLoading: isLoadingAlerts } = useQuery({
     queryKey: ["/api/stock-alerts?demo=true"],
     staleTime: 60000, // 1 minute
     retry: 1,
+  });
+  
+  // Fetch pending approval alerts
+  const { data: pendingAlerts = [], isLoading: isLoadingPending } = useQuery({
+    queryKey: ["/api/admin/stock-alerts/pending"],
+    enabled: hasPermission("canEditAlerts"),
+    staleTime: 60000, // 1 minute
+  });
+  
+  // Approve stock alert mutation
+  const approveMutation = useMutation({
+    mutationFn: async ({ alertId, notes }: { alertId: number, notes: string }) => {
+      const response = await apiRequest(
+        "POST", 
+        `/api/admin/stock-alerts/${alertId}/approve`, 
+        { notes }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Alert approved",
+        description: "The stock alert has been successfully approved and is now visible to users.",
+        variant: "success",
+      });
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stock-alerts/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stock-alerts"] });
+      
+      // Reset state
+      setApprovalNotes("");
+      setSelectedAlertId(null);
+      setShowApproveDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Approval failed",
+        description: error.message || "There was an error approving the alert.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Reject stock alert mutation
+  const rejectMutation = useMutation({
+    mutationFn: async ({ alertId, notes }: { alertId: number, notes: string }) => {
+      const response = await apiRequest(
+        "POST", 
+        `/api/admin/stock-alerts/${alertId}/reject`, 
+        { notes }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Alert rejected",
+        description: "The stock alert has been rejected.",
+        variant: "default",
+      });
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stock-alerts/pending"] });
+      
+      // Reset state
+      setApprovalNotes("");
+      setSelectedAlertId(null);
+      setShowRejectDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Rejection failed",
+        description: error.message || "There was an error rejecting the alert.",
+        variant: "destructive",
+      });
+    },
   });
   
   // Ensure allAlerts is an array before using array methods
@@ -235,6 +318,121 @@ export default function AdminStockAlertsPage() {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-6">
+        {/* Approve Alert Dialog */}
+        <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Approve Stock Alert</DialogTitle>
+              <DialogDescription>
+                The alert will be visible to members after approval. 
+                Add any notes about your approval decision.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="approvalNotes">Approval Notes (Optional)</Label>
+                <Textarea
+                  id="approvalNotes"
+                  value={approvalNotes}
+                  onChange={(e) => setApprovalNotes(e.target.value)}
+                  placeholder="Add any notes or comments for this approval"
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex space-x-2 sm:space-x-0">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowApproveDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedAlertId) {
+                    approveMutation.mutate({
+                      alertId: selectedAlertId,
+                      notes: approvalNotes
+                    });
+                  }
+                }}
+                disabled={approveMutation.isPending}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {approveMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Approving...
+                  </>
+                ) : (
+                  <>Approve Alert</>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reject Alert Dialog */}
+        <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reject Stock Alert</DialogTitle>
+              <DialogDescription>
+                Please provide feedback about why this alert is being rejected.
+                This will be sent to the submitter.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="rejectionNotes">Rejection Reason <span className="text-red-500">*</span></Label>
+                <Textarea
+                  id="rejectionNotes"
+                  value={approvalNotes}
+                  onChange={(e) => setApprovalNotes(e.target.value)}
+                  placeholder="Explain why this alert is being rejected"
+                  className="min-h-[100px]"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex space-x-2 sm:space-x-0">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowRejectDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedAlertId && approvalNotes.trim()) {
+                    rejectMutation.mutate({
+                      alertId: selectedAlertId,
+                      notes: approvalNotes
+                    });
+                  } else {
+                    toast({
+                      title: "Rejection reason required",
+                      description: "Please provide a reason for rejecting this alert",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                disabled={rejectMutation.isPending}
+                variant="destructive"
+              >
+                {rejectMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  <>Reject Alert</>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Stock Alerts Management</h1>
@@ -259,6 +457,16 @@ export default function AdminStockAlertsPage() {
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="active">Active Alerts</TabsTrigger>
             <TabsTrigger value="drafts">Drafts</TabsTrigger>
+            {canEditAlerts && (
+              <TabsTrigger value="pending" className="relative">
+                Pending Approval
+                {Array.isArray(pendingAlerts) && pendingAlerts.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {pendingAlerts.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="analytics">
@@ -582,6 +790,123 @@ export default function AdminStockAlertsPage() {
               )}
             </div>
           </TabsContent>
+          
+          {/* Pending Approvals Tab */}
+          {canEditAlerts && (
+            <TabsContent value="pending">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Pending Approval Alerts</h2>
+                </div>
+                
+                {isLoadingPending ? (
+                  <div className="flex justify-center p-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : pendingAlerts.length === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center p-6">
+                      <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                      <p className="text-lg text-center text-muted-foreground">No pending alerts waiting for approval</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {pendingAlerts.map((alert: any) => (
+                      <Card key={alert.id} className="overflow-hidden">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col md:flex-row gap-4">
+                            <div className="relative flex-1">
+                              <img 
+                                src={alert.dailyChartImageUrl || "https://via.placeholder.com/400x200"} 
+                                alt={`${alert.symbol} chart`}
+                                className="w-full h-48 object-cover rounded-md"
+                              />
+                              <div className="absolute top-0 right-0 bg-background/80 p-2 m-2 rounded-md">
+                                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                                  PENDING
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center mb-2">
+                                <div>
+                                  <h3 className="text-xl font-bold">{alert.symbol}</h3>
+                                  <p className="text-sm text-muted-foreground mb-1">{alert.companyName}</p>
+                                </div>
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  alert.requiredTier === "free" ? "bg-green-100 text-green-800" :
+                                  alert.requiredTier === "paid" ? "bg-blue-100 text-blue-800" :
+                                  alert.requiredTier === "premium" ? "bg-purple-100 text-purple-800" :
+                                  "bg-amber-100 text-amber-800"
+                                }`}>
+                                  {alert.requiredTier?.toUpperCase()}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Buy Zone</p>
+                                  <p className="text-sm font-medium">${alert.buyZoneMin?.toFixed(2)} - ${alert.buyZoneMax?.toFixed(2)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Current</p>
+                                  <p className="text-sm font-medium">${alert.currentPrice?.toFixed(2)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Target 1</p>
+                                  <p className="text-sm font-medium">${alert.target1?.toFixed(2)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Target 3</p>
+                                  <p className="text-sm font-medium">${alert.target3?.toFixed(2)}</p>
+                                </div>
+                              </div>
+                              
+                              <p className="text-xs text-muted-foreground mb-1">Submitted by</p>
+                              <p className="text-sm mb-4">{alert.submittedBy || "Unknown"}</p>
+                              
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm" asChild className="flex-1">
+                                  <Link to={`/admin/stock-alerts/preview?id=${alert.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" /> Preview
+                                  </Link>
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+                                  onClick={() => {
+                                    setSelectedAlertId(alert.id);
+                                    setShowApproveDialog(true);
+                                  }}
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1 bg-red-100 hover:bg-red-200 text-red-800 border-red-300"
+                                  onClick={() => {
+                                    setSelectedAlertId(alert.id);
+                                    setShowRejectDialog(true);
+                                  }}
+                                >
+                                  <XCircle className="mr-2 h-4 w-4" /> Reject
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
+          
         </Tabs>
       </div>
     </AdminLayout>
