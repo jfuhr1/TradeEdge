@@ -1,0 +1,25 @@
+1.	About the alert lifecycle:
+•	When an admin creates an alert, should it immediately be visible to users (based on their membership tier), or is there an approval/review process?
+Ideally it should go into approval, but when we tried to design that everything started failing. Since it is just me now, I would be approving my own stuff, but would eventually want to be able to approve other people’s trades
+•	Do alerts have a status like "active" or "closed" once price targets are hit or conditions change?
+Yes – the alert is active until it hits it’s first price target. Since price can bounce up and down for a while, it remains active until that first target it hit, and then moves to closed. By closed we mean that we don’t want to recommend it to new users to buy into that stock, but people that bought the stock still want to track it’s progress and what other price targets are hit. 
+2.	Regarding the filters for alerts:
+•	What are the most important filter categories you want users to see? (new alerts, buy zone, target hit, etc.)
+I believe we already have this set up in this way – new alerts, alerts still in the buy zone, target hit, high risk/reward
+•	Should users be able to filter by technical reasons, confluences, or other categorical fields?
+Eventually yes, but not yet. I don’t want to overdo it on this MVP version. But build the database where it allows for the user to filter by any and all fields. 
+3.	For alert management:
+•	Do you need the ability to edit alerts after they've been created if market conditions change?
+Not really, no 
+•	Would you want to "close" an alert if the opportunity is no longer valid rather than deleting it?
+No, if an alert breaks below the “buy zone” we consider it a “high risk/reward” trade 
+4.	About the membership tiers:
+•	How should the different membership tiers affect which alerts users can see?
+Our sign-up page talks about that. Free users are only supposed to get one free alert per month, while paid members get to see all of the alerts. In the future we will add additional tiers and alert types that users can purchase 
+•	Do premium members get earlier access to alerts than paid members?
+No they are all allowed at the same time 
+5.	For notifications:
+•	What are the key events that should trigger notifications to users?
+We already outlined this in our notifications settings – when a stock enter the buy zone and when it approaches a target if they are holding the stock in their portfolio
+•	Should users be able to customize which notifications they receive?
+Yes, to the extent that we have already designed. 
