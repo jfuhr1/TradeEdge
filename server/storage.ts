@@ -791,24 +791,45 @@ export class MemStorage implements IStorage {
   
   async getClosedStockAlerts(userTier: string = 'free'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all closed alerts
+        if (userTier === 'employee') {
+          return alert.status === 'closed';
+        }
+        
+        // For regular users, only show approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Show closed alerts
-        alert.status === 'closed' &&
-        // Filter by user tier or allow free alerts
-        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
-      )
+        return alert.status === 'closed' &&
+               // Filter by user tier or allow free alerts
+               (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true);
+      })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
   async getHighRiskRewardStockAlerts(userTier: string = 'paid'): Promise<StockAlert[]> {
     return Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all high risk/reward alerts
+        if (userTier === 'employee') {
+          return alert.status !== 'closed' && 
+                 alert.currentPrice < alert.buyZoneMin;
+        }
+        
+        // For regular users, only show approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Below buy zone but still active
-        alert.status !== 'closed' && 
-        alert.currentPrice < alert.buyZoneMin &&
-        // Filter by user tier
-        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
-      )
+        return alert.status !== 'closed' && 
+               alert.currentPrice < alert.buyZoneMin &&
+               // Filter by user tier
+               (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true);
+      })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
   }
   
@@ -817,11 +838,22 @@ export class MemStorage implements IStorage {
     const target2: StockAlert[] = [];
     const target3: StockAlert[] = [];
     
+    // Get filtered alerts based on user's tier and approval status
     const alerts = Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all alerts
+        if (userTier === 'employee') {
+          return true;
+        }
+        
+        // For regular users, only show approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Filter by user tier
-        this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true
-      );
+        return this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true;
+      });
     
     for (const alert of alerts) {
       // For target 1: current price is at or above target 1
@@ -853,13 +885,24 @@ export class MemStorage implements IStorage {
     const target2: StockAlert[] = [];
     const target3: StockAlert[] = [];
     
+    // Get filtered alerts based on user's tier and approval status
     const alerts = Array.from(this.stockAlerts.values())
-      .filter(alert => 
+      .filter(alert => {
+        // Admin users can see all active alerts
+        if (userTier === 'employee') {
+          return alert.status !== 'closed';
+        }
+        
+        // For regular users, only show approved alerts
+        if (alert.approvalStatus !== 'approved') {
+          return false;
+        }
+        
         // Include alerts without a status or with status='active'
-        alert.status !== 'closed' &&
-        // Filter by user tier
-        (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true)
-      );
+        return alert.status !== 'closed' &&
+               // Filter by user tier
+               (this.tierHasAccess(userTier, alert.requiredTier) || alert.isFreeAlert === true);
+      });
     
     for (const alert of alerts) {
       // For target 1: price is above buy zone and within 95% of target 1

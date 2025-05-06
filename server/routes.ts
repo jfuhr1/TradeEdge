@@ -2119,6 +2119,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get pending approval alerts (admin only)
+  app.get("/api/admin/stock-alerts/pending", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin with permission to edit alerts
+      const hasPermission = await storage.hasAdminPermission(req.user.id, "canEditAlerts");
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin permission required" });
+      }
+      
+      const pendingAlerts = await storage.getPendingApprovalAlerts();
+      res.json(pendingAlerts);
+    } catch (error) {
+      console.error("Error fetching pending approval alerts:", error);
+      res.status(500).json({ message: "Failed to fetch pending approval alerts" });
+    }
+  });
+  
+  // Approve a stock alert (admin only)
+  app.post("/api/admin/stock-alerts/:id/approve", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin with permission to edit alerts
+      const hasPermission = await storage.hasAdminPermission(req.user.id, "canEditAlerts");
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin permission required" });
+      }
+      
+      const alertId = parseInt(req.params.id);
+      if (isNaN(alertId)) {
+        return res.status(400).json({ message: "Invalid alert ID format" });
+      }
+      
+      const { notes } = req.body;
+      
+      const updatedAlert = await storage.approveStockAlert(alertId, req.user.id, notes);
+      
+      if (!updatedAlert) {
+        return res.status(404).json({ message: "Stock alert not found" });
+      }
+      
+      res.status(200).json(updatedAlert);
+    } catch (error) {
+      console.error("Error approving stock alert:", error);
+      res.status(500).json({ message: "Failed to approve stock alert" });
+    }
+  });
+  
+  // Reject a stock alert (admin only)
+  app.post("/api/admin/stock-alerts/:id/reject", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin with permission to edit alerts
+      const hasPermission = await storage.hasAdminPermission(req.user.id, "canEditAlerts");
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin permission required" });
+      }
+      
+      const alertId = parseInt(req.params.id);
+      if (isNaN(alertId)) {
+        return res.status(400).json({ message: "Invalid alert ID format" });
+      }
+      
+      const { notes } = req.body;
+      
+      const updatedAlert = await storage.rejectStockAlert(alertId, req.user.id, notes);
+      
+      if (!updatedAlert) {
+        return res.status(404).json({ message: "Stock alert not found" });
+      }
+      
+      res.status(200).json(updatedAlert);
+    } catch (error) {
+      console.error("Error rejecting stock alert:", error);
+      res.status(500).json({ message: "Failed to reject stock alert" });
+    }
+  });
+  
   // Get all users (admin only)
   app.get("/api/admin/users", async (req, res) => {
     try {
