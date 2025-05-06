@@ -163,7 +163,8 @@ export const stockAlerts = pgTable("stock_alerts", {
   riskRating: integer("risk_rating"), // 1-5 scale
   timeFrame: text("time_frame"), // short, medium, long term
   potentialReturns: json("potential_returns").default([]), // array of {target, percentage} objects
-  requiredTier: text("required_tier").default("free"), // The minimum membership tier required to see this alert
+  requiredTier: text("required_tier").default("paid"), // The minimum membership tier required to see this alert (free, paid, premium, mentorship)
+  isFreeAlert: boolean("is_free_alert").default(false), // Whether this alert is available to free users (overrides requiredTier for "free" users)
   status: text("status").notNull().default("active"), // active, closed, cancelled
   isDraft: boolean("is_draft").default(true), // Whether this alert is a draft or published
   maxPrice: doublePrecision("max_price"), // To track the highest price reached

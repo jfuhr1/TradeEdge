@@ -654,10 +654,33 @@ export class MemStorage implements IStorage {
     return stockAlert;
   }
   
-  async getStockAlerts(): Promise<StockAlert[]> {
-    return Array.from(this.stockAlerts.values()).sort((a, b) => 
-      b.createdAt.getTime() - a.createdAt.getTime()
-    );
+  async getStockAlerts(userTier: string = 'paid'): Promise<StockAlert[]> {
+    return Array.from(this.stockAlerts.values())
+      .filter(alert => 
+        // Show an alert if:
+        // 1. The user's tier meets or exceeds the required tier OR
+        // 2. The alert is explicitly marked as a free alert (available to all users)
+        (
+          this.tierHasAccess(userTier, alert.requiredTier) || 
+          alert.isFreeAlert === true
+        )
+      )
+      .sort((a, b) => 
+        b.createdAt.getTime() - a.createdAt.getTime()
+      );
+  }
+  
+  // Helper method to determine if a user's tier has access to content requiring a specific tier
+  tierHasAccess(userTier: string, requiredTier: string): boolean {
+    const tierLevels: {[key: string]: number} = {
+      'free': 0,
+      'paid': 1,
+      'premium': 2,
+      'mentorship': 3,
+      'employee': 4
+    };
+    
+    return (tierLevels[userTier] ?? 0) >= (tierLevels[requiredTier] ?? 0);
   }
   
   async getStockAlert(id: number): Promise<StockAlert | undefined> {
