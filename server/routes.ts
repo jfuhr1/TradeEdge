@@ -413,10 +413,11 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "paid",
         status: "active",
-        technicalReasons: [2, 5, 7, 14],
-        confluences: [2, 4, 8],
-        tags: [2, 14],
-        risks: [1, 2, 3],
+        isFreeAlert: false,
+        technicalReasons: ["Support Level", "Volume Pattern", "Trend Continuation", "Bullish Flag"],
+        confluences: ["Earnings Beat", "AI Chip Demand", "Market Leadership"],
+        tags: ["Technology", "Semiconductor"],
+        risks: "Valuation concerns, competition from AMD, potential cyclical slowdown",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
@@ -424,7 +425,10 @@ async function createSampleStockAlerts() {
         description: "NVIDIA continues to dominate the AI computing space with its GPUs. Strong earnings and continued demand for AI solutions support the bullish outlook.",
         thesis: "NVIDIA's central position in the AI revolution and consistent execution makes it a core holding despite the high valuation.",
         highlightedNewsUrl: "https://www.fool.com/investing/2023/11/22/better-buy-nvidia-vs-amd/",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/nvda_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/nvda_weekly.png",
+        mainChartType: "daily"
       },
       {
         symbol: "AMZN",
@@ -444,49 +448,57 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "paid",
         status: "active",
-        technicalReasons: [1, 5, 7, 11],
-        confluences: [1, 8, 9],
-        tags: [2, 7],
-        risks: [1, 2],
+        isFreeAlert: false,
+        technicalReasons: ["Support Level", "Volume Pattern", "Trend Continuation", "Bullish Cup and Handle"],
+        confluences: ["AWS Growth", "Retail Margin Improvement", "Prime Subscription Growth"],
+        tags: ["Technology", "Retail"],
+        risks: "Retail competition, AWS growth slowdown, regulatory scrutiny",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
         approvalStatus: "approved",
-        description: "Amazon is showing strong momentum with AWS growth stabilizing and retail business improving margins. Technical charts show bullish patterns on multiple timeframes.",
-        thesis: "Amazon's operational improvements and potential for margin expansion in retail, combined with continued AWS strength, present a compelling opportunity.",
-        highlightedNewsUrl: "https://www.cnbc.com/2023/10/26/amazon-amzn-q3-earnings-report-2023.html",
-        currentPriceUpdateMethod: "manual"
+        description: "Amazon's AWS growth is accelerating, while retail margins improve. The technical chart shows a clear base formation with improving volume patterns.",
+        thesis: "Amazon's dual growth engines of AWS and retail, combined with margin expansion initiatives, make it well-positioned for the current market cycle.",
+        highlightedNewsUrl: "https://www.cnbc.com/2023/10/27/amazon-amzn-q3-earnings-report-2023.html",
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/amzn_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/amzn_weekly.png",
+        mainChartType: "daily"
       },
       {
         symbol: "TSLA",
         companyName: "Tesla, Inc.",
-        currentPrice: 176.75,
-        buyZoneMin: 170,
-        buyZoneMax: 180,
-        entryPoint: 175,
+        currentPrice: 178.05,
+        buyZoneMin: 175,
+        buyZoneMax: 185,
+        entryPoint: 180,
         stopLoss: 165,
-        target1: 190,
-        target2: 205,
-        target3: 220,
-        target1Percentage: 8.57,
-        target2Percentage: 17.14,
-        target3Percentage: 25.71,
-        riskRewardRatio: 2.5,
-        timeHorizon: "3-6 months",
+        target1: 200,
+        target2: 225,
+        target3: 250,
+        target1Percentage: 11.11,
+        target2Percentage: 25.00,
+        target3Percentage: 38.89,
+        riskRewardRatio: 2.67,
+        timeHorizon: "6-12 months",
         requiredTier: "premium",
         status: "active",
-        technicalReasons: [1, 3, 12],
-        confluences: [1, 10, 11],
-        tags: [2, 5],
-        risks: [1, 2, 3, 6],
+        isFreeAlert: false,
+        technicalReasons: ["Support Level", "Volume Pattern", "Trend Reversal", "RSI Divergence"],
+        confluences: ["Cybertruck Launch", "Margin Stabilization", "AI Development"],
+        tags: ["Technology", "Automotive", "AI"],
+        risks: "Competition, production challenges, execution on FSD and robotaxi promises",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
         approvalStatus: "approved",
-        description: "Tesla is finding support at key levels with RSI suggesting oversold conditions. Recent innovations in FSD and energy products offer growth vectors beyond the core auto business.",
-        thesis: "Tesla's oversold conditions and multiple growth drivers beyond EVs provide an attractive entry point at current levels.",
-        highlightedNewsUrl: "https://www.reuters.com/business/autos-transportation/tesla-cybertruck-deliveries-begin-musk-vision-finally-becomes-reality-2023-11-30/",
-        currentPriceUpdateMethod: "manual"
+        description: "Tesla's margins have stabilized while production ramps for Cybertruck. The stock is testing a key support level with strong RSI divergence.",
+        thesis: "Tesla's AI initiatives and ongoing demand for its existing models, combined with key technical support levels, create an attractive entry point.",
+        highlightedNewsUrl: "https://www.fool.com/investing/2023/11/27/why-tesla-stock-jumped-today/",
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/tsla_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/tsla_weekly.png",
+        mainChartType: "daily"
       },
       
       // Pending approval alerts
@@ -508,17 +520,21 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "paid",
         status: "active",
-        technicalReasons: [1, 5, 7, 14],
-        confluences: [1, 8, 9],
-        tags: [2, 14],
-        risks: [1, 3],
+        isFreeAlert: false,
+        technicalReasons: ["Support Level", "Volume Pattern", "Trend Continuation", "AI Chip Strategy"],
+        confluences: ["Data Center Growth", "Market Share Gains", "AI Chip Development"],
+        tags: ["Technology", "Semiconductor"],
+        risks: "Intel competition, execution challenges in new product launches",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvalStatus: "pending",
         description: "AMD is gaining market share in data centers with its EPYC processors. The technical chart shows a strong support zone with bullish MACD momentum.",
         thesis: "AMD's competitive position against Intel continues to improve, and its AI chip strategy is starting to show results.",
         highlightedNewsUrl: "https://www.marketwatch.com/story/amd-stock-rallies-as-wall-street-looks-for-ai-momentum-in-earnings-83e2cefc",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/amd_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/amd_weekly.png",
+        mainChartType: "daily"
       },
       {
         symbol: "META",
@@ -538,17 +554,21 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "paid",
         status: "active",
-        technicalReasons: [2, 5, 7, 12],
-        confluences: [2, 4, 9],
-        tags: [2, 14],
-        risks: [2, 3],
+        isFreeAlert: false,
+        technicalReasons: ["Resistance Breakout", "Volume Pattern", "Trend Continuation", "Revenue Growth"],
+        confluences: ["Cost-cutting", "AI Integration", "Ad Platform Improvements"],
+        tags: ["Technology", "Social Media", "AI"],
+        risks: "Regulatory challenges, competition in the social media space",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvalStatus: "pending",
         description: "Meta's cost-cutting measures are bearing fruit with improved margins. Technical charts show a breakout from a consolidation pattern with strong volume.",
         thesis: "Meta's operational efficiency improvements, combined with potential from AI integration and Reality Labs, provide multiple growth vectors.",
         highlightedNewsUrl: "https://www.investors.com/news/technology/meta-stock-facebook-parent-extends-gain-blowout-earnings-report/",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/meta_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/meta_weekly.png",
+        mainChartType: "daily"
       },
       
       // Rejected alerts
@@ -570,10 +590,11 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "premium",
         status: "active",
-        technicalReasons: [2, 5, 14],
-        confluences: [2, 13],
-        tags: [2, 14],
-        risks: [1, 2, 6],
+        isFreeAlert: false,
+        technicalReasons: ["Resistance Breakout", "Volume Pattern", "AI Integration"],
+        confluences: ["Government Contracts", "AI Software Expansion"],
+        tags: ["Technology", "Software", "AI", "Data Analytics"],
+        risks: "Valuation concerns, high government contract dependence, profitability challenges",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
@@ -582,7 +603,10 @@ async function createSampleStockAlerts() {
         description: "Palantir is expanding its commercial business while maintaining strong government contracts. Technical patterns show a potential breakout from a consolidation phase.",
         thesis: "Palantir's AI-focused software platforms position it well for growth as enterprises increase spending on data analysis solutions.",
         highlightedNewsUrl: "https://www.investors.com/news/technology/palantir-stock-palantir-earnings-q3-2023/",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/pltr_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/pltr_weekly.png",
+        mainChartType: "daily"
       },
       
       // Closed alerts (reached target)
@@ -605,10 +629,11 @@ async function createSampleStockAlerts() {
         requiredTier: "free",
         status: "closed",
         targetReached: 1,
-        technicalReasons: [1, 5, 7, 11],
-        confluences: [1, 8, 13],
-        tags: [2, 14],
-        risks: [1, 2],
+        isFreeAlert: true,
+        technicalReasons: ["Support Level", "Sector Momentum", "Earnings Beat", "Moving Average Crossover"],
+        confluences: ["Support Zone Strength", "Daily MACD Turning Up", "Weekly MACD Turning Up"],
+        tags: ["Technology", "AI"],
+        risks: "Ad revenue sensitivity to economic conditions, regulatory scrutiny",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
@@ -617,6 +642,9 @@ async function createSampleStockAlerts() {
         thesis: "Google's diverse business segments and AI leadership provide multiple growth vectors with a strong technical setup.",
         highlightedNewsUrl: "https://www.cnbc.com/2023/10/24/alphabet-googl-earnings-q3-2023.html",
         currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/goog_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/goog_weekly.png",
+        mainChartType: "daily",
         closedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) // 15 days ago
       }
     ];
