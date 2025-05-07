@@ -317,12 +317,8 @@ async function createSampleUsers() {
 // Function to create sample stock alerts
 async function createSampleStockAlerts() {
   try {
-    // Check if we already have stock alerts
-    const existingAlerts = await storage.getAllStockAlerts();
-    if (existingAlerts.length > 0) {
-      console.log("Stock alerts already exist. Skipping creation of sample alerts.");
-      return;
-    }
+    // For this demonstration, we'll force creating fresh sample data
+    console.log("Creating fresh sample stock alerts...");
     
     console.log("Creating sample stock alerts...");
     
@@ -347,10 +343,11 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "free",
         status: "active",
-        technicalReasons: [1, 5, 11],
-        confluences: [1, 3, 8],
-        tags: [2],
-        risks: [1, 4],
+        isFreeAlert: true,
+        technicalReasons: ["Support Level", "MACD Crossover", "Volume Increase"],
+        confluences: ["Quarterly Earnings Beat", "New Product Launch", "Dividend Increase"],
+        tags: ["Technology", "Consumer"],
+        risks: "Competition from other phone manufacturers, potential supply chain disruptions",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
@@ -358,7 +355,10 @@ async function createSampleStockAlerts() {
         description: "Apple continues to show strength with its services business growing steadily. The support zone has held multiple times, and we're seeing bullish MACD signals.",
         thesis: "Apple's continued expansion into services, combined with strong technical support, makes this an attractive buy in the current zone.",
         highlightedNewsUrl: "https://www.investors.com/news/technology/apple-stock-buy-now/",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/aapl_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/aapl_weekly.png",
+        mainChartType: "daily"
       },
       {
         symbol: "MSFT",
@@ -378,10 +378,11 @@ async function createSampleStockAlerts() {
         timeHorizon: "3-6 months",
         requiredTier: "free",
         status: "active",
-        technicalReasons: [2, 5, 6],
-        confluences: [2, 13],
-        tags: [2, 4],
-        risks: [1, 2],
+        isFreeAlert: true,
+        technicalReasons: ["Resistance Breakout", "Volume Pattern", "RSI Strength"],
+        confluences: ["Cloud Revenue Growth", "AI Integration"],
+        tags: ["Technology", "Cloud"],
+        risks: "Valuation concerns, regulatory challenges",
         lastUpdated: new Date(),
         submittedBy: 5, // contentadmin user
         approvedBy: 1, // PortfolioConsultant user
@@ -389,7 +390,10 @@ async function createSampleStockAlerts() {
         description: "Microsoft has broken through key resistance levels with strong volume. Azure growth continues to impress in the cloud segment.",
         thesis: "Microsoft's dominance in enterprise software and cloud services positions it well for continued growth, supported by strong technical signals.",
         highlightedNewsUrl: "https://www.cnbc.com/2023/10/24/microsoft-msft-earnings-q1-2024.html",
-        currentPriceUpdateMethod: "manual"
+        currentPriceUpdateMethod: "manual",
+        dailyChartImageUrl: "https://example.com/chart/msft_daily.png",
+        weeklyChartImageUrl: "https://example.com/chart/msft_weekly.png",
+        mainChartType: "daily"
       },
       {
         symbol: "NVDA",
