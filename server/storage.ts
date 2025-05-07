@@ -61,12 +61,14 @@ export interface IStorage {
   
   // Stock alert operations
   createStockAlert(alert: InsertStockAlert): Promise<StockAlert>;
+  getAllStockAlerts(): Promise<StockAlert[]>;
   getStockAlerts(): Promise<StockAlert[]>;
   getStockAlert(id: number): Promise<StockAlert | undefined>;
   getStockAlertsInBuyZone(): Promise<StockAlert[]>;
   getStockAlertsNearingTargets(): Promise<{target1: StockAlert[], target2: StockAlert[], target3: StockAlert[]}>;
   updateStockAlert(id: number, updates: Partial<StockAlert>): Promise<StockAlert | undefined>;
   updateStockAlertPrice(id: number, currentPrice: number): Promise<StockAlert | undefined>;
+  getAllStockAlerts(): Promise<StockAlert[]>;
   
   // Portfolio operations
   createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
@@ -652,6 +654,11 @@ export class MemStorage implements IStorage {
     
     this.stockAlerts.set(id, stockAlert);
     return stockAlert;
+  }
+  
+  async getAllStockAlerts(): Promise<StockAlert[]> {
+    // Return all stock alerts regardless of tier or approval status
+    return Array.from(this.stockAlerts.values());
   }
   
   async getStockAlerts(userTier: string = 'paid'): Promise<StockAlert[]> {

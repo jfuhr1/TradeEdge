@@ -314,6 +314,320 @@ async function createSampleUsers() {
   }
 }
 
+// Function to create sample stock alerts
+async function createSampleStockAlerts() {
+  try {
+    // Check if we already have stock alerts
+    const existingAlerts = await storage.getAllStockAlerts();
+    if (existingAlerts.length > 0) {
+      console.log("Stock alerts already exist. Skipping creation of sample alerts.");
+      return;
+    }
+    
+    console.log("Creating sample stock alerts...");
+    
+    // Sample stock alerts with different statuses and tiers
+    const sampleAlerts = [
+      // Approved alerts (active)
+      {
+        symbol: "AAPL",
+        companyName: "Apple Inc.",
+        currentPrice: 178.72,
+        buyZoneMin: 175,
+        buyZoneMax: 185,
+        entryPoint: 180,
+        stopLoss: 170,
+        target1: 195,
+        target2: 210,
+        target3: 230,
+        target1Percentage: 8.33,
+        target2Percentage: 16.67,
+        target3Percentage: 27.78,
+        riskRewardRatio: 3.33,
+        timeHorizon: "3-6 months",
+        requiredTier: "free",
+        status: "active",
+        technicalReasons: [1, 5, 11],
+        confluences: [1, 3, 8],
+        tags: [2],
+        risks: [1, 4],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "Apple continues to show strength with its services business growing steadily. The support zone has held multiple times, and we're seeing bullish MACD signals.",
+        thesis: "Apple's continued expansion into services, combined with strong technical support, makes this an attractive buy in the current zone.",
+        highlightedNewsUrl: "https://www.investors.com/news/technology/apple-stock-buy-now/",
+        currentPriceUpdateMethod: "manual"
+      },
+      {
+        symbol: "MSFT",
+        companyName: "Microsoft Corporation",
+        currentPrice: 410.2,
+        buyZoneMin: 405,
+        buyZoneMax: 415,
+        entryPoint: 410,
+        stopLoss: 390,
+        target1: 430,
+        target2: 450,
+        target3: 480,
+        target1Percentage: 4.88,
+        target2Percentage: 9.76,
+        target3Percentage: 17.07,
+        riskRewardRatio: 2.5,
+        timeHorizon: "3-6 months",
+        requiredTier: "free",
+        status: "active",
+        technicalReasons: [2, 5, 6],
+        confluences: [2, 13],
+        tags: [2, 4],
+        risks: [1, 2],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "Microsoft has broken through key resistance levels with strong volume. Azure growth continues to impress in the cloud segment.",
+        thesis: "Microsoft's dominance in enterprise software and cloud services positions it well for continued growth, supported by strong technical signals.",
+        highlightedNewsUrl: "https://www.cnbc.com/2023/10/24/microsoft-msft-earnings-q1-2024.html",
+        currentPriceUpdateMethod: "manual"
+      },
+      {
+        symbol: "NVDA",
+        companyName: "NVIDIA Corporation",
+        currentPrice: 950.32,
+        buyZoneMin: 940,
+        buyZoneMax: 980,
+        entryPoint: 960,
+        stopLoss: 900,
+        target1: 1050,
+        target2: 1150,
+        target3: 1250,
+        target1Percentage: 9.38,
+        target2Percentage: 19.79,
+        target3Percentage: 30.21,
+        riskRewardRatio: 3.75,
+        timeHorizon: "3-6 months",
+        requiredTier: "paid",
+        status: "active",
+        technicalReasons: [2, 5, 7, 14],
+        confluences: [2, 4, 8],
+        tags: [2, 14],
+        risks: [1, 2, 3],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "NVIDIA continues to dominate the AI computing space with its GPUs. Strong earnings and continued demand for AI solutions support the bullish outlook.",
+        thesis: "NVIDIA's central position in the AI revolution and consistent execution makes it a core holding despite the high valuation.",
+        highlightedNewsUrl: "https://www.fool.com/investing/2023/11/22/better-buy-nvidia-vs-amd/",
+        currentPriceUpdateMethod: "manual"
+      },
+      {
+        symbol: "AMZN",
+        companyName: "Amazon.com, Inc.",
+        currentPrice: 185.07,
+        buyZoneMin: 180,
+        buyZoneMax: 190,
+        entryPoint: 185,
+        stopLoss: 175,
+        target1: 200,
+        target2: 215,
+        target3: 230,
+        target1Percentage: 8.11,
+        target2Percentage: 16.22,
+        target3Percentage: 24.32,
+        riskRewardRatio: 3.0,
+        timeHorizon: "3-6 months",
+        requiredTier: "paid",
+        status: "active",
+        technicalReasons: [1, 5, 7, 11],
+        confluences: [1, 8, 9],
+        tags: [2, 7],
+        risks: [1, 2],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "Amazon is showing strong momentum with AWS growth stabilizing and retail business improving margins. Technical charts show bullish patterns on multiple timeframes.",
+        thesis: "Amazon's operational improvements and potential for margin expansion in retail, combined with continued AWS strength, present a compelling opportunity.",
+        highlightedNewsUrl: "https://www.cnbc.com/2023/10/26/amazon-amzn-q3-earnings-report-2023.html",
+        currentPriceUpdateMethod: "manual"
+      },
+      {
+        symbol: "TSLA",
+        companyName: "Tesla, Inc.",
+        currentPrice: 176.75,
+        buyZoneMin: 170,
+        buyZoneMax: 180,
+        entryPoint: 175,
+        stopLoss: 165,
+        target1: 190,
+        target2: 205,
+        target3: 220,
+        target1Percentage: 8.57,
+        target2Percentage: 17.14,
+        target3Percentage: 25.71,
+        riskRewardRatio: 2.5,
+        timeHorizon: "3-6 months",
+        requiredTier: "premium",
+        status: "active",
+        technicalReasons: [1, 3, 12],
+        confluences: [1, 10, 11],
+        tags: [2, 5],
+        risks: [1, 2, 3, 6],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "Tesla is finding support at key levels with RSI suggesting oversold conditions. Recent innovations in FSD and energy products offer growth vectors beyond the core auto business.",
+        thesis: "Tesla's oversold conditions and multiple growth drivers beyond EVs provide an attractive entry point at current levels.",
+        highlightedNewsUrl: "https://www.reuters.com/business/autos-transportation/tesla-cybertruck-deliveries-begin-musk-vision-finally-becomes-reality-2023-11-30/",
+        currentPriceUpdateMethod: "manual"
+      },
+      
+      // Pending approval alerts
+      {
+        symbol: "AMD",
+        companyName: "Advanced Micro Devices, Inc.",
+        currentPrice: 158.40,
+        buyZoneMin: 155,
+        buyZoneMax: 165,
+        entryPoint: 160,
+        stopLoss: 150,
+        target1: 175,
+        target2: 190,
+        target3: 210,
+        target1Percentage: 9.38,
+        target2Percentage: 18.75,
+        target3Percentage: 31.25,
+        riskRewardRatio: 3.0,
+        timeHorizon: "3-6 months",
+        requiredTier: "paid",
+        status: "active",
+        technicalReasons: [1, 5, 7, 14],
+        confluences: [1, 8, 9],
+        tags: [2, 14],
+        risks: [1, 3],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvalStatus: "pending",
+        description: "AMD is gaining market share in data centers with its EPYC processors. The technical chart shows a strong support zone with bullish MACD momentum.",
+        thesis: "AMD's competitive position against Intel continues to improve, and its AI chip strategy is starting to show results.",
+        highlightedNewsUrl: "https://www.marketwatch.com/story/amd-stock-rallies-as-wall-street-looks-for-ai-momentum-in-earnings-83e2cefc",
+        currentPriceUpdateMethod: "manual"
+      },
+      {
+        symbol: "META",
+        companyName: "Meta Platforms, Inc.",
+        currentPrice: 465.70,
+        buyZoneMin: 460,
+        buyZoneMax: 475,
+        entryPoint: 468,
+        stopLoss: 450,
+        target1: 490,
+        target2: 515,
+        target3: 550,
+        target1Percentage: 4.70,
+        target2Percentage: 10.04,
+        target3Percentage: 17.52,
+        riskRewardRatio: 2.22,
+        timeHorizon: "3-6 months",
+        requiredTier: "paid",
+        status: "active",
+        technicalReasons: [2, 5, 7, 12],
+        confluences: [2, 4, 9],
+        tags: [2, 14],
+        risks: [2, 3],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvalStatus: "pending",
+        description: "Meta's cost-cutting measures are bearing fruit with improved margins. Technical charts show a breakout from a consolidation pattern with strong volume.",
+        thesis: "Meta's operational efficiency improvements, combined with potential from AI integration and Reality Labs, provide multiple growth vectors.",
+        highlightedNewsUrl: "https://www.investors.com/news/technology/meta-stock-facebook-parent-extends-gain-blowout-earnings-report/",
+        currentPriceUpdateMethod: "manual"
+      },
+      
+      // Rejected alerts
+      {
+        symbol: "PLTR",
+        companyName: "Palantir Technologies Inc.",
+        currentPrice: 22.15,
+        buyZoneMin: 21,
+        buyZoneMax: 23,
+        entryPoint: 22,
+        stopLoss: 20,
+        target1: 25,
+        target2: 28,
+        target3: 32,
+        target1Percentage: 13.64,
+        target2Percentage: 27.27,
+        target3Percentage: 45.45,
+        riskRewardRatio: 2.5,
+        timeHorizon: "3-6 months",
+        requiredTier: "premium",
+        status: "active",
+        technicalReasons: [2, 5, 14],
+        confluences: [2, 13],
+        tags: [2, 14],
+        risks: [1, 2, 6],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "rejected",
+        approvalNotes: "Risk/reward ratio is attractive, but concerns about valuation and government contract dependence make this too risky at the moment. Re-evaluate after next earnings report.",
+        description: "Palantir is expanding its commercial business while maintaining strong government contracts. Technical patterns show a potential breakout from a consolidation phase.",
+        thesis: "Palantir's AI-focused software platforms position it well for growth as enterprises increase spending on data analysis solutions.",
+        highlightedNewsUrl: "https://www.investors.com/news/technology/palantir-stock-palantir-earnings-q3-2023/",
+        currentPriceUpdateMethod: "manual"
+      },
+      
+      // Closed alerts (reached target)
+      {
+        symbol: "GOOG",
+        companyName: "Alphabet Inc.",
+        currentPrice: 157.95,
+        buyZoneMin: 130,
+        buyZoneMax: 140,
+        entryPoint: 135,
+        stopLoss: 125,
+        target1: 150,
+        target2: 165,
+        target3: 180,
+        target1Percentage: 11.11,
+        target2Percentage: 22.22,
+        target3Percentage: 33.33,
+        riskRewardRatio: 3.0,
+        timeHorizon: "3-6 months",
+        requiredTier: "free",
+        status: "closed",
+        targetReached: 1,
+        technicalReasons: [1, 5, 7, 11],
+        confluences: [1, 8, 13],
+        tags: [2, 14],
+        risks: [1, 2],
+        lastUpdated: new Date(),
+        submittedBy: 5, // contentadmin user
+        approvedBy: 1, // PortfolioConsultant user
+        approvalStatus: "approved",
+        description: "Google's advertising business is rebounding while Cloud division shows strong growth. Technical patterns indicate a strong support zone with improving momentum.",
+        thesis: "Google's diverse business segments and AI leadership provide multiple growth vectors with a strong technical setup.",
+        highlightedNewsUrl: "https://www.cnbc.com/2023/10/24/alphabet-googl-earnings-q3-2023.html",
+        currentPriceUpdateMethod: "manual",
+        closedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) // 15 days ago
+      }
+    ];
+    
+    // Create each stock alert
+    for (const alertData of sampleAlerts) {
+      await storage.createStockAlert(alertData);
+    }
+    
+    console.log("Sample stock alerts created successfully");
+  } catch (error) {
+    console.error("Error creating sample stock alerts:", error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
@@ -326,6 +640,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize sample notifications
   await createSampleNotifications();
+  
+  // Create sample stock alerts
+  await createSampleStockAlerts();
 
   // Stock Alerts API
   app.get("/api/stock-alerts", async (req, res) => {
