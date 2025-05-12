@@ -191,22 +191,34 @@ export default function SignupPage() {
   
   const selectedTier = form.watch("tier");
   
-  const nextStep = () => {
+  const nextStep = async () => {
     // Validate fields for the current step
     if (currentStep === 1) {
-      const tierValid = form.trigger("tier");
-      if (tierValid) {
+      const accountInfoValid = await form.trigger(["username", "email", "password", "confirmPassword"]);
+      if (accountInfoValid) {
         setCurrentStep(2);
       }
     } else if (currentStep === 2) {
-      const accountInfoValid = form.trigger(["username", "email", "password", "confirmPassword"]);
-      if (accountInfoValid) {
+      const personalInfoValid = await form.trigger(["name", "phone"]);
+      if (personalInfoValid) {
         setCurrentStep(3);
       }
     } else if (currentStep === 3) {
-      const personalInfoValid = form.trigger(["name", "phone"]);
-      if (personalInfoValid) {
+      const legalValid = await form.trigger(["disclaimerAcknowledged", "termsAgreed"]);
+      if (legalValid) {
         setCurrentStep(4);
+      }
+    } else if (currentStep === 4) {
+      const tierValid = await form.trigger("tier");
+      const selectedTier = form.getValues("tier");
+      
+      if (selectedTier !== "free") {
+        const paymentValid = await form.trigger(["cardNumber", "cardExpiry", "cardCVC", "billingAddress"]);
+        if (tierValid && paymentValid) {
+          form.handleSubmit(onSubmit)();
+        }
+      } else if (tierValid) {
+        form.handleSubmit(onSubmit)();
       }
     }
   };
@@ -279,10 +291,10 @@ export default function SignupPage() {
                     )}
                   </div>
                   <div className="mt-2 text-sm font-medium">
-                    {step === 1 && "Membership"}
-                    {step === 2 && "Account"}
-                    {step === 3 && "Profile"}
-                    {step === 4 && "Legal"}
+                    {step === 1 && "Account"}
+                    {step === 2 && "Profile"}
+                    {step === 3 && "Legal"}
+                    {step === 4 && "Membership"}
                   </div>
                 </div>
               ))}
@@ -293,101 +305,6 @@ export default function SignupPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {currentStep === 1 && (
-                  <div>
-                    <h2 className="text-2xl font-semibold mb-6">Choose Your Membership</h2>
-                    <FormField
-                      control={form.control}
-                      name="tier"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormMessage />
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
-                          >
-                            {TIERS.map((tier) => (
-                              <div key={tier.id}>
-                                <FormControl>
-                                  <RadioGroupItem
-                                    value={tier.id}
-                                    id={tier.id}
-                                    className="peer sr-only"
-                                  />
-                                </FormControl>
-                                <Label
-                                  htmlFor={tier.id}
-                                  className="flex flex-col h-full space-y-3 rounded-xl border-2 border-muted bg-popover p-5 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <div className="text-xl font-semibold">{tier.name}</div>
-                                      <div className="text-sm text-muted-foreground mt-1">
-                                        {tier.description}
-                                      </div>
-                                    </div>
-                                    {tier.id === "paid" && (
-                                      <Badge variant="outline" className="bg-primary/10">Most Popular</Badge>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex items-end gap-1 mt-2">
-                                    <span className="text-2xl font-bold">{tier.price}</span>
-                                    <span className="text-sm text-muted-foreground">{tier.period}</span>
-                                  </div>
-                                                      
-                                  <Separator className="my-3" />
-                                  
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Includes</h4>
-                                    <ul className="space-y-2">
-                                      {tier.features.map((feature, index) => (
-                                        <li key={index} className="flex items-start gap-2 text-sm">
-                                          <CheckIcon className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                          <span>{feature}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                  
-                                  {tier.limitations.length > 0 && (
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium">Limitations</h4>
-                                      <ul className="space-y-2">
-                                        {tier.limitations.map((limitation, index) => (
-                                          <li key={index} className="flex items-start gap-2 text-sm">
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              width="24"
-                                              height="24"
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              stroke="currentColor"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5"
-                                            >
-                                              <path d="M18 6 6 18"></path>
-                                              <path d="m6 6 12 12"></path>
-                                            </svg>
-                                            <span className="text-muted-foreground">{limitation}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </Label>
-                              </div>
-                            ))}
-                          </RadioGroup>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-
-                {currentStep === 2 && (
                   <div>
                     <h2 className="text-2xl font-semibold mb-6">Create Your Account</h2>
                     <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -447,7 +364,7 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 2 && (
                   <div>
                     <h2 className="text-2xl font-semibold mb-6">Your Profile</h2>
                     <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -478,75 +395,10 @@ export default function SignupPage() {
                         )}
                       />
                     </div>
-                    
-                    {selectedTier !== "free" && (
-                      <>
-                        <h3 className="text-xl font-semibold mt-8 mb-6">Payment Information</h3>
-                        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="cardNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Card Number</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Input placeholder="4242 4242 4242 4242" {...field} />
-                                    <CreditCardIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="cardExpiry"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Expiry Date</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="MM/YY" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="cardCVC"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>CVC</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="123" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <FormField
-                            control={form.control}
-                            name="billingAddress"
-                            render={({ field }) => (
-                              <FormItem className="col-span-2">
-                                <FormLabel>Billing Address</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="123 Main St, City, State, ZIP" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </>
-                    )}
                   </div>
                 )}
 
-                {currentStep === 4 && (
+                {currentStep === 3 && (
                   <div>
                     <h2 className="text-2xl font-semibold mb-6">Legal Acknowledgments</h2>
                     <div className="space-y-6">
@@ -640,6 +492,175 @@ export default function SignupPage() {
                     </div>
                   </div>
                 )}
+
+                {currentStep === 4 && (
+                  <div>
+                    <h2 className="text-2xl font-semibold mb-6">Choose Your Membership</h2>
+                    <FormField
+                      control={form.control}
+                      name="tier"
+                      render={({ field }) => (
+                        <FormItem className="space-y-4">
+                          <FormMessage />
+                          <RadioGroup
+                            value={field.value}
+                            onValueChange={(value: string) => {
+                              field.onChange(value);
+                              // Reset payment fields when switching to free tier
+                              if (value === "free") {
+                                form.setValue("cardNumber", "");
+                                form.setValue("cardExpiry", "");
+                                form.setValue("cardCVC", "");
+                                form.setValue("billingAddress", "");
+                              }
+                            }}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+                          >
+                            {TIERS.map((tier) => (
+                              <div key={tier.id}>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value={tier.id}
+                                    id={tier.id}
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <Label
+                                  htmlFor={tier.id}
+                                  className="flex flex-col h-full space-y-3 rounded-xl border-2 border-muted bg-popover p-5 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <div className="text-xl font-semibold">{tier.name}</div>
+                                      <div className="text-sm text-muted-foreground mt-1">
+                                        {tier.description}
+                                      </div>
+                                    </div>
+                                    {tier.id === "paid" && (
+                                      <Badge variant="outline" className="bg-primary/10">Most Popular</Badge>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-end gap-1 mt-2">
+                                    <span className="text-2xl font-bold">{tier.price}</span>
+                                    <span className="text-sm text-muted-foreground">{tier.period}</span>
+                                  </div>
+                                                      
+                                  <Separator className="my-3" />
+                                  
+                                  <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Includes</h4>
+                                    <ul className="space-y-2">
+                                      {tier.features.map((feature: string, index: number) => (
+                                        <li key={index} className="flex items-start gap-2 text-sm">
+                                          <CheckIcon className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                          <span>{feature}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  
+                                  {tier.limitations.length > 0 && (
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium">Limitations</h4>
+                                      <ul className="space-y-2">
+                                        {tier.limitations.map((limitation: string, index: number) => (
+                                          <li key={index} className="flex items-start gap-2 text-sm">
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width="24"
+                                              height="24"
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5"
+                                            >
+                                              <path d="M18 6 6 18"></path>
+                                              <path d="m6 6 12 12"></path>
+                                            </svg>
+                                            <span className="text-muted-foreground">{limitation}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedTier !== "free" && (
+                      <>
+                        <h3 className="text-xl font-semibold mt-8 mb-6">Payment Information</h3>
+                        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                          <FormField
+                            control={form.control}
+                            name="cardNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Card Number</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input placeholder="4242 4242 4242 4242" {...field} />
+                                    <CreditCardIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="cardExpiry"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Expiry Date</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="MM/YY" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="cardCVC"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>CVC</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="123" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name="billingAddress"
+                            render={({ field }) => (
+                              <FormItem className="col-span-2">
+                                <FormLabel>Billing Address</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="123 Main St, City, State, ZIP" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
                 
                 <div className="flex justify-between pt-4">
                   {currentStep > 1 ? (
@@ -660,7 +681,7 @@ export default function SignupPage() {
                       <ArrowRightIcon className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="button" onClick={nextStep} disabled={isSubmitting}>
                       {isSubmitting ? "Creating Account..." : "Complete Signup"}
                     </Button>
                   )}
