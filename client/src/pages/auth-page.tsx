@@ -4,6 +4,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ChartLine, Trophy } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import type { User } from "@/hooks/use-auth";  // Import the User type
 
 import {
   Card,
@@ -28,11 +30,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
 
 // Login form schema
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -61,7 +62,7 @@ export default function AuthPage() {
   useEffect(() => {
     if (user) {
       // If user is admin, redirect to admin dashboard
-      if (user.isAdmin) {
+      if (user.is_admin) {
         setLocation("/admin");
       } else {
         // Otherwise, redirect to user dashboard
@@ -74,7 +75,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -93,33 +94,19 @@ export default function AuthPage() {
 
   // Handle login form submission
   function onLoginSubmit(data: LoginFormValues) {
-    loginMutation.mutate(data, {
-      onSuccess: (user) => {
-        // Navigate to appropriate page based on admin status
-        if (user.isAdmin) {
-          setLocation("/admin");
-        } else {
-          setLocation("/dashboard");
-        }
-      }
-    });
+    loginMutation.mutate(data);
   }
 
   // Handle register form submission
   function onRegisterSubmit(data: RegisterFormValues) {
-    // Extract data without confirmPassword which isn't part of our API schema
-    const { confirmPassword, ...registerData } = data;
+    const registerData = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      name: data.name
+    };
     
-    registerMutation.mutate(registerData, {
-      onSuccess: (user) => {
-        // Navigate to appropriate page based on admin status
-        if (user.isAdmin) {
-          setLocation("/admin");
-        } else {
-          setLocation("/dashboard");
-        }
-      }
-    });
+    registerMutation.mutate(registerData);
   }
 
   return (
@@ -212,17 +199,21 @@ export default function AuthPage() {
                 </TabsList>
                 
                 {/* Login Form */}
-                <TabsContent value="login">
+                <TabsContent value="login" className="space-y-4">
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 mt-4">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="yourusername" {...field} />
+                              <Input 
+                                type="email"
+                                placeholder="you@example.com" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -236,7 +227,11 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input 
+                                type="password" 
+                                placeholder="••••••••" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -246,15 +241,15 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={loginMutation.isPending}
+                        disabled={loginMutation.isLoading}
                       >
-                        {loginMutation.isPending ? (
+                        {loginMutation.isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Logging in...
+                            Signing in...
                           </>
                         ) : (
-                          "Login"
+                          "Sign In"
                         )}
                       </Button>
                     </form>

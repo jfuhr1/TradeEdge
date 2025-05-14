@@ -11,6 +11,7 @@ import {
   UserIcon, 
   ShieldCheckIcon 
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -231,22 +232,45 @@ export default function SignupPage() {
     setIsSubmitting(true);
     
     try {
-      // In a production app, this would connect to your real API
-      // Simulating API call for demonstration purposes
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Step 1: Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            username: values.username,
+            full_name: values.name
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Step 2: Update the profile with additional information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          phone_number: values.phone || null,
+          financial_disclaimer_accepted: values.disclaimerAcknowledged,
+          terms_accepted: values.termsAgreed,
+          privacy_accepted: values.termsAgreed // Using same value as terms for now
+        })
+        .eq('id', authData.user!.id);
+
+      if (profileError) throw profileError;
       
       // Navigate to the welcome page after successful signup
       toast({
         title: "Account created successfully!",
-        description: "Welcome to TradeEdge Pro!",
+        description: "Please check your email to verify your account.",
       });
       
       navigate("/welcome");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
       toast({
         title: "Error creating account",
-        description: "There was an issue creating your account. Please try again.",
+        description: error.message || "There was an issue creating your account. Please try again.",
         variant: "destructive",
       });
     } finally {
