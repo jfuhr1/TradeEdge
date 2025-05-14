@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -17,8 +18,18 @@ type AuthContextType = {
   registerMutation: UseMutationResult<SelectUser, Error, RegisterData>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
-type RegisterData = Pick<InsertUser, "username" | "password" | "email" | "firstName" | "lastName">;
+type LoginData = {
+  email: string;
+  password: string;
+};
+
+type RegisterData = {
+  email: string;
+  password: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -47,37 +58,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const {
-    data: serverUser,
+    data: user,
     error,
     isLoading,
-  } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    refetch: refetchUser
+  } = useQuery<SelectUser | null, Error>({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (!authUser) return null;
+
+      // Get additional profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (!profile) return null;
+
+      // Combine auth user and profile data
+      return {
+        id: authUser.id,
+        email: authUser.email!,
+        username: profile.username,
+        firstName: profile.full_name?.split(' ')[0] || '',
+        lastName: profile.full_name?.split(' ')[1] || '',
+        phone: profile.phone_number,
+        tier: "free", // Default to free, update based on your subscription logic
+        profilePicture: null,
+        completedLessons: [],
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        isAdmin: false, // You'll need to implement admin role logic
+        createdAt: new Date(authUser.created_at)
+      };
+    }
   });
-  
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        refetchUser();
+      } else if (event === 'SIGNED_OUT') {
+        refetchUser();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [refetchUser]);
+
   // Use demo user if in demo mode, otherwise use server user
-  const user = isDemoMode ? demoUser : serverUser;
+  const authUser = isDemoMode ? demoUser : user;
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) throw error;
+      if (!user) throw new Error('No user returned after login');
+
+      // Get profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      return {
+        id: user.id,
+        email: user.email!,
+        username: profile.username,
+        firstName: profile.full_name?.split(' ')[0] || '',
+        lastName: profile.full_name?.split(' ')[1] || '',
+        phone: profile.phone_number,
+        tier: "free",
+        profilePicture: null,
+        completedLessons: [],
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        isAdmin: false,
+        createdAt: new Date(user.created_at)
+      };
     },
     onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.firstName} ${user.lastName}!`,
       });
-      
-      // Redirect based on admin status
-      setTimeout(() => {
-        if (user.isAdmin) {
-          window.location.href = "/admin";
-        } else {
-          window.location.href = "/dashboard";
-        }
-      }, 500); // Small delay to allow toast to be shown
     },
     onError: (error: Error) => {
       toast({
@@ -89,25 +164,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
-    },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.firstName} ${user.lastName}!`,
+    mutationFn: async (data: RegisterData) => {
+      // Step 1: Sign up with Supabase Auth
+      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            username: data.username,
+            full_name: `${data.firstName} ${data.lastName}`
+          }
+        }
       });
 
-      // Redirect based on admin status
-      setTimeout(() => {
-        if (user.isAdmin) {
-          window.location.href = "/admin";
-        } else {
-          window.location.href = "/dashboard";
-        }
-      }, 500); // Small delay to allow toast to be shown
+      if (signUpError) throw signUpError;
+      if (!user) throw new Error('No user returned after registration');
+
+      // Step 2: Update profile with additional information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          full_name: `${data.firstName} ${data.lastName}`
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      return {
+        id: user.id,
+        email: user.email!,
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: null,
+        tier: "free",
+        profilePicture: null,
+        completedLessons: [],
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        isAdmin: false,
+        createdAt: new Date(user.created_at)
+      };
+    },
+    onSuccess: (user: SelectUser) => {
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account.",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -120,25 +224,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // If in demo mode, clear localStorage
-      if (isDemoMode) {
-        localStorage.removeItem('demoMode');
-      } else {
-        // Otherwise, call the actual logout API
-        await apiRequest("POST", "/api/logout");
-      }
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-      
-      // Redirect to auth page
-      setTimeout(() => {
-        window.location.href = "/auth";
-      }, 500); // Small delay to allow toast to be shown
     },
     onError: (error: Error) => {
       toast({
@@ -152,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user: authUser ?? null,
         isLoading,
         error,
         loginMutation,

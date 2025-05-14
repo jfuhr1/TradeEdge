@@ -32,7 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 // Login form schema
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -53,7 +53,6 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const { loginMutation, registerMutation, user } = useAuth();
   const [location, setLocation] = useLocation();
 
@@ -74,7 +73,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -107,10 +106,17 @@ export default function AuthPage() {
 
   // Handle register form submission
   function onRegisterSubmit(data: RegisterFormValues) {
-    // Extract data without confirmPassword which isn't part of our API schema
-    const { confirmPassword, ...registerData } = data;
+    // Split name into first and last name
+    const [firstName, ...lastNameParts] = data.name.split(" ");
+    const lastName = lastNameParts.join(" ");
     
-    registerMutation.mutate(registerData, {
+    registerMutation.mutate({
+      email: data.email,
+      password: data.password,
+      username: data.username,
+      firstName,
+      lastName: lastName || firstName // If no last name provided, use first name
+    }, {
       onSuccess: (user) => {
         // Navigate to appropriate page based on admin status
         if (user.isAdmin) {
@@ -199,36 +205,38 @@ export default function AuthPage() {
         <div className="p-8 md:w-1/2 flex items-center justify-center bg-gray-50">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle>Welcome to TradeEdge Pro</CardTitle>
+              <CardTitle>Welcome Back</CardTitle>
               <CardDescription>
-                Login or create an account to access stock alerts and trading resources
+                Sign in to your account to continue
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="login">Login</TabsTrigger>
                   <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
                 
-                {/* Login Form */}
                 <TabsContent value="login">
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 mt-4">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="yourusername" {...field} />
+                              <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={loginForm.control}
                         name="password"
@@ -236,76 +244,37 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input 
+                                type="password" 
+                                placeholder="Enter your password" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <Button 
                         type="submit" 
-                        className="w-full" 
+                        className="w-full"
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Logging in...
+                            Signing in...
                           </>
                         ) : (
-                          "Login"
+                          "Sign In"
                         )}
                       </Button>
                     </form>
                   </Form>
-                  
-                  <div className="mt-4 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Don't have an account?{" "}
-                      <Button 
-                        variant="link" 
-                        className="p-0" 
-                        onClick={() => setActiveTab("register")}
-                      >
-                        Register
-                      </Button>
-                    </p>
-                  </div>
-                  
-                  <div className="border-t pt-4 mt-4">
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      disabled={isDemoLoading}
-                      onClick={() => {
-                        // Simulate successful login for demo purposes
-                        setIsDemoLoading(true);
-                        setTimeout(() => {
-                          setIsDemoLoading(false);
-                          // Set demo mode in localStorage
-                          localStorage.setItem('demoMode', 'true');
-                          // Use full page refresh to reload the app with demo login
-                          window.location.href = "/";
-                        }, 800);
-                      }}
-                    >
-                      {isDemoLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading demo...
-                        </>
-                      ) : (
-                        "Skip Login (Demo Mode)"
-                      )}
-                    </Button>
-                  </div>
                 </TabsContent>
                 
-                {/* Register Form */}
                 <TabsContent value="register">
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 mt-4">
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="username"
@@ -313,13 +282,15 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input placeholder="yourusername" {...field} />
+                              <Input 
+                                placeholder="Choose a username" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={registerForm.control}
                         name="name"
@@ -327,13 +298,15 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="John Doe" {...field} />
+                              <Input 
+                                placeholder="Enter your full name" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={registerForm.control}
                         name="email"
@@ -341,13 +314,16 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="you@example.com" {...field} />
+                              <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={registerForm.control}
                         name="password"
@@ -355,13 +331,16 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input 
+                                type="password" 
+                                placeholder="Choose a password" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={registerForm.control}
                         name="confirmPassword"
@@ -369,22 +348,25 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input 
+                                type="password" 
+                                placeholder="Confirm your password" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <Button 
                         type="submit" 
-                        className="w-full" 
+                        className="w-full"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating account...
+                            Creating Account...
                           </>
                         ) : (
                           "Create Account"
@@ -392,47 +374,6 @@ export default function AuthPage() {
                       </Button>
                     </form>
                   </Form>
-                  
-                  <div className="mt-4 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Already have an account?{" "}
-                      <Button 
-                        variant="link" 
-                        className="p-0" 
-                        onClick={() => setActiveTab("login")}
-                      >
-                        Login
-                      </Button>
-                    </p>
-                  </div>
-                  
-                  <div className="border-t pt-4 mt-4">
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      disabled={isDemoLoading}
-                      onClick={() => {
-                        // Simulate successful registration for demo purposes
-                        setIsDemoLoading(true);
-                        setTimeout(() => {
-                          setIsDemoLoading(false);
-                          // Set demo mode in localStorage
-                          localStorage.setItem('demoMode', 'true');
-                          // Use full page refresh to reload the app with demo login
-                          window.location.href = "/";
-                        }, 800);
-                      }}
-                    >
-                      {isDemoLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading demo...
-                        </>
-                      ) : (
-                        "Skip Registration (Demo Mode)"
-                      )}
-                    </Button>
-                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
