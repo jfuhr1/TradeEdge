@@ -2,10 +2,12 @@ import { Link, useLocation } from "wouter";
 import { Home, Bell, Briefcase, GraduationCap, Calendar, Settings, ChartLine, Trophy, ChevronLeft, ChevronRight, BellRing, CreditCard, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { logoutMutation } = useAuth();
   
   // Demo user data - hardcoded for display purposes
   const demoUser = {
@@ -23,6 +25,10 @@ export default function Sidebar() {
     { href: "/account-settings", icon: <CreditCard className="w-5 h-5" />, label: "Membership" },
     { href: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <aside className={`desktop-sidebar fixed ${collapsed ? 'w-16' : 'w-64'} h-full bg-white border-r border-neutral-200 overflow-y-auto transition-all duration-300`}>
@@ -67,11 +73,13 @@ export default function Sidebar() {
               >
                 {demoUser.tier.charAt(0).toUpperCase() + demoUser.tier.slice(1)}
               </span>
-              <Link href="/auth">
-                <button className="text-xs text-primary ml-2">
-                  Logout
-                </button>
-              </Link>
+              <button 
+                onClick={handleLogout}
+                className="text-xs text-primary ml-2 hover:text-primary/80"
+                disabled={logoutMutation.isPending}
+              >
+                {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+              </button>
             </div>
           </div>
         </div>
