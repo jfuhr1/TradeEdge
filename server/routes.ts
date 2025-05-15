@@ -6,6 +6,7 @@ import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
+import stripeRoutes from './services/stripe/routes';
 import { 
   insertStockAlertSchema, 
   insertPortfolioItemSchema, 
@@ -675,6 +676,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Create sample stock alerts
   await createSampleStockAlerts();
+
+  // Register Stripe routes
+  app.use('/api/stripe', stripeRoutes);
 
   // Stock Alerts API
   app.get("/api/stock-alerts", async (req, res) => {
