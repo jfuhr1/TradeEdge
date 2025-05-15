@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIERS } from './stripeClient';
+import { supabase } from '@/lib/supabase';
 
 export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
 
@@ -16,10 +17,16 @@ export async function createSubscriptionCheckout({
   cancelUrl,
 }: CreateCheckoutSessionParams) {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('No authentication token found');
+    }
+
     const response = await fetch('/api/stripe/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
         priceId,
@@ -30,7 +37,8 @@ export async function createSubscriptionCheckout({
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
     const { sessionId } = await response.json();

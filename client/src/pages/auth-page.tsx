@@ -56,19 +56,6 @@ export default function AuthPage() {
   const { loginMutation, registerMutation, user } = useAuth();
   const [location, setLocation] = useLocation();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      // If user is admin, redirect to admin dashboard
-      if (user.isAdmin) {
-        setLocation("/admin");
-      } else {
-        // Otherwise, redirect to user dashboard
-        setLocation("/dashboard");
-      }
-    }
-  }, [user, setLocation]);
-  
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -94,11 +81,11 @@ export default function AuthPage() {
   function onLoginSubmit(data: LoginFormValues) {
     loginMutation.mutate(data, {
       onSuccess: (user) => {
-        // Navigate to appropriate page based on admin status
+        // Only redirect to admin if user is admin, otherwise go to subscribe
         if (user.isAdmin) {
           setLocation("/admin");
         } else {
-          setLocation("/dashboard");
+          setLocation("/subscribe");
         }
       }
     });
@@ -118,11 +105,11 @@ export default function AuthPage() {
       lastName: lastName || firstName // If no last name provided, use first name
     }, {
       onSuccess: (user) => {
-        // Navigate to appropriate page based on admin status
+        // Only redirect to admin if user is admin, otherwise go to subscribe
         if (user.isAdmin) {
           setLocation("/admin");
         } else {
-          setLocation("/dashboard");
+          setLocation("/subscribe");
         }
       }
     });

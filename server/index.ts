@@ -1,9 +1,15 @@
+import 'dotenv/config';
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-// Increase JSON body size limit to 50MB for large image data
+
+// Raw body parser for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
+// Regular parsers for other routes
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
