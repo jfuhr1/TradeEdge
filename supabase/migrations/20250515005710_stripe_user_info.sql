@@ -28,7 +28,7 @@ BEGIN
     NEW.raw_user_meta_data->>'username',
     NULL,
     NULL,
-    'free',
+    NULL,
     NOW(),
     NOW()
   );

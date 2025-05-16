@@ -18,12 +18,19 @@ export function ProtectedRoute({
   // Check for demo mode in localStorage
   const isDemoMode = localStorage.getItem('demoMode') === 'true';
 
+  // This effect handles the tier check
   useEffect(() => {
+    let isMounted = true;
+    
     async function checkTier() {
       if (!user) {
-        setIsCheckingTier(false);
+        if (isMounted) {
+          setIsCheckingTier(false);
+        }
         return;
       }
+
+      setIsCheckingTier(true); // Ensure we're in checking state
 
       try {
         const { data, error } = await supabase
@@ -33,36 +40,61 @@ export function ProtectedRoute({
           .single();
 
         if (error) throw error;
-        setHasTier(!!data.stripe_tier);
+        
+        if (isMounted) {
+          // Consider "free" as a valid tier - only redirect if tier is null
+          setHasTier(data.stripe_tier !== null);
+          setIsCheckingTier(false);
+        }
       } catch (error) {
-        console.error('Error checking tier:', error);
-        setHasTier(false);
-      } finally {
+        if (isMounted) {
+          setHasTier(false);
+          setIsCheckingTier(false);
+        }
+      }
+    }
+
+    // Wait for user to be loaded before checking tier
+    if (!isLoading) {
+      if (user) {
+        checkTier();
+      } else {
         setIsCheckingTier(false);
       }
     }
 
-    checkTier();
-  }, [user]);
+    return () => {
+      isMounted = false;
+    };
+  }, [user, isLoading]); // Add isLoading as a dependency
 
-  return (
-    <Route path={path}>
-      {isLoading || isCheckingTier ? (
+  // Check if we're on the subscribe page
+  const isSubscribePage = path === "/subscribe";
+
+  // Simplify the loading condition
+  const showLoading = isLoading || (user && isCheckingTier);
+  
+  // Only show loading for non-subscribe pages if we're checking tier
+  if (showLoading && !isSubscribePage) {
+    return (
+      <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading...</span>
         </div>
-      ) : user ? (
-        hasTier ? (
-          <Component />
-        ) : path === "/subscribe" ? (
-          <Component />
-        ) : (
-          <Redirect to="/subscribe" />
-        )
-      ) : isDemoMode ? (
-        <Component />
-      ) : (
+      </Route>
+    );
+  }
+
+  // Only when we're done checking everything, decide on rendering
+  return (
+    <Route path={path}>
+      {!user && !isDemoMode ? (
         <Redirect to="/auth" />
+      ) : hasTier === false && !isSubscribePage ? (
+        <Redirect to="/subscribe" />
+      ) : (
+        <Component />
       )}
     </Route>
   );

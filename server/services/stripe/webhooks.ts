@@ -1,4 +1,4 @@
-import { stripe } from './stripeService';
+import { stripe, SUBSCRIPTION_PRICES } from './stripeService';
 import type { Stripe } from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
@@ -45,12 +45,26 @@ export async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Se
       throw new Error('No userId found in customer metadata');
     }
 
+    // Get subscription details to determine the tier
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const priceId = subscription.items.data[0]?.price.id;
+    
+    // Determine tier from price ID
+    let tier = 'free';
+    for (const [tierName, tierPriceId] of Object.entries(SUBSCRIPTION_PRICES)) {
+      if (tierPriceId === priceId) {
+        tier = tierName.toLowerCase();
+        break;
+      }
+    }
+
     // Update the user's profile with Stripe info
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
+        stripe_tier: tier
       })
       .eq('id', userId);
 
@@ -58,7 +72,7 @@ export async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Se
       throw updateError;
     }
 
-    console.log(`Updated profile for user ${userId} with Stripe info`);
+    console.log(`Updated profile for user ${userId} with Stripe info and tier ${tier}`);
   } catch (error) {
     console.error('Error handling checkout session completed:', error);
     throw error;
@@ -77,11 +91,24 @@ export async function handleSubscriptionCreated(subscription: Stripe.Subscriptio
       throw new Error('No userId found in customer metadata');
     }
 
-    // Update the user's profile with subscription info
+    // Get the price ID from subscription
+    const priceId = subscription.items.data[0]?.price.id;
+    
+    // Determine tier from price ID
+    let tier = 'free';
+    for (const [tierName, tierPriceId] of Object.entries(SUBSCRIPTION_PRICES)) {
+      if (tierPriceId === priceId) {
+        tier = tierName.toLowerCase();
+        break;
+      }
+    }
+
+    // Update the user's profile with subscription info and tier
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        stripe_subscription_id: subscription.id
+        stripe_subscription_id: subscription.id,
+        stripe_tier: tier
       })
       .eq('id', userId);
 
@@ -89,104 +116,9 @@ export async function handleSubscriptionCreated(subscription: Stripe.Subscriptio
       throw updateError;
     }
 
-    console.log(`Updated subscription for user ${userId}`);
+    console.log(`Updated subscription for user ${userId} with tier ${tier}`);
   } catch (error) {
     console.error('Error handling subscription created:', error);
     throw error;
   }
 }
-
-export async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  try {
-    console.log('Processing subscription updated:', subscription.id);
-    
-    const customerId = subscription.customer as string;
-    const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-    const userId = customer.metadata.userId;
-
-    if (!userId) {
-      throw new Error('No userId found in customer metadata');
-    }
-
-    // Update the subscription ID in case it changed
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        stripe_subscription_id: subscription.id
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log(`Updated subscription for user ${userId}`);
-  } catch (error) {
-    console.error('Error handling subscription updated:', error);
-    throw error;
-  }
-}
-
-export async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  try {
-    console.log('Processing subscription deleted:', subscription.id);
-    
-    const customerId = subscription.customer as string;
-    const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-    const userId = customer.metadata.userId;
-
-    if (!userId) {
-      throw new Error('No userId found in customer metadata');
-    }
-
-    // Clear the subscription ID from the profile
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        stripe_subscription_id: null
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log(`Removed subscription for user ${userId}`);
-  } catch (error) {
-    console.error('Error handling subscription deleted:', error);
-    throw error;
-  }
-}
-
-export async function handleSubscriptionTrialEnding(subscription: Stripe.Subscription) {
-  // Implement if you add trial periods later
-  console.log('Trial ending for subscription:', subscription.id);
-}
-
-export async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  // Log successful payments
-  console.log('Invoice paid:', invoice.id);
-}
-
-export async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  try {
-    console.log('Processing failed payment for invoice:', invoice.id);
-    
-    const customerId = invoice.customer as string;
-    const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-    const userId = customer.metadata.userId;
-
-    if (!userId) {
-      throw new Error('No userId found in customer metadata');
-    }
-
-    // You might want to notify the user or take other actions here
-    console.log(`Payment failed for user ${userId}`);
-  } catch (error) {
-    console.error('Error handling invoice payment failed:', error);
-    throw error;
-  }
-}
-
-// Alias for subscription deleted to maintain compatibility
-export const handleCustomerSubscriptionDeleted = handleSubscriptionDeleted; 

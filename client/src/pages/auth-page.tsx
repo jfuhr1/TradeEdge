@@ -56,6 +56,18 @@ export default function AuthPage() {
   const { loginMutation, registerMutation, user } = useAuth();
   const [location, setLocation] = useLocation();
 
+  // Add effect to check if user is logged in and redirect them
+  useEffect(() => {
+    if (user) {
+      // Redirect based on user admin status
+      if (user.isAdmin) {
+        setLocation("/admin");
+      } else {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
+
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -79,16 +91,7 @@ export default function AuthPage() {
 
   // Handle login form submission
   function onLoginSubmit(data: LoginFormValues) {
-    loginMutation.mutate(data, {
-      onSuccess: (user) => {
-        // Only redirect to admin if user is admin, otherwise go to subscribe
-        if (user.isAdmin) {
-          setLocation("/admin");
-        } else {
-          setLocation("/subscribe");
-        }
-      }
-    });
+    loginMutation.mutate(data);
   }
 
   // Handle register form submission
@@ -103,15 +106,6 @@ export default function AuthPage() {
       username: data.username,
       firstName,
       lastName: lastName || firstName // If no last name provided, use first name
-    }, {
-      onSuccess: (user) => {
-        // Only redirect to admin if user is admin, otherwise go to subscribe
-        if (user.isAdmin) {
-          setLocation("/admin");
-        } else {
-          setLocation("/subscribe");
-        }
-      }
     });
   }
 

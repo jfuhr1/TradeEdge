@@ -57,14 +57,14 @@ async function requireAuth(req: Request, res: Response, next: Function) {
 // Checkout session routes
 router.post('/create-checkout-session', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { priceId, successUrl, cancelUrl } = req.body;
     const user = req.user;
+    const { priceId, successUrl, cancelUrl } = req.body;
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    // Get or create customer
+    // Get or create Stripe customer
     let customer = await customerService.getCustomer(user.id);
     if (!customer) {
       customer = await customerService.createCustomer({
@@ -74,8 +74,21 @@ router.post('/create-checkout-session', requireAuth, async (req: Request, res: R
           userId: user.id,
         },
       });
+      
+      // Update Supabase profile with Stripe customer ID
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          stripe_customer_id: customer.id,
+        })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        throw updateError;
+      }
     }
 
+    // Create checkout session with the Stripe customer ID
     const session = await checkoutService.createCheckoutSession({
       priceId,
       customerId: customer.id,
@@ -89,77 +102,6 @@ router.post('/create-checkout-session', requireAuth, async (req: Request, res: R
     res.json({ sessionId: session.id });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Subscription management routes
-router.get('/current-subscription', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const user = req.user as User;
-    const customer = await customerService.getCustomer(user.id.toString());
-    
-    if (!customer) {
-      return res.json(null);
-    }
-
-    const subscriptions = await subscriptionService.listCustomerSubscriptions(customer.id);
-    const activeSubscription = subscriptions.find(sub => sub.status === 'active');
-
-    if (!activeSubscription) {
-      return res.json(null);
-    }
-
-    const subscriptionItem = activeSubscription.items.data[0];
-
-    res.json({
-      id: activeSubscription.id,
-      status: activeSubscription.status,
-      currentPeriodEnd: new Date(subscriptionItem.current_period_end * 1000).toISOString(),
-      cancelAtPeriodEnd: activeSubscription.cancel_at_period_end,
-      tier: activeSubscription.metadata?.tier || 'free',
-    });
-  } catch (error: any) {
-    console.error('Error fetching subscription:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-router.patch('/update-subscription/:subscriptionId', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId } = req.params;
-    const { newTier } = req.body;
-
-    const subscription = await subscriptionService.updateSubscription({
-      subscriptionId,
-      newTier,
-    });
-
-    res.json(subscription);
-  } catch (error: any) {
-    console.error('Error updating subscription:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-router.post('/cancel-subscription/:subscriptionId', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId } = req.params;
-    const subscription = await subscriptionService.cancelSubscription(subscriptionId);
-    res.json(subscription);
-  } catch (error: any) {
-    console.error('Error canceling subscription:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-router.post('/reactivate-subscription/:subscriptionId', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId } = req.params;
-    const subscription = await subscriptionService.reactivateSubscription(subscriptionId);
-    res.json(subscription);
-  } catch (error: any) {
-    console.error('Error reactivating subscription:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -182,21 +124,6 @@ router.post('/webhook', async (req: Request, res: Response) => {
         break;
       case 'customer.subscription.created':
         await webhookService.handleSubscriptionCreated(event.data.object);
-        break;
-      case 'customer.subscription.updated':
-        await webhookService.handleSubscriptionUpdated(event.data.object);
-        break;
-      case 'customer.subscription.deleted':
-        await webhookService.handleSubscriptionDeleted(event.data.object);
-        break;
-      case 'customer.subscription.trial_will_end':
-        await webhookService.handleSubscriptionTrialEnding(event.data.object);
-        break;
-      case 'invoice.paid':
-        await webhookService.handleInvoicePaid(event.data.object);
-        break;
-      case 'invoice.payment_failed':
-        await webhookService.handleInvoicePaymentFailed(event.data.object);
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);

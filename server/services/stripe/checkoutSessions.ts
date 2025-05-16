@@ -47,32 +47,3 @@ export async function createCheckoutSession({
     throw error;
   }
 }
-
-export async function retrieveCheckoutSession(sessionId: string) {
-  try {
-    return await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['subscription', 'customer'],
-    });
-  } catch (error) {
-    console.error('Error retrieving checkout session:', error);
-    throw error;
-  }
-}
-
-export async function listCheckoutSessions(params: Stripe.Checkout.SessionListParams) {
-  try {
-    return await stripe.checkout.sessions.list(params);
-  } catch (error) {
-    console.error('Error listing checkout sessions:', error);
-    throw error;
-  }
-}
-
-export async function expireCheckoutSession(sessionId: string) {
-  try {
-    return await stripe.checkout.sessions.expire(sessionId);
-  } catch (error) {
-    console.error('Error expiring checkout session:', error);
-    throw error;
-  }
-} 

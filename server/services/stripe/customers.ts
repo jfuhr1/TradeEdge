@@ -1,5 +1,15 @@
 import { stripe } from './stripeService';
 import type { Stripe } from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 interface CreateCustomerParams {
   email: string;
@@ -22,42 +32,23 @@ export async function createCustomer({ email, name, metadata }: CreateCustomerPa
   }
 }
 
-export async function getCustomer(customerId: string) {
+export async function getCustomer(userId: string) {
   try {
-    return await stripe.customers.retrieve(customerId);
+    // First try to find the customer ID in the Supabase profiles table
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data?.stripe_customer_id) {
+      return null; // Return null instead of throwing an error
+    }
+
+    // Now retrieve the customer using the Stripe customer ID
+    return await stripe.customers.retrieve(data.stripe_customer_id);
   } catch (error) {
     console.error('Error retrieving customer:', error);
-    throw error;
+    return null; // Return null instead of throwing an error
   }
 }
-
-export async function updateCustomer(customerId: string, params: Stripe.CustomerUpdateParams) {
-  try {
-    return await stripe.customers.update(customerId, params);
-  } catch (error) {
-    console.error('Error updating customer:', error);
-    throw error;
-  }
-}
-
-export async function deleteCustomer(customerId: string) {
-  try {
-    return await stripe.customers.del(customerId);
-  } catch (error) {
-    console.error('Error deleting customer:', error);
-    throw error;
-  }
-}
-
-export async function listCustomerPaymentMethods(customerId: string) {
-  try {
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: customerId,
-      type: 'card',
-    });
-    return paymentMethods.data;
-  } catch (error) {
-    console.error('Error listing payment methods:', error);
-    throw error;
-  }
-} 

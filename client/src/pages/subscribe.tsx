@@ -112,18 +112,6 @@ const TIERS = [
 // Form validation schema
 const subscribeSchema = z.object({
   tier: z.enum(["free", "paid", "premium", "mentorship"]),
-  cardNumber: z.string().optional(),
-  cardExpiry: z.string().optional(),
-  cardCVC: z.string().optional(),
-  billingAddress: z.string().optional(),
-}).refine(data => {
-  if (data.tier !== "free") {
-    return !!data.cardNumber && !!data.cardExpiry && !!data.cardCVC && !!data.billingAddress;
-  }
-  return true;
-}, {
-  message: "Payment details are required for paid tiers",
-  path: ["cardNumber"],
 });
 
 type SubscribeFormValues = z.infer<typeof subscribeSchema>;
@@ -138,10 +126,6 @@ function SubscribePage() {
     resolver: zodResolver(subscribeSchema),
     defaultValues: {
       tier: "free",
-      cardNumber: "",
-      cardExpiry: "",
-      cardCVC: "",
-      billingAddress: "",
     },
   });
   
@@ -170,7 +154,6 @@ function SubscribePage() {
 
           const sessionId = await createSubscriptionCheckout({
             priceId,
-            customerId: user.id.toString(),
             successUrl: `${window.location.origin}/welcome?session_id={CHECKOUT_SESSION_ID}`,
             cancelUrl: `${window.location.origin}/subscribe`,
           });
@@ -274,13 +257,6 @@ function SubscribePage() {
                         value={field.value}
                         onValueChange={(value: string) => {
                           field.onChange(value);
-                          // Reset payment fields when switching to free tier
-                          if (value === "free") {
-                            form.setValue("cardNumber", "");
-                            form.setValue("cardExpiry", "");
-                            form.setValue("cardCVC", "");
-                            form.setValue("billingAddress", "");
-                          }
                         }}
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
                       >
@@ -362,71 +338,6 @@ function SubscribePage() {
                     </FormItem>
                   )}
                 />
-
-                {selectedTier !== "free" && (
-                  <>
-                    <h3 className="text-xl font-semibold mt-8 mb-6">Payment Information</h3>
-                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="cardNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Card Number</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input placeholder="4242 4242 4242 4242" {...field} />
-                                <CreditCardIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="cardExpiry"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Expiry Date</FormLabel>
-                              <FormControl>
-                                <Input placeholder="MM/YY" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="cardCVC"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CVC</FormLabel>
-                              <FormControl>
-                                <Input placeholder="123" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="billingAddress"
-                        render={({ field }) => (
-                          <FormItem className="col-span-2">
-                            <FormLabel>Billing Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123 Main St, City, State, ZIP" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
                 
                 <div className="flex justify-between pt-4">
                   <Button type="button" variant="outline" onClick={() => navigate("/")}>
@@ -435,7 +346,7 @@ function SubscribePage() {
                   </Button>
                   
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Processing..." : "Continue"}
+                    {isSubmitting ? "Processing..." : selectedTier === "free" ? "Continue" : "Proceed to Payment"}
                   </Button>
                 </div>
               </form>
