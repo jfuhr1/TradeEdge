@@ -86,11 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firstName: profile.full_name?.split(' ')[0] || '',
         lastName: profile.full_name?.split(' ')[1] || '',
         phone: profile.phone_number,
-        tier: "free", // Default to free, update based on your subscription logic
+        tier: profile.stripe_tier || "free",
         profilePicture: null,
         completedLessons: [],
-        stripeCustomerId: null,
-        stripeSubscriptionId: null,
+        stripeCustomerId: profile.stripe_customer_id || null,
+        stripeSubscriptionId: profile.stripe_subscription_id || null,
         isAdmin: false, // You'll need to implement admin role logic
         createdAt: new Date(authUser.created_at)
       };
@@ -139,11 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firstName: profile.full_name?.split(' ')[0] || '',
         lastName: profile.full_name?.split(' ')[1] || '',
         phone: profile.phone_number,
-        tier: "free",
+        tier: profile.stripe_tier || "free",
         profilePicture: null,
         completedLessons: [],
-        stripeCustomerId: null,
-        stripeSubscriptionId: null,
+        stripeCustomerId: profile.stripe_customer_id || null,
+        stripeSubscriptionId: profile.stripe_subscription_id || null,
         isAdmin: false,
         createdAt: new Date(user.created_at)
       };

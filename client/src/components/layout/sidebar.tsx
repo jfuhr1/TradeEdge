@@ -7,14 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 export default function Sidebar() {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { logoutMutation } = useAuth();
+  const { logoutMutation, user } = useAuth();
   
-  // Demo user data - hardcoded for display purposes
-  const demoUser = {
-    name: "Jane Smith",
-    tier: "premium"
-  };
-
   const navItems = [
     { href: "/dashboard", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
     { href: "/stock-alerts", icon: <Bell className="w-5 h-5" />, label: "Stock Alerts" },
@@ -56,22 +50,22 @@ export default function Sidebar() {
       </div>
       
       {/* User Profile Summary */}
-      {!collapsed && (
+      {!collapsed && user && (
         <div className="p-4 flex items-center border-b border-neutral-200">
           <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center">
-            {demoUser.name.charAt(0).toUpperCase()}
+            {user.firstName?.charAt(0).toUpperCase() || ''}
           </div>
           <div className="ml-3">
-            <p className="font-medium">{demoUser.name}</p>
+            <p className="font-medium">{user.firstName} {user.lastName}</p>
             <div className="flex items-center mt-1">
               <span 
                 className={`text-xs px-2 py-1 ${
-                  demoUser.tier === 'premium' 
+                  user.tier === 'premium' 
                     ? 'bg-primary text-white' 
                     : 'bg-neutral-200 text-neutral-700'
                 } rounded-full`}
               >
-                {demoUser.tier.charAt(0).toUpperCase() + demoUser.tier.slice(1)}
+                {(user.tier || 'free').charAt(0).toUpperCase() + (user.tier || 'free').slice(1)}
               </span>
               <button 
                 onClick={handleLogout}
@@ -103,7 +97,7 @@ export default function Sidebar() {
           </Link>
         ))}
         
-        {!collapsed && demoUser.tier === 'free' && (
+        {!collapsed && user?.tier === 'free' && (
           <div className="mt-4 mx-4 p-4 bg-blue-50 rounded-lg">
             <p className="font-medium text-sm">Your free trial ends in</p>
             <p className="text-primary font-bold font-mono">14 days</p>

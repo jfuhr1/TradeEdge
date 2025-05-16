@@ -42,6 +42,7 @@ import SignupPage from "./pages/signup";
 import WelcomePage from "./pages/welcome";
 import Notifications from "./pages/notifications";
 import Settings from "./pages/settings";
+import SubscribePage from "./pages/subscribe";
 import { AppLayout } from "./components/layout/app-layout";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="/ws-test" component={WebSocketTest} />
           
           {/* Protected routes - require login */}
+          <ProtectedRoute path="/subscribe" component={SubscribePage} />
           <ProtectedRoute path="/dashboard" component={Dashboard} />
           <ProtectedRoute path="/success-center" component={SuccessCenter} />
           <ProtectedRoute path="/stock-alerts" component={StockAlerts} />

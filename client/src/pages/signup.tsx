@@ -7,7 +7,6 @@ import {
   ArrowRightIcon, 
   ArrowLeftIcon,
   CheckIcon, 
-  CreditCardIcon, 
   UserIcon, 
   ShieldCheckIcon 
 } from "lucide-react";
@@ -16,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import {
   Form,
@@ -27,102 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-
-// Pricing tiers
-const TIERS = [
-  {
-    id: "free",
-    name: "Free",
-    description: "Basic plan for beginner traders",
-    price: "$0",
-    period: "forever",
-    features: [
-      "One free trade idea per month", 
-      "Basic education content", 
-      "Weekly market summaries",
-      "Weekly Intro to TradeEdge coaching",
-      "Ability to book coaching calls at full price"
-    ],
-    limitations: [
-      "Limited alerts", 
-      "No portfolio tracking", 
-      "No custom notifications", 
-      "No weekly Q&A sessions"
-    ]
-  },
-  {
-    id: "paid",
-    name: "Paid",
-    description: "Our most popular plan for serious traders",
-    price: "$29.99",
-    period: "per month",
-    features: [
-      "All stock alerts",
-      "Portfolio tracking",
-      "Custom notification settings",
-      "Full education library",
-      "Weekly 'New Alerts' coaching sessions",
-      "All educational coaching sessions",
-      "Ability to book coaching calls at full price"
-    ],
-    limitations: [
-      "No weekly Q&A sessions",
-      "No discounts on coaching calls"
-    ]
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    description: "For professional traders who want it all",
-    price: "$999",
-    period: "per year",
-    features: [
-      "All stock alerts",
-      "Priority notifications",
-      "Portfolio tracking",
-      "Custom notification settings",
-      "Full education library",
-      "Weekly Premium Member New Alerts and Q&A sessions",
-      "Annual portfolio review included",
-      "Annual 1-hour consultation included",
-      "Ability to book additional coaching calls at 25% off"
-    ],
-    limitations: []
-  },
-  {
-    id: "mentorship",
-    name: "Mentorship",
-    description: "For those seeking intensive coaching and guidance",
-    price: "$5,000",
-    period: "one-time fee",
-    features: [
-      "All Premium tier benefits",
-      "20 weekly coaching sessions structured as:",
-      "• 8 weekly sessions (First 2 months)",
-      "• 4 bi-weekly sessions (Next 2 months)",
-      "• 8 monthly sessions (Next 8 months)",
-      "Personalized trading strategy development",
-      "Ongoing performance evaluation",
-      "Priority support"
-    ],
-    limitations: []
-  }
-];
 
 // Form validation schema
 const signupSchema = z.object({
@@ -136,13 +38,6 @@ const signupSchema = z.object({
   name: z.string().min(2, "Full name is required"),
   phone: z.string().optional(),
   
-  // Membership and payment
-  tier: z.enum(["free", "paid", "premium", "mentorship"]),
-  cardNumber: z.string().optional(),
-  cardExpiry: z.string().optional(),
-  cardCVC: z.string().optional(),
-  billingAddress: z.string().optional(),
-  
   // Legal confirmations
   disclaimerAcknowledged: z.boolean().refine(val => val, {
     message: "You must acknowledge the financial advice disclaimer",
@@ -153,14 +48,6 @@ const signupSchema = z.object({
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
-}).refine(data => {
-  if (data.tier !== "free") {
-    return !!data.cardNumber && !!data.cardExpiry && !!data.cardCVC && !!data.billingAddress;
-  }
-  return true;
-}, {
-  message: "Payment details are required for paid tiers",
-  path: ["cardNumber"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -180,17 +67,10 @@ export default function SignupPage() {
       confirmPassword: "",
       name: "",
       phone: "",
-      tier: "free",
-      cardNumber: "",
-      cardExpiry: "",
-      cardCVC: "",
-      billingAddress: "",
       disclaimerAcknowledged: false,
       termsAgreed: false,
     },
   });
-  
-  const selectedTier = form.watch("tier");
   
   const nextStep = async () => {
     // Validate fields for the current step
@@ -207,18 +87,6 @@ export default function SignupPage() {
     } else if (currentStep === 3) {
       const legalValid = await form.trigger(["disclaimerAcknowledged", "termsAgreed"]);
       if (legalValid) {
-        setCurrentStep(4);
-      }
-    } else if (currentStep === 4) {
-      const tierValid = await form.trigger("tier");
-      const selectedTier = form.getValues("tier");
-      
-      if (selectedTier !== "free") {
-        const paymentValid = await form.trigger(["cardNumber", "cardExpiry", "cardCVC", "billingAddress"]);
-        if (tierValid && paymentValid) {
-          form.handleSubmit(onSubmit)();
-        }
-      } else if (tierValid) {
         form.handleSubmit(onSubmit)();
       }
     }
@@ -259,13 +127,12 @@ export default function SignupPage() {
 
       if (profileError) throw profileError;
       
-      // Navigate to the welcome page after successful signup
       toast({
         title: "Account created successfully!",
         description: "Please check your email to verify your account.",
       });
       
-      navigate("/welcome");
+      navigate("/subscribe");
     } catch (error: any) {
       console.error("Signup error:", error);
       toast({
@@ -305,7 +172,7 @@ export default function SignupPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between relative">
               <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-1 bg-gray-200 -z-10"></div>
-              {[1, 2, 3, 4].map((step) => (
+              {[1, 2, 3].map((step) => (
                 <div key={step} className={`flex flex-col items-center ${step <= currentStep ? "text-primary" : "text-gray-400"}`}>
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step <= currentStep ? "bg-primary text-white" : "bg-gray-200"}`}>
                     {step < currentStep ? (
@@ -318,7 +185,6 @@ export default function SignupPage() {
                     {step === 1 && "Account"}
                     {step === 2 && "Profile"}
                     {step === 3 && "Legal"}
-                    {step === 4 && "Membership"}
                   </div>
                 </div>
               ))}
@@ -516,175 +382,6 @@ export default function SignupPage() {
                     </div>
                   </div>
                 )}
-
-                {currentStep === 4 && (
-                  <div>
-                    <h2 className="text-2xl font-semibold mb-6">Choose Your Membership</h2>
-                    <FormField
-                      control={form.control}
-                      name="tier"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormMessage />
-                          <RadioGroup
-                            value={field.value}
-                            onValueChange={(value: string) => {
-                              field.onChange(value);
-                              // Reset payment fields when switching to free tier
-                              if (value === "free") {
-                                form.setValue("cardNumber", "");
-                                form.setValue("cardExpiry", "");
-                                form.setValue("cardCVC", "");
-                                form.setValue("billingAddress", "");
-                              }
-                            }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
-                          >
-                            {TIERS.map((tier) => (
-                              <div key={tier.id}>
-                                <FormControl>
-                                  <RadioGroupItem
-                                    value={tier.id}
-                                    id={tier.id}
-                                    className="peer sr-only"
-                                  />
-                                </FormControl>
-                                <Label
-                                  htmlFor={tier.id}
-                                  className="flex flex-col h-full space-y-3 rounded-xl border-2 border-muted bg-popover p-5 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <div className="text-xl font-semibold">{tier.name}</div>
-                                      <div className="text-sm text-muted-foreground mt-1">
-                                        {tier.description}
-                                      </div>
-                                    </div>
-                                    {tier.id === "paid" && (
-                                      <Badge variant="outline" className="bg-primary/10">Most Popular</Badge>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex items-end gap-1 mt-2">
-                                    <span className="text-2xl font-bold">{tier.price}</span>
-                                    <span className="text-sm text-muted-foreground">{tier.period}</span>
-                                  </div>
-                                                      
-                                  <Separator className="my-3" />
-                                  
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Includes</h4>
-                                    <ul className="space-y-2">
-                                      {tier.features.map((feature: string, index: number) => (
-                                        <li key={index} className="flex items-start gap-2 text-sm">
-                                          <CheckIcon className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                          <span>{feature}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                  
-                                  {tier.limitations.length > 0 && (
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium">Limitations</h4>
-                                      <ul className="space-y-2">
-                                        {tier.limitations.map((limitation: string, index: number) => (
-                                          <li key={index} className="flex items-start gap-2 text-sm">
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              width="24"
-                                              height="24"
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              stroke="currentColor"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5"
-                                            >
-                                              <path d="M18 6 6 18"></path>
-                                              <path d="m6 6 12 12"></path>
-                                            </svg>
-                                            <span className="text-muted-foreground">{limitation}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </Label>
-                              </div>
-                            ))}
-                          </RadioGroup>
-                        </FormItem>
-                      )}
-                    />
-
-                    {selectedTier !== "free" && (
-                      <>
-                        <h3 className="text-xl font-semibold mt-8 mb-6">Payment Information</h3>
-                        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="cardNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Card Number</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Input placeholder="4242 4242 4242 4242" {...field} />
-                                    <CreditCardIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="cardExpiry"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Expiry Date</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="MM/YY" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="cardCVC"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>CVC</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="123" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <FormField
-                            control={form.control}
-                            name="billingAddress"
-                            render={({ field }) => (
-                              <FormItem className="col-span-2">
-                                <FormLabel>Billing Address</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="123 Main St, City, State, ZIP" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
                 
                 <div className="flex justify-between pt-4">
                   {currentStep > 1 ? (
@@ -699,7 +396,7 @@ export default function SignupPage() {
                     </Button>
                   )}
                   
-                  {currentStep < 4 ? (
+                  {currentStep < 3 ? (
                     <Button type="button" onClick={nextStep}>
                       Next
                       <ArrowRightIcon className="ml-2 h-4 w-4" />
