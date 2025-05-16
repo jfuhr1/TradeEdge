@@ -1,6 +1,7 @@
 import { stripe, SUBSCRIPTION_PRICES } from './stripeService';
 import type { Stripe } from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import * as coachingService from './coachingCheckout';
 
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
   throw new Error('Missing environment variable: STRIPE_WEBHOOK_SECRET');
@@ -33,7 +34,13 @@ export async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Se
   try {
     console.log('Processing checkout session:', session.id);
     
-    // Get the customer and subscription details
+    // Check if this is a coaching purchase
+    if (session.mode === 'payment' && session.metadata?.coachingProductId) {
+      await coachingService.handleCoachingPurchaseCompleted(session);
+      return;
+    }
+    
+    // Handle subscription checkout (existing code)
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
     

@@ -20,4 +20,11 @@ export const tierToPriceId: Record<Exclude<SubscriptionTier, 'free'>, string> = 
   paid: SUBSCRIPTION_PRICES.PAID!,
   premium: SUBSCRIPTION_PRICES.PREMIUM!,
   mentorship: SUBSCRIPTION_PRICES.MENTORSHIP!,
-}; 
+};
+
+// Add coaching product price IDs
+export const COACHING_PRICES = {
+  SINGLE_SESSION: process.env.STRIPE_COACHING_SINGLE_PRICE_ID,
+  FIVE_SESSIONS: process.env.STRIPE_COACHING_FIVE_PRICE_ID,
+  TEN_SESSIONS: process.env.STRIPE_COACHING_TEN_PRICE_ID,
+} as const; 
