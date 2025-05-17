@@ -61,13 +61,21 @@ export async function handleCoachingPurchaseCompleted(session: Stripe.Checkout.S
       throw new Error('Missing required metadata');
     }
 
+    // Retrieve the line items to get the price ID
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const priceId = lineItems.data[0]?.price?.id;
+
+    if (!priceId) {
+      throw new Error('Could not retrieve price ID from session');
+    }
+
     // Insert the purchase record
     const { error: insertError } = await supabase
       .from('coaching_purchases')
       .insert({
         user_id: userId,
         coaching_product_id: coachingProductId,
-        stripe_price_id: session.line_items?.data[0]?.price?.id,
+        stripe_price_id: priceId,
         stripe_payment_id: session.payment_intent as string,
         status: 'completed',
         purchase_date: new Date().toISOString(),

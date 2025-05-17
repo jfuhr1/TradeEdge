@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { createCoachingCheckout, redirectToCheckout } from "@/lib/stripe/coachingCheckout";
+import { getCoachingProducts, type CoachingProduct } from "@/lib/supabase/coachingProducts";
 import { 
   Card, 
   CardContent, 
@@ -121,6 +123,8 @@ export default function AccountSettingsPage() {
   const { toast } = useToast();
   const [selectedTier, setSelectedTier] = useState<string>(user?.tier || "free");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [processingPayments, setProcessingPayments] = useState<Record<string, boolean>>({});
+  const [coachingProducts, setCoachingProducts] = useState<CoachingProduct[]>([]);
   
   // Add a state for tracking coaching session credits
   const [coachingCredits, setCoachingCredits] = useState({
@@ -132,6 +136,24 @@ export default function AccountSettingsPage() {
       sessions: { total: 20, used: 0 }
     }
   });
+
+  useEffect(() => {
+    const fetchCoachingProducts = async () => {
+      try {
+        const products = await getCoachingProducts();
+        setCoachingProducts(products);
+      } catch (error) {
+        console.error('Error fetching coaching products:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load coaching products. Please try again later.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchCoachingProducts();
+  }, [toast]);
 
   const handleTierChange = async () => {
     if (!user || selectedTier === user.tier) return;
@@ -174,6 +196,33 @@ export default function AccountSettingsPage() {
       description: "Your profile information has been updated successfully.",
       variant: "default"
     });
+  };
+
+  const handleCoachingPayment = async (productId: string, priceId: string) => {
+    try {
+      setProcessingPayments(prev => ({ ...prev, [productId]: true }));
+      
+      // Get the base URL for success/cancel redirects
+      const baseUrl = window.location.origin;
+      
+      const sessionId = await createCoachingCheckout({
+        productId,
+        priceId,
+        successUrl: `${baseUrl}/account-settings?tab=coaching&success=true`,
+        cancelUrl: `${baseUrl}/account-settings?tab=coaching`,
+      });
+      
+      await redirectToCheckout(sessionId);
+    } catch (error) {
+      console.error('Error processing coaching payment:', error);
+      toast({
+        title: "Payment Failed",
+        description: "There was an error processing your payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingPayments(prev => ({ ...prev, [productId]: false }));
+    }
   };
 
   return (
@@ -457,7 +506,7 @@ export default function AccountSettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue={user?.name || ""} className="mt-1" />
+                    <Input id="name" defaultValue={`${user?.firstName || ''} ${user?.lastName || ''}`} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="username">Username</Label>
@@ -840,30 +889,24 @@ export default function AccountSettingsPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold">Portfolio Consultation</h4>
-                      <p className="text-sm text-gray-600 mt-1 mb-2">1-hour comprehensive portfolio review with strategy recommendations</p>
-                      <div className="flex justify-between items-end">
-                        <span className="text-lg font-bold">${user?.tier === "premium" ? "75" : "100"}</span>
-                        <Button size="sm">Book</Button>
+                    {coachingProducts.map((product) => (
+                      <div key={product.id} className="border rounded-lg p-4">
+                        <h4 className="font-semibold">{product.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1 mb-2">{product.description}</p>
+                        <div className="flex justify-between items-end">
+                          <span className="text-lg font-bold">
+                            ${product.price.toFixed(2)}
+                          </span>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleCoachingPayment(product.id, product.stripe_price_id)}
+                            disabled={processingPayments[product.id]}
+                          >
+                            {processingPayments[product.id] ? "Processing..." : "Book"}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold">Strategy Session</h4>
-                      <p className="text-sm text-gray-600 mt-1 mb-2">Develop a customized trading plan with a TradeEdge Pro expert</p>
-                      <div className="flex justify-between items-end">
-                        <span className="text-lg font-bold">${user?.tier === "premium" ? "187.50" : "250"}</span>
-                        <Button size="sm">Book</Button>
-                      </div>
-                    </div>
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold">Technical Analysis</h4>
-                      <p className="text-sm text-gray-600 mt-1 mb-2">Learn advanced chart patterns and technical indicators</p>
-                      <div className="flex justify-between items-end">
-                        <span className="text-lg font-bold">${user?.tier === "premium" ? "75" : "100"}</span>
-                        <Button size="sm">Book</Button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>

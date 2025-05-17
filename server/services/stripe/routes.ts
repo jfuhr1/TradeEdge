@@ -1,14 +1,9 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { json, raw } from 'express';
-import { stripe } from './stripeService';
-import * as checkoutService from './checkoutSessions';
-import * as subscriptionService from './subscriptions';
+import * as checkoutService from './subscriptions';
 import * as customerService from './customers';
 import * as webhookService from './webhooks';
-import * as coachingService from './coachingCheckout';
-import type { User } from '@supabase/supabase-js';
-import type { Stripe } from 'stripe';
+import * as coachingService from './coaching';
 import { createClient } from '@supabase/supabase-js';
 
 // Extend Express Request to include Supabase user
@@ -111,7 +106,7 @@ router.post('/create-checkout-session', requireAuth, async (req: Request, res: R
 router.post('/create-coaching-checkout', requireAuth, async (req: Request, res: Response) => {
   try {
     const user = req.user;
-    const { priceId, coachingProductId, successUrl, cancelUrl } = req.body;
+    const { productId, priceId, successUrl, cancelUrl } = req.body;
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
@@ -149,7 +144,7 @@ router.post('/create-coaching-checkout', requireAuth, async (req: Request, res: 
       cancelUrl,
       metadata: {
         userId: user.id,
-        coachingProductId,
+        coachingProductId: productId,
       },
     });
 

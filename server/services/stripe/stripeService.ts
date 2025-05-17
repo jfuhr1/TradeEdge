@@ -4,9 +4,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing environment variable: STRIPE_SECRET_KEY');
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16', // Use the latest stable API version
-});
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const SUBSCRIPTION_PRICES = {
   PAID: process.env.STRIPE_PAID_PRICE_ID,
