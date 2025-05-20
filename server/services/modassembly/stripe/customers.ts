@@ -1,0 +1,40 @@
+import { stripe } from './client';
+import { getStripeCustomerId } from '../supabase/profiles';
+
+interface CreateCustomerParams {
+  email: string;
+  name?: string;
+  metadata?: Record<string, string>;
+}
+
+export async function createCustomer({ email, name, metadata }: CreateCustomerParams) {
+  try {
+    return await stripe.customers.create({
+      email,
+      name,
+      metadata: {
+        ...metadata,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating customer:', error);
+    throw error;
+  }
+}
+
+export async function getCustomer(userId: string) {
+  try {
+    // Get the customer ID using the dedicated profiles service
+    const stripeCustomerId = await getStripeCustomerId(userId);
+
+    if (!stripeCustomerId) {
+      return null; // Return null if no customer ID found
+    }
+
+    // Now retrieve the customer using the Stripe customer ID
+    return await stripe.customers.retrieve(stripeCustomerId);
+  } catch (error) {
+    console.error('Error retrieving customer:', error);
+    return null; // Return null instead of throwing an error
+  }
+}
