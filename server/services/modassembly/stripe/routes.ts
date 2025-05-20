@@ -108,29 +108,47 @@ router.post('/create-coaching-checkout', requireAuth, async (req: Request, res: 
 // Webhook handler
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
+    console.log('[Webhook] Received webhook event');
+    console.log('[Webhook] Headers:', JSON.stringify(req.headers));
+    console.log('[Webhook] Body type:', typeof req.body);
+    console.log('[Webhook] Body is buffer:', Buffer.isBuffer(req.body));
+    
     const signature = req.headers['stripe-signature'];
     
     if (!signature || typeof signature !== 'string') {
+      console.error('[Webhook] Missing or invalid stripe-signature header:', signature);
       return res.status(400).json({ error: 'Missing stripe-signature header' });
     }
 
-    const event = webhookService.constructEvent(req.body, signature);
+    try {
+      const event = webhookService.constructEvent(req.body, signature);
+      
+      // Handle the event
+      console.log(`[Webhook] Processing event type: ${event.type}`);
+      
+      switch (event.type) {
+        case 'checkout.session.completed':
+          console.log('[Webhook] Starting checkout.session.completed handler');
+          await webhookService.handleCheckoutSessionCompleted(event.data.object);
+          console.log('[Webhook] Finished checkout.session.completed handler');
+          break;
+        case 'customer.subscription.created':
+          console.log('[Webhook] Starting customer.subscription.created handler');
+          await webhookService.handleSubscriptionCreated(event.data.object);
+          console.log('[Webhook] Finished customer.subscription.created handler');
+          break;
+        default:
+          console.log(`[Webhook] Unhandled event type: ${event.type}`);
+      }
 
-    // Handle the event
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await webhookService.handleCheckoutSessionCompleted(event.data.object);
-        break;
-      case 'customer.subscription.created':
-        await webhookService.handleSubscriptionCreated(event.data.object);
-        break;
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+      console.log('[Webhook] Sending success response');
+      res.json({ received: true });
+    } catch (eventError: any) {
+      console.error('[Webhook] Error processing webhook event:', eventError);
+      return res.status(400).json({ error: eventError.message });
     }
-
-    res.json({ received: true });
   } catch (error: any) {
-    console.error('Error handling webhook:', error);
+    console.error('[Webhook] Error in webhook request handling:', error);
     res.status(400).json({ error: error.message });
   }
 });

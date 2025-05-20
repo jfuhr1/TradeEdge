@@ -45,10 +45,25 @@ export async function createCheckoutSession({
 
 export async function handleCheckoutSessionCompleted(event: Stripe.Checkout.Session | Stripe.Subscription) {
   try {
-    console.log('Processing stripe event:', event.id);
+    console.log('[Webhook] Processing stripe event:', event.id);
     
-    let customerId = event.customer as string;
-    let subscriptionId = event.id as string;
+    let customerId = '';
+    let subscriptionId = '';
+    
+    // Handle different event types correctly
+    if ('subscription' in event && typeof event.subscription === 'string') {
+      // This is a Checkout.Session event
+      console.log('[Webhook] Event is a Checkout.Session');
+      customerId = typeof event.customer === 'string' ? event.customer : (event.customer as Stripe.Customer).id;
+      subscriptionId = event.subscription;
+    } else {
+      // This is a Subscription event
+      console.log('[Webhook] Event is a Subscription');
+      customerId = typeof event.customer === 'string' ? event.customer : (event.customer as Stripe.Customer).id;
+      subscriptionId = event.id;
+    }
+    
+    console.log(`[Webhook] CustomerId: ${customerId}, SubscriptionId: ${subscriptionId}`);
     
     // Get the user ID from the customer metadata
     const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
@@ -58,9 +73,13 @@ export async function handleCheckoutSessionCompleted(event: Stripe.Checkout.Sess
       throw new Error('No userId found in customer metadata');
     }
 
+    console.log(`[Webhook] Found userId in customer metadata: ${userId}`);
+
     // Get subscription details to determine the tier
     const subscriptionDetails = await stripe.subscriptions.retrieve(subscriptionId);
     const priceId = subscriptionDetails.items.data[0]?.price.id;
+    
+    console.log(`[Webhook] Retrieved subscription, priceId: ${priceId}`);
     
     // Determine tier from price ID
     let tier = 'free';
@@ -74,9 +93,9 @@ export async function handleCheckoutSessionCompleted(event: Stripe.Checkout.Sess
     // Update the user's profile with Stripe info using the profiles service
     await updateSubscriptionDetails(userId, customerId, subscriptionId, tier);
 
-    console.log(`Updated profile for user ${userId} with Stripe info and tier ${tier}`);
+    console.log(`[Webhook] Updated profile for user ${userId} with Stripe info and tier ${tier}`);
   } catch (error) {
-    console.error('Error handling stripe event:', error);
+    console.error('[Webhook] Error handling stripe event:', error);
     throw error;
   }
 }
