@@ -8,12 +8,10 @@ import {
   CheckIcon, 
   CreditCardIcon
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { SUBSCRIPTION_TIERS } from "@/lib/stripe/stripeClient";
-import { createSubscriptionCheckout, redirectToCheckout } from "@/lib/stripe/subscriptionCheckout";
+import { SUBSCRIPTION_TIERS } from "@/lib/modassembly/stripe/client";
+import { createSubscriptionCheckout, redirectToCheckout } from "@/lib/modassembly/stripe/subscriptionCheckout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { updateUserTier } from "@/lib/modassembly/supabase/profiles";
 
 // Pricing tiers
 const TIERS = [
@@ -172,12 +171,10 @@ function SubscribePage() {
       }
 
       // Step 2: Update the profile with the selected tier
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          stripe_tier: values.tier,
-        })
-        .eq('id', user.id);
+      const { error: updateError } = await updateUserTier(
+        String(user.id), 
+        values.tier
+      );
 
       if (updateError) throw updateError;
       

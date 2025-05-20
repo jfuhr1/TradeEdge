@@ -1,5 +1,5 @@
-import { SUBSCRIPTION_TIERS } from './stripeClient';
-import { supabase } from '@/lib/supabase';
+import { SUBSCRIPTION_TIERS } from './client';
+import { supabase } from '@/lib/modassembly/supabase/client';
 
 export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
 
@@ -48,7 +48,7 @@ export async function createSubscriptionCheckout({
 }
 
 export async function redirectToCheckout(sessionId: string) {
-  const stripe = await import('./stripeClient').then(module => module.stripePromise);
+  const stripe = await import('./client').then(module => module.stripePromise);
   if (!stripe) {
     throw new Error('Stripe not initialized');
   }

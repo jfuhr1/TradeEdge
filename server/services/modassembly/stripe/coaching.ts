@@ -1,15 +1,6 @@
-import { stripe } from './stripeService';
+import { stripe } from './client';
 import type { Stripe } from 'stripe';
-import { createClient } from '@supabase/supabase-js';
-
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { insertCoachingPurchase } from '../supabase/coachingPurchases';
 
 interface CreateCoachingCheckoutParams {
   priceId: string;
@@ -69,21 +60,13 @@ export async function handleCoachingPurchaseCompleted(session: Stripe.Checkout.S
       throw new Error('Could not retrieve price ID from session');
     }
 
-    // Insert the purchase record
-    const { error: insertError } = await supabase
-      .from('coaching_purchases')
-      .insert({
-        user_id: userId,
-        coaching_product_id: coachingProductId,
-        stripe_price_id: priceId,
-        stripe_payment_id: session.payment_intent as string,
-        status: 'completed',
-        purchase_date: new Date().toISOString(),
-      });
-
-    if (insertError) {
-      throw insertError;
-    }
+    // Insert the purchase record using the new utility function
+    await insertCoachingPurchase({
+      userId,
+      coachingProductId,
+      stripePriceId: priceId,
+      stripePaymentId: session.payment_intent as string,
+    });
 
     console.log(`Recorded coaching purchase for user ${userId}`);
   } catch (error) {

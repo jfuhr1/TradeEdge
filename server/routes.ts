@@ -6,7 +6,7 @@ import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
-import stripeRoutes from './services/stripe/routes';
+import stripeRoutes from './services/modassembly/stripe/routes';
 import { 
   insertStockAlertSchema, 
   insertPortfolioItemSchema, 

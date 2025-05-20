@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { createCoachingCheckout, redirectToCheckout } from "@/lib/stripe/coachingCheckout";
-import { getCoachingProducts, type CoachingProduct } from "@/lib/supabase/coachingProducts";
+import { createCoachingCheckout, redirectToCheckout } from "@/lib/modassembly/stripe/coachingCheckout";
+import { getCoachingProducts, type CoachingProduct } from "@/lib/modassembly/supabase/coachingProducts";
 import { 
   Card, 
   CardContent, 
