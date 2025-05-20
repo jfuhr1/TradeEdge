@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase";
+import { getUserTier } from "@/lib/modassembly/supabase/profiles";
 import { useEffect, useState } from "react";
 
 // Constants for localStorage
@@ -55,13 +55,11 @@ export function ProtectedRoute({
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('stripe_tier')
-          .eq('id', user.id)
-          .single();
+        const data = await getUserTier(String(user.id));
 
-        if (error) throw error;
+        if (!data) {
+          throw new Error('Failed to get user tier data');
+        }
         
         if (isMounted) {
           // Consider "free" as a valid tier - only redirect if tier is null

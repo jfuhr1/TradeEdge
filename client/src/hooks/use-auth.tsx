@@ -5,9 +5,9 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/modassembly/supabase/client";
+import { getProfile, updateProfile } from "@/lib/modassembly/supabase/profiles";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -70,11 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!authUser) return null;
 
       // Get additional profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
+      const profile = await getProfile(authUser.id);
 
       if (!profile) return null;
 
@@ -126,11 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) throw new Error('No user returned after login');
 
       // Get profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const profile = await getProfile(user.id);
 
       return {
         id: user.id,
@@ -181,13 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) throw new Error('No user returned after registration');
 
       // Step 2: Update profile with additional information
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          username: data.username,
-          full_name: `${data.firstName} ${data.lastName}`
-        })
-        .eq('id', user.id);
+      const { error: profileError } = await updateProfile(user.id, {
+        username: data.username,
+        full_name: `${data.firstName} ${data.lastName}`
+      });
 
       if (profileError) throw profileError;
 

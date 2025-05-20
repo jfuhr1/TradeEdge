@@ -10,12 +10,10 @@ import {
   UserIcon, 
   ShieldCheckIcon 
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/modassembly/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -25,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { updateSignupInfo } from "@/lib/modassembly/supabase/profiles";
 
 // Form validation schema
 const signupSchema = z.object({
@@ -115,15 +114,15 @@ export default function SignupPage() {
       if (authError) throw authError;
 
       // Step 2: Update the profile with additional information
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
+      const { error: profileError } = await updateSignupInfo(
+        authData.user!.id,
+        {
           phone_number: values.phone || null,
           financial_disclaimer_accepted: values.disclaimerAcknowledged,
           terms_accepted: values.termsAgreed,
           privacy_accepted: values.termsAgreed // Using same value as terms for now
-        })
-        .eq('id', authData.user!.id);
+        }
+      );
 
       if (profileError) throw profileError;
       

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/modassembly/supabase/client';
 
 export interface CoachingProduct {
   id: string;

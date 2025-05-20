@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/modassembly/supabase/client';
 
 interface CreateCoachingCheckoutParams {
   productId: string;
@@ -47,7 +47,7 @@ export async function createCoachingCheckout({
 }
 
 export async function redirectToCheckout(sessionId: string) {
-  const stripe = await import('./stripeClient').then(module => module.stripePromise);
+  const stripe = await import('./client').then(module => module.stripePromise);
   if (!stripe) {
     throw new Error('Stripe not initialized');
   }
