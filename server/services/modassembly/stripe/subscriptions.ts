@@ -90,8 +90,6 @@ export async function handleCheckoutSessionCompleted(event: Stripe.Checkout.Sess
       }
     }
 
-    console.log(`[Webhook] Determined tier: ${tier}`);
-
     // Update the user's profile with Stripe info using the profiles service
     await updateSubscriptionDetails(userId, customerId, subscriptionId, tier);
 
