@@ -4,6 +4,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
+// Constants for localStorage
+const TIER_CACHE_KEY = 'userTier';
+
 export function ProtectedRoute({
   path,
   component: Component,
@@ -21,6 +24,15 @@ export function ProtectedRoute({
   // This effect handles the tier check
   useEffect(() => {
     let isMounted = true;
+
+    const getCachedTier = (userId: string) => {
+      const cachedTier = localStorage.getItem(`${TIER_CACHE_KEY}_${userId}`);
+      return cachedTier ? JSON.parse(cachedTier) : null;
+    };
+
+    const setCachedTier = (userId: string, tierData: any) => {
+      localStorage.setItem(`${TIER_CACHE_KEY}_${userId}`, JSON.stringify(tierData));
+    };
     
     async function checkTier() {
       if (!user) {
@@ -30,7 +42,17 @@ export function ProtectedRoute({
         return;
       }
 
-      setIsCheckingTier(true); // Ensure we're in checking state
+      setIsCheckingTier(true);
+
+      // Check cache first
+      const cachedTierData = getCachedTier(String(user.id));
+      if (cachedTierData !== null) {
+        if (isMounted) {
+          setHasTier(cachedTierData.stripe_tier !== null);
+          setIsCheckingTier(false);
+        }
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -45,6 +67,8 @@ export function ProtectedRoute({
           // Consider "free" as a valid tier - only redirect if tier is null
           setHasTier(data.stripe_tier !== null);
           setIsCheckingTier(false);
+          // Cache the result
+          setCachedTier(String(user.id), data);
         }
       } catch (error) {
         if (isMounted) {
@@ -66,7 +90,7 @@ export function ProtectedRoute({
     return () => {
       isMounted = false;
     };
-  }, [user, isLoading]); // Add isLoading as a dependency
+  }, [user, isLoading]);
 
   // Check if we're on the subscribe page
   const isSubscribePage = path === "/subscribe";

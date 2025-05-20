@@ -1,13 +1,9 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { json, raw } from 'express';
-import { stripe } from './stripeService';
-import * as checkoutService from './checkoutSessions';
-import * as subscriptionService from './subscriptions';
+import * as checkoutService from './subscriptions';
 import * as customerService from './customers';
 import * as webhookService from './webhooks';
-import type { User } from '@supabase/supabase-js';
-import type { Stripe } from 'stripe';
+import * as coachingService from './coaching';
 import { createClient } from '@supabase/supabase-js';
 
 // Extend Express Request to include Supabase user
@@ -102,6 +98,59 @@ router.post('/create-checkout-session', requireAuth, async (req: Request, res: R
     res.json({ sessionId: session.id });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Coaching checkout session route
+router.post('/create-coaching-checkout', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const { productId, priceId, successUrl, cancelUrl } = req.body;
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Get or create Stripe customer
+    let customer = await customerService.getCustomer(user.id);
+    if (!customer) {
+      customer = await customerService.createCustomer({
+        email: user.email ?? '',
+        name: user.user_metadata?.full_name,
+        metadata: {
+          userId: user.id,
+        },
+      });
+      
+      // Update Supabase profile with Stripe customer ID
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          stripe_customer_id: customer.id,
+        })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        throw updateError;
+      }
+    }
+
+    // Create coaching checkout session
+    const session = await coachingService.createCoachingCheckout({
+      priceId,
+      customerId: customer.id,
+      successUrl,
+      cancelUrl,
+      metadata: {
+        userId: user.id,
+        coachingProductId: productId,
+      },
+    });
+
+    res.json({ sessionId: session.id });
+  } catch (error: any) {
+    console.error('Error creating coaching checkout session:', error);
     res.status(400).json({ error: error.message });
   }
 });

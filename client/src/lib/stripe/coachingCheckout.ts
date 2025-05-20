@@ -1,33 +1,32 @@
-import { SUBSCRIPTION_TIERS } from './stripeClient';
 import { supabase } from '@/lib/supabase';
 
-export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
-
-interface CreateCheckoutSessionParams {
+interface CreateCoachingCheckoutParams {
+  productId: string;
   priceId: string;
-  customerId?: string;
   successUrl: string;
   cancelUrl: string;
 }
 
-export async function createSubscriptionCheckout({
+export async function createCoachingCheckout({
+  productId,
   priceId,
   successUrl,
   cancelUrl,
-}: CreateCheckoutSessionParams) {
+}: CreateCoachingCheckoutParams) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch('/api/stripe/create-checkout-session', {
+    const response = await fetch('/api/stripe/create-coaching-checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
+        productId,
         priceId,
         successUrl,
         cancelUrl,
@@ -42,7 +41,7 @@ export async function createSubscriptionCheckout({
     const { sessionId } = await response.json();
     return sessionId;
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error('Error creating coaching checkout session:', error);
     throw error;
   }
 }
