@@ -1,20 +1,11 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import * as checkoutService from './subscriptions';
-import * as customerService from './customers';
-import * as webhookService from './webhooks';
-import * as coachingService from './coaching';
-import { updateStripeCustomerId } from '../supabase/profiles';
-import { requireAuth } from '../auth';
-
-// Extend Express Request to include Supabase user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User
-    }
-  }
-}
+import * as checkoutService from './services/modassembly/stripe/subscriptions';
+import * as customerService from './services/modassembly/stripe/customers';
+import * as webhookService from './services/modassembly/stripe/webhooks';
+import * as coachingService from './services/modassembly/stripe/coaching';
+import { updateStripeCustomerId } from './services/modassembly/supabase/profiles';
+import { requireAuth } from './services/modassembly/auth';
 
 const router = Router();
 
