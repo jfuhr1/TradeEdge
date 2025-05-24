@@ -1,23 +1,6 @@
 import { Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/modassembly/supabase/client';
 
-// Extend Express Request to include Supabase user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User
-    }
-  }
-}
-
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 // Middleware to ensure user is authenticated with Supabase
 export async function requireAuth(req: Request, res: Response, next: Function) {
