@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { supabase } from '@/lib/modassembly/supabase/client';
+import { supabase } from './services/modassembly/supabase/client';
 
 
 // Middleware to ensure user is authenticated with Supabase

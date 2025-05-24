@@ -4,18 +4,34 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/modassembly/supabase/client";
 import { getProfile, updateProfile } from "@/lib/modassembly/supabase/profiles";
 
+// Custom user type for Supabase context (UUID instead of number ID)
+type SupabaseUser = {
+  id: string; // UUID from Supabase
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  tier: string;
+  profilePicture: string | null;
+  completedLessons: any[];
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  isAdmin: boolean;
+  createdAt: Date;
+};
+
 type AuthContextType = {
-  user: SelectUser | null;
+  user: SupabaseUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<SupabaseUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, RegisterData>;
+  registerMutation: UseMutationResult<SupabaseUser, Error, RegisterData>;
 };
 
 type LoginData = {
@@ -36,33 +52,12 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
-  // Check if we are in demo mode from localStorage
-  const isDemoMode = localStorage.getItem('demoMode') === 'true';
-  
-  // Create a demo user
-  const demoUser: SelectUser = {
-    id: 9999,
-    username: "demo_user",
-    password: "",
-    email: "demo@tradeedgepro.com",
-    firstName: "Jane",
-    lastName: "Smith",
-    phone: null,
-    tier: "standard",
-    profilePicture: null,
-    completedLessons: [],
-    stripeCustomerId: null,
-    stripeSubscriptionId: null,
-    isAdmin: true, // Set to true to allow admin access in demo mode
-    createdAt: new Date()
-  };
-  
   const {
     data: user,
     error,
     isLoading,
     refetch: refetchUser
-  } = useQuery<SelectUser | null, Error>({
+  } = useQuery<SupabaseUser | null, Error>({
     queryKey: ["user"],
     queryFn: async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -108,9 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refetchUser]);
 
-  // Use demo user if in demo mode, otherwise use server user
-  const authUser = isDemoMode ? demoUser : user;
-
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
@@ -140,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: new Date(user.created_at)
       };
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (user: SupabaseUser) => {
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.firstName} ${user.lastName}!`,
@@ -196,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: new Date(user.created_at)
       };
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (user: SupabaseUser) => {
       toast({
         title: "Registration successful",
         description: "Please check your email to verify your account.",
@@ -234,7 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: authUser ?? null,
+        user: user ?? null,
         isLoading,
         error,
         loginMutation,

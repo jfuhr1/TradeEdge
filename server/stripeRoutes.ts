@@ -5,7 +5,7 @@ import * as customerService from './services/modassembly/stripe/customers';
 import * as webhookService from './services/modassembly/stripe/webhooks';
 import * as coachingService from './services/modassembly/stripe/coaching';
 import { updateStripeCustomerId } from './services/modassembly/supabase/profiles';
-import { requireAuth } from './services/modassembly/auth';
+import { requireAuth } from './supabaseAuth';
 
 const router = Router();
 

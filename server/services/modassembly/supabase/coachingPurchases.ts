@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/modassembly/supabase/client";
+import { supabase } from "./client";
 
 interface InsertCoachingPurchaseParams {
   userId: string;

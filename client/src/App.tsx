@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { ProtectedRoute } from "./lib/protected-route";
+import { AdminRoute } from "./lib/admin-route";
 import AuthPage from "./pages/auth-page";
 import Dashboard from "./pages/dashboard";
 import StockAlerts from "./pages/stock-alerts";
@@ -76,27 +77,27 @@ function App() {
           <ProtectedRoute path="/notification-settings/stock/:id" component={StockNotificationSettings} />
           
           {/* Admin routes */}
-          <ProtectedRoute path="/admin" component={AdminIndex} />
-          <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
-          <ProtectedRoute path="/admin/users" component={AdminUsers} />
-          <ProtectedRoute path="/admin/create-alert" component={CreateAlert} />
-          <ProtectedRoute path="/admin/stock-alerts" component={AdminStockAlerts} />
-          <ProtectedRoute path="/admin/stock-alerts/create" component={CreateStockAlert} />
-          <ProtectedRoute path="/admin/stock-alerts/preview" component={StockAlertPreview} />
-          <ProtectedRoute path="/admin/stock-alerts/recover-draft" component={RecoverDraftPage} />
-          <ProtectedRoute path="/admin/stock-alerts/edit/:id" component={CreateStockAlert} />
-          <ProtectedRoute path="/admin/education" component={AdminEducation} />
-          <ProtectedRoute path="/admin/articles" component={AdminArticles} />
-          <ProtectedRoute path="/admin/coaching" component={AdminCoaching} />
-          <ProtectedRoute path="/admin/performance" component={AlertPerformance} />
-          <ProtectedRoute path="/admin/promotions" component={AdminPromotions} />
-          <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} />
+          <AdminRoute path="/admin" component={AdminIndex} />
+          <AdminRoute path="/admin/dashboard" component={AdminDashboard} />
+          <AdminRoute path="/admin/users" component={AdminUsers} />
+          <AdminRoute path="/admin/create-alert" component={CreateAlert} />
+          <AdminRoute path="/admin/stock-alerts" component={AdminStockAlerts} />
+          <AdminRoute path="/admin/stock-alerts/create" component={CreateStockAlert} />
+          <AdminRoute path="/admin/stock-alerts/preview" component={StockAlertPreview} />
+          <AdminRoute path="/admin/stock-alerts/recover-draft" component={RecoverDraftPage} />
+          <AdminRoute path="/admin/stock-alerts/edit/:id" component={CreateStockAlert} />
+          <AdminRoute path="/admin/education" component={AdminEducation} />
+          <AdminRoute path="/admin/articles" component={AdminArticles} />
+          <AdminRoute path="/admin/coaching" component={AdminCoaching} />
+          <AdminRoute path="/admin/performance" component={AlertPerformance} />
+          <AdminRoute path="/admin/promotions" component={AdminPromotions} />
+          <AdminRoute path="/admin/analytics" component={AdminAnalytics} />
           
           {/* User Management Routes */}
-          <ProtectedRoute path="/admin/users/manage/:id" component={ManageUser} />
-          <ProtectedRoute path="/admin/users/manage-combined/demouser" component={DemoUserDiagnostic} />
-          <ProtectedRoute path="/admin/users/manage-combined/:id" component={ManageUserCombined} />
-          <ProtectedRoute path="/admin/users/add-user" component={AddUser} />
+          <AdminRoute path="/admin/users/manage/:id" component={ManageUser} />
+          <AdminRoute path="/admin/users/manage-combined/demouser" component={DemoUserDiagnostic} />
+          <AdminRoute path="/admin/users/manage-combined/:id" component={ManageUserCombined} />
+          <AdminRoute path="/admin/users/add-user" component={AddUser} />
           
           <Route component={NotFound} />
         </Switch>
