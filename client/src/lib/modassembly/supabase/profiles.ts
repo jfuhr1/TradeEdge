@@ -96,3 +96,23 @@ export async function updateUserTier(userId: string, tier: string) {
   
   return { data, error };
 }
+
+/**
+ * Get a user's role
+ * @param userId The user's ID
+ * @returns The role information or null if not found
+ */
+export async function getUserRole(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching user role:', error);
+    return null;
+  }
+  
+  return data;
+}
