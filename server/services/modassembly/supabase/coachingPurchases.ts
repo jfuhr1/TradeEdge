@@ -29,7 +29,7 @@ export async function insertCoachingPurchase({
       coaching_product_id: coachingProductId,
       stripe_price_id: stripePriceId,
       stripe_payment_id: stripePaymentId,
-      status: 'completed',
+      status: 'purchased',
       purchase_date: new Date().toISOString(),
     });
 
